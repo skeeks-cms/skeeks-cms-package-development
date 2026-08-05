@@ -295,23 +295,14 @@ own widgets:
 - context menus;
 - file input and specialized editors.
 
-Structural panel CSS is conditional and belongs to `BackendPanelAsset`.
-`BackendPanelAsset` depends on `BackendUiAsset`; the reverse dependency is
-forbidden because tables, forms and empty backend layouts do not need panel
-structure. Keep shared `--sx-panel-*` variables in the theme layer and the
-structural `.sx-panel*` selectors in `panel.css`. Every view that emits
-`.sx-panel` directly registers the panel asset. `AdminPanelWidget` owns that
-registration through `AdminPanelAsset`, and the default model `view` card
-registers it itself. Administration-only fullscreen behavior remains a scoped
-extension in the admin panel asset.
-
-Compose panels with `sx-panel__header`, `__title`, `__hint`, `__actions`,
-`__body` and optional `__footer`. Use `sx-panel--compact` and
-`sx-panel--responsive` instead of Bootstrap layout utilities for shared
-padding and mobile action stacking; use `--padded` and `--clip` only when the
-surface needs those explicit behaviors. Keep `sx-surface` for a visual surface
-foundation and `sx-block` for a simple legacy-compatible content block; do not
-merge these public roles mechanically.
+Structured surface CSS belongs to the global `BackendUiAsset`; it must not add
+a page-specific request. New UI composes it through `BackendSurfaceWidget` and
+the `sx-surface*` contract described in `surfaces.md`. `BackendPanelAsset`
+remains a functional conditional bundle for installed `.sx-panel*` consumers,
+while `.sx-block*` belongs to deprecated `BackendBlockAsset`. The UPA shell is
+a clean reference consumer and depends on neither compatibility asset. The
+Admin shell may depend on the block asset during migration. Do not add new
+component dependencies or markup using those compatibility names.
 
 Dashboard grid and layout CSS belongs to `AdminDashboardAsset` in
 `cms-backend-admin` and is registered only on dashboard pages. Keep jQuery UI

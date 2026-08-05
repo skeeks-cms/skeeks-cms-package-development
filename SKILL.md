@@ -81,6 +81,9 @@ Read the relevant reference completely before acting:
 - For backend/UPA CSS and JS ownership, AssetBundle dependencies, payload
   budgets, icon providers and migration away from mandatory Unify assets, read
   [references/backend-ui-assets.md](references/backend-ui-assets.md).
+- For new Admin/UPA containers, surface composition and migration away from
+  `sx-block`/`sx-panel`, read
+  [references/surfaces.md](references/surfaces.md).
 
 For a complete backend UI implementation or migration, also follow the
 installed package runbook at `skeeks/cms-backend/BACKEND_UI_GUIDE.md`. Treat

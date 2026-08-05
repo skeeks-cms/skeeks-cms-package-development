@@ -710,26 +710,25 @@ external asset instead of per-view `registerJs` blocks.
 
 Use the shared surface primitives instead of project-specific card shells:
 
-- `.sx-surface` is the flat bordered surface for cabinet sections;
-- `.sx-panel` uses the same contract with the shared raised-panel shadow;
-- `.sx-surface--padded` / `.sx-panel--padded` apply semantic inner spacing;
-- `.sx-surface--clip` / `.sx-panel--clip` clip child rows and tables to the
-  shared radius;
-- `.sx-panel__header`, `.sx-panel__title`, `.sx-panel__hint` and
-  `.sx-panel__action` are the reusable heading slots;
-- `.sx-panel__header--bordered` separates that heading from the panel body.
+- `BackendSurfaceWidget` is the canonical structured cabinet section;
+- direct `.sx-surface` is reserved for low-level compositions such as metrics,
+  lists and tables;
+- `raised`, `clip`, `responsive`, bordered-header, flush-body and
+  stretched-footer behavior belongs to the widget/global surface contract;
+- palette, radius, padding and shadow come from `--sx-surface-*` tokens.
 
-Their palette, radius, padding and shadow come from `--sx-surface-*` and
-`--sx-panel-*`. A project may override those variables for brand geometry, but
-must not keep aliases such as `.portal-panel` that duplicate the complete
-surface or header implementation.
+A project may override those variables for brand geometry, but must not keep
+aliases such as `.portal-panel` that duplicate the complete surface or header
+implementation.
 
-Existing package views may still render `.sx-block`. Treat it as the
-`BackendUiAsset` compatibility panel configured through `--sx-block-*`; it
-must work even when no project stylesheet is present. New cabinet and admin
-views should choose `.sx-surface` for a flat bordered section or `.sx-panel`
-for a raised section, adding `--padded` and `--clip` intentionally. Never
-reintroduce a project-wide `.sx-block` shadow, radius or light background.
+Existing package views may still render `.sx-block` or `.sx-panel`. Their
+deprecated `BackendBlockAsset` and `BackendPanelAsset` compatibility bundles
+must work without project CSS. The UPA shell must not load either compatibility
+asset globally; the Admin shell may load the block asset during migration. Do
+not emit either class in new cabinet/admin views. Use
+`BackendSurfaceWidget`, or direct `.sx-surface` where the widget structure is
+not appropriate. Never reintroduce project-wide compatibility shadows, radii
+or fixed light backgrounds.
 
 For compact dashboard summaries use `.sx-metrics` with `.sx-metric`,
 `.sx-metric__value` and `.sx-metric__label`. Choose `.sx-metrics--3` or

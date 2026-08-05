@@ -367,12 +367,11 @@ root variables and keep exceptional project-only geometry. Even permanent
 dark-header contrast, popup shadows, drawer shadows and backdrop colors should
 be named variables rather than fixed values repeated in selectors.
 
-The historical `.sx-block` class is a shared compatibility panel, not a
-project helper. `BackendUiAsset` owns its padding, margin, text, surface,
-border, radius and shadow through `--sx-block-*`, derived from the canonical
-surface/panel tokens. Preserve `.sx-block` in old package views, but use
-`.sx-surface` or `.sx-panel` with explicit `--padded`/`--clip` modifiers in new
-views. Do not keep a late project `.sx-block` shadow or radius.
+The historical `.sx-block` and `.sx-panel` classes are conditional deprecated
+compatibility contracts, not project helpers. Preserve them only in old package views. New or
+deliberately migrated views use `BackendSurfaceWidget`, or direct
+`.sx-surface` markup for low-level compositions such as metrics and tables.
+Do not keep a late project `.sx-block`/`.sx-panel` shadow or radius.
 
 Compact model-card matrices whose columns have equal roles use
 `.sx-data-table-wrapper` and `table.sx-data-table`. This is distinct from the
@@ -618,16 +617,21 @@ the explicit canonical column, especially for entities owned by another
 controller.
 
 `BackendModelStandartController` must provide a safe read-only `view` card by
-default; packages may override it with a richer read-only card. The shared
-default card registers its own conditional panel asset. Never use `delete` or
-another destructive action as the fallback card.
+default; its standard `model-view` renderer uses `BackendSurfaceWidget`.
+The standard `model-log` renderer and CMS activity-list items also use the
+canonical surface contract and must not register `BackendBlockAsset`.
+Existing custom cards may retain the functional `BackendPanelAsset`
+registration during migration. Old block views register `BackendBlockAsset`
+explicitly or rely on the temporary Admin shell dependency; the UPA shell does
+not provide that compatibility dependency. New cards use
+`BackendSurfaceWidget`. Never use `delete` or another destructive
+action as the fallback card.
 
 Use `.sx-detail-layout`, `__aside` and `__main` for responsive master/detail
 pages. Legacy cards may retain `.sx-block`, `.sx-block-title`,
 `.sx-block-content`, `.sx-label`, `.sx-value-row`, `.sx-value` and
-`.sx-edit-btn`; shared backend CSS owns their compatibility presentation. New
-simple blocks use `sx-block__title`, `__content` and optional `__footer`
-instead of adding page-local geometry.
+`.sx-edit-btn`; `BackendBlockAsset` owns their compatibility presentation. New
+simple blocks use `BackendSurfaceWidget` instead of adding page-local geometry.
 
 The shared Ajax action runtime must subscribe to one-shot completion handlers
 before starting the content request so cached or immediately completed
