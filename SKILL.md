@@ -5,6 +5,16 @@ description: "Develop and evolve shared SkeekS CMS Composer packages such as ske
 
 # SkeekS CMS package development
 
+## Maintain this skill
+
+The canonical source of this skill is the separate repository
+`https://github.com/skeeks-cms/skeeks-cms-package-development`. On the SkeekS
+Windows workstation its editable working copy is
+`C:\SkeekS\dev\php\vendor\skeeks\skeeks-cms-package-development`.
+
+When the user asks to extend or correct this skill, edit that repository.
+Do not edit an installed or cached copy under the Codex user directory.
+
 ## Establish scope
 
 Treat changes as shared framework work. They may affect every project that
@@ -21,10 +31,22 @@ Choose the owning package before editing:
 - `skeeks/cms-theme-unify-v2`: temporary compatibility package for old Unify
   layouts, assets and markup while they are being migrated; do not add new
   reusable UI, shell behavior or semantic renderers here;
-- `skeeks/cms-backend`: target owner of reusable backend/cabinet shell
-  renderers, theme behavior and semantic UI components;
 - `skeeks/cms-mcp`: MCP/REST transports, tool contracts and API services;
 - `skeeks/cms-oauth2-server`: OAuth resources, clients, codes and tokens.
+
+The architectural target is one reusable `BackendComponent` foundation for
+administration, UPA/client accounts and future role- or product-specific
+cabinets. It owns the common shell and page-building rules. Administration
+and the current UPA are consumers of this foundation, not separate UI
+frameworks. A new site should receive a strong client account out of the box,
+then customize it in the project through navigation, permissions, branding,
+semantic theme values and exceptional product behavior rather than by forking
+the shared shell or controller lifecycle.
+
+Keep `BackendController` as the common controller foundation for cabinet
+pages. Keep light/dark mode, the mode switcher and palette customizer on the
+shared backend contract so Admin, UPA and future cabinets do not create
+parallel implementations.
 
 `skeeks/crm` is a legacy package scheduled for removal. Do not add features,
 UI migrations, compatibility work or other new changes there. Treat existing
@@ -54,15 +76,19 @@ projects or cabinet types can use the same contract.
    `data-sx-*` behavior hooks. Remove project-era `portal-*` and Unify
    `u-*`/`u-side-*`/`g-*` classes after moving their required presentation to
    the semantic contract.
-9. Project theme CSS assigns shared `--sx-*` brand values directly; do not
+9. Do not make Bootstrap classes part of new shared markup or a reusable
+   backend contract. Prefer semantic `sx-*` hooks with CSS Grid or flex for
+   new and deliberately migrated layouts. Existing local Bootstrap markup may
+   remain until its screen is intentionally migrated.
+10. Project theme CSS assigns shared `--sx-*` brand values directly; do not
    create a parallel project token graph that only aliases back to `--sx-*`.
-10. Domain screens that are explicitly project-owned, such as the current
+11. Domain screens that are explicitly project-owned, such as the current
     `skeeks.com` GPD/store workflow, keep their established layout and
     project CSS. A namespace cleanup to `sx-gpd-*`/`sx-store-*` does not make
     that markup a reusable backend contract; promote only independently
     proven common primitives and do not redesign those screens incidentally.
-11. Do not routinely clear published assets when keyed asset URLs already
-   provide cache busting.
+12. Do not routinely clear published assets when keyed asset URLs already
+    provide cache busting.
 
 Do not update the shared vendor index unless the user explicitly asks.
 

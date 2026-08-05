@@ -3,6 +3,11 @@
 `skeeks/cms-backend` owns the single surface contract for new Admin, UPA and
 customer-cabinet interfaces.
 
+The long-term goal is for every ordinary backend page to be composed from the
+same small set of semantic elements, with `sx-surface` as the canonical
+container. Administration, UPA and future cabinets must share this page
+grammar even when their navigation, permissions, density and branding differ.
+
 ## Canonical implementation
 
 Use `skeeks\cms\backend\widgets\BackendSurfaceWidget` for a structured
@@ -44,13 +49,26 @@ stacking implementation.
 Do not emit `sx-block` or `sx-panel` in new or deliberately migrated Admin/UPA
 interfaces. They live only in deprecated `BackendBlockAsset` and
 `BackendPanelAsset` compatibility bundles depending on `BackendUiAsset`; never
-add either as a dependency of a new component. The UPA shell must stay free of
-both compatibility bundles; the Admin shell may load `BackendBlockAsset` while
-old administration views remain. Remove these adapters only after searches
-confirm that all installed consumers emit canonical `BackendSurfaceWidget` or
-`sx-surface` markup.
+add either as a dependency of a new component.
+
+The UPA/client shell is already outside this compatibility boundary and must
+stay free of `sx-block`, `sx-panel` and both compatibility bundles. The
+administration shell temporarily loads deprecated `BackendBlockAsset` through
+`BackendAdminAppAsset` while old administration views still emit `sx-block`.
+Administration-only `AdminPanelWidget`/`AdminPanelAsset` still adapt historical
+`sx-panel` markup through `BackendPanelAsset`. Do not treat these adapters as
+new primitives or copy them into another cabinet.
+
+Migrate administration incrementally, screen by screen. Each touched screen
+must replace its `sx-block`/`sx-panel` composition with
+`BackendSurfaceWidget` or canonical `sx-surface` slots and stop registering
+the obsolete compatibility bundle when it has no remaining consumer. Remove
+`BackendBlockAsset` and `BackendPanelAsset` only after repository and rendered
+DOM checks confirm that all installed administration consumers have migrated.
 
 When migrating a screen, remove project-era panel/card selectors after their
 remaining product-specific layout has been separated from the global surface
 contract. Verify populated and empty content, light and dark themes, desktop
-and narrow viewports, focus visibility and horizontal overflow.
+and narrow viewports, focus visibility and horizontal overflow. Do not add
+Bootstrap grid or utility classes to the replacement shared contract; use
+semantic slots with CSS Grid/flex where layout is needed.

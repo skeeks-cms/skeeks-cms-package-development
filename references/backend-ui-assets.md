@@ -820,11 +820,20 @@ plus exceptional product screens. Do not copy the reference shell back into
 The `skeeks.com` migration removed the 20 KB project `client-portal.css` from
 the active asset graph and retained only `client-portal-theme.css`.
 
-Legacy service-status renderers must emit
-`sx-cabinet-service-status` with semantic success/danger/info modifiers.
-Do not preserve `u-tags-v1`, `g-bg-*` or inline status colors in a project
-controller merely to match the reference cabinet; the shared cabinet asset
-owns this adapter and maps it to the common status tokens.
+Legacy project service-status renderers may keep
+`sx-cabinet-service-status` with semantic success/danger/info modifiers, but
+their geometry must live in a conditional project asset registered by the
+owning controllers. `BackendCabinetAsset` must not publish that adapter on
+every cabinet page. Map its colors to the common status tokens and do not
+preserve `u-tags-v1`, `g-bg-*` or inline status colors.
+
+On 2026-08-05 the skeeks.com split moved the site/hosting status adapter to
+`BackendSiteStatusAsset`, the monitoring summary to
+`ClientPortalSitesAsset`, and the order filter row to
+`ClientPortalOrderAsset`. The latter two are registered by their owning views;
+unrelated support pages publish none of the three stylesheets. The global
+`cabinet.css` dropped from 12,158 to 10,275 raw bytes and from 2,266 to 1,945
+gzip bytes without changing `theme.css`.
 
 After direct administration detachment,
 `cms-backend-admin\AdminTheme -> BackendTheme` published no Unify CSS or
