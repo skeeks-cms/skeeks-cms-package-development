@@ -48,6 +48,14 @@ pages. Keep light/dark mode, the mode switcher and palette customizer on the
 shared backend contract so Admin, UPA and future cabinets do not create
 parallel implementations.
 
+Customer cabinets consume `BackendAppAsset` and the standard backend shell
+directly. `BackendTheme` supplies the comfortable cabinet sidebar by default;
+the administration theme explicitly selects the dense default sidebar. Do not
+restore `BackendCabinetAsset`, a global `cabinet.css` or a second cabinet shell.
+Tune cabinet presentation through the shared `--sx-shell-*` variables and
+semantic header/sidebar/footer slots; keep only brand values and exceptional
+product screens in project assets.
+
 `skeeks/crm` is a legacy package scheduled for removal. Do not add features,
 UI migrations, compatibility work or other new changes there. Treat existing
 uncommitted changes in that repository as a separate legacy workstream and do

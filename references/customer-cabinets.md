@@ -135,6 +135,52 @@ administration theme instead of registering a compatibility bundle at
 themes. Do not apply this migration to the retired `skeeks/crm` package or its
 legacy module.
 
+## Standard cabinet shell
+
+A customer cabinet is a composition of the standard backend shell, not a
+separate application skin. Depend directly on `BackendAppAsset`, inherit
+`BackendTheme` and use its default `sx-shell-sidebar--comfortable` modifier.
+The administration theme explicitly keeps `sx-shell-sidebar--default`; do not
+change dense Admin navigation while polishing a cabinet.
+
+Compose the shell through these shared contracts:
+
+- header frame: `BackendShellHeaderWidget` with `brand`, `actions` and
+  `profile` slots;
+- brand: `sx-shell-header__brand-link`, `__brand-logo` and
+  `__brand-caption`; use `--sx-shell-header-caption-margin` for space before
+  the divider and `--sx-shell-header-caption-padding` after it;
+- actions: `sx-shell-header__action` and `--icon`; use the same configured
+  semantic icon for a destination in the header and navigation;
+- account: `sx-shell-profile`, `__toggle`, `__avatar`, `__label` and
+  `__chevron`; tune its clickable padding, gap, avatar and chevron through
+  `--sx-shell-header-profile-*`. Hover, focus and open states share the
+  header action background;
+- sidebar: `BackendShellSidebarWidget`, the recursive `sx-shell-menu*`
+  renderer and optional `sx-shell-sidebar__support*` content in `afterMenu`;
+- footer: `BackendShellFooterWidget` with `sx-shell-footer--centered`, plus
+  `--sticky` only when the product layout intentionally pins it.
+
+The comfortable sidebar's visible separator belongs on `.sx-sidebar-inner`.
+Its full-width background can cover a border placed only on the outer
+`#sideNav`, even though DevTools reports that outer border as computed. Check
+the actual rendered line in light and dark, not only `border-right-width`.
+
+Cabinet tuning lives in the shared variable families:
+
+- outer geometry: top offset, sidebar width, content maximum/padding, end
+  gutter and bottom/mobile spacing;
+- header: inline padding, brand/action gaps, caption margin/padding, action
+  and icon sizes and profile geometry;
+- comfortable sidebar: desktop/mobile padding, menu item/link spacing and
+  support-block spacing;
+- centered footer: outer padding and content/link gaps.
+
+Do not add Bootstrap grid/spacing utilities to migrated header/profile markup,
+do not recreate these selectors in `client-portal.css`, and do not restore a
+global `cabinet.css` or `BackendCabinetAsset`. Project theme CSS should contain
+only `--sx-*` brand/geometry values; page-specific assets remain conditional.
+
 ## Controller selection
 
 Use `BackendController` for an overview page that aggregates counts, status and
@@ -447,6 +493,18 @@ Keep customer forms intentionally smaller than administration forms:
 - validate selected relationships again during save;
 - keep file uploads and comments attached to an already authorized model.
 
+Client and administration routes for the same entity must reuse the same
+`BackendModelHeader` composition. A project controller may render the domain
+package's model-header partial and disable relation links the client is not
+allowed to open, but it must not rebuild the title, image and metadata with a
+preview widget inside the action view. Empty-layout project CSS must not
+override model-header padding or title typography and must not hide
+`.sx-model-header__meta`; those are backend-layer responsibilities. Keep
+page-specific support-card CSS conditional and limited to the content grid,
+description geometry and responsive stacking. Use one explicit page gap for
+the overview and the PJAX-owned result/comment sections instead of Bootstrap
+rows, column gutters and inline `margin-top` values.
+
 Use `BackendFormAsset` for shared presentation. It depends on
 `BackendUiAsset` and maps native controls, validation states, disabled fields
 and Krajee Select2 to `--sx-form-*` tokens. Project cabinet CSS may override
@@ -532,9 +590,9 @@ Use this ownership boundary:
   geometry, mapped to shared semantic inputs with safe standalone fallbacks;
 - `BackendTheme` and `BackendAppAsset`: early no-flash initialization,
   persistent switcher and the shared shell/runtime;
-- `BackendCabinetAsset`: the opt-in reference customer-cabinet presentation
-  over that runtime; projects depend on it instead of copying the common
-  header/sidebar/footer and standard page CSS;
+- `BackendShellHeaderAsset`, `BackendShellMenuAsset` and the shell widgets:
+  the single header/sidebar/footer contract shared by administration and
+  customer cabinets; cabinet projects depend directly on `BackendAppAsset`;
 - `cms-backend-admin\AdminTheme`: the standard administration consumer and
   its admin-only header/footer/quick-access slots;
 - `cms-theme-unify-v2`: an explicit compatibility adapter only for products
@@ -701,7 +759,21 @@ notifications each register their own CMS domain asset, both depending on
 `BackendUiAsset`; do not put their panel/modal geometry into Unify or project
 CSS. Map notification popovers, browser-permission panels, work-reminder
 dialogs and call panels to `--sx-color-*`, radius, shadow, focus and button
-tokens. The current-user schedule/timer control follows the same rule:
+tokens.
+
+`CmsWebNotifyWidget` is mounted by the admin backend header, but remains a
+CMS-owned conditional widget. Compose its popup from the shared
+`.sx-surface.sx-surface--raised.sx-surface--clip`, `.sx-surface__body`,
+`.sx-surface__footer` and semantic `.sx-button` primitives. Keep only popup
+positioning, scroll bounds, browser-permission state and notification-row
+anatomy in `CmsWebNotifyAsset`. The row asset must explicitly own the vertical
+flow and typography of `.sx-time`, `.sx-name`, `.sx-model` and
+`.sx-action-trigger`; otherwise broad legacy selectors can collapse line
+height and make asynchronous notification titles overlap. Long titles wrap
+inside the popup, and neither the view nor its actions should depend on
+Bootstrap display/button utilities.
+
+The current-user schedule/timer control follows the same rule:
 `CmsUserScheduleAsset` owns its responsive geometry, refresh behavior and
 reduced-motion fallback, while the PHP view provides only the current state
 and `data-sx-schedule-refresh` configuration. Pass URLs and localized

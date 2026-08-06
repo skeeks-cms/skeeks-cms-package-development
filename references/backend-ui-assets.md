@@ -650,8 +650,31 @@ through these root variables:
 - `--sx-shell-main-bottom-padding`;
 - `--sx-shell-mobile-content-top-padding`.
 
-The default values preserve the administration geometry. A compact cabinet
-may override them from its brand/theme variable asset without copying the
+The shared shell also exposes presentation variables for product-level tuning
+without a second stylesheet implementation:
+
+- header: `--sx-shell-header-inline-padding`,
+  `--sx-shell-header-brand-gap`, `--sx-shell-header-actions-gap`,
+  `--sx-shell-header-caption-margin`, `--sx-shell-header-caption-padding`,
+  `--sx-shell-header-action-height` and
+  `--sx-shell-header-action-inline-padding`,
+  `--sx-shell-header-icon-size`, plus
+  `--sx-shell-header-avatar-size` and the
+  `--sx-shell-header-profile-*` family;
+- comfortable sidebar: `--sx-shell-sidebar-comfortable-padding`,
+  `--sx-shell-sidebar-comfortable-mobile-padding`,
+  `--sx-shell-sidebar-item-gap`, `--sx-shell-sidebar-link-padding`,
+  `--sx-shell-sidebar-nested-link-padding`,
+  `--sx-shell-sidebar-support-margin` and
+  `--sx-shell-sidebar-support-padding`;
+- centered footer: `--sx-shell-footer-gap`,
+  `--sx-shell-footer-link-gap`, `--sx-shell-footer-padding` and
+  `--sx-shell-footer-mobile-padding`.
+
+`BackendTheme` defaults to `sx-shell-sidebar--comfortable`; the standard
+administration theme explicitly selects `sx-shell-sidebar--default` to retain
+its dense navigation. A cabinet may override these variables from its
+brand/theme variable asset without copying the
 shared `.sx-main`, `.sx-main-col`, `.sx-content-wrapper`, `.sx-sidebar` or
 `.sx-sidebar-inner` implementation. Set the main end gutter to zero when the
 cabinet does not render the administration quick-access rail; otherwise the
@@ -809,21 +832,19 @@ After direct UPA detachment, `ClientPortalTheme` published no
 dropped to 24 CSS and 47 JavaScript requests while retaining the exact
 `64px` header and `264px` sidebar geometry.
 
-The verified reference-cabinet presentation now lives in
-`cms-backend\BackendCabinetAsset`. It is opt-in over `BackendAppAsset` and
-owns the semantic client header/profile, sidebar/menu/help, content frame,
-footer, responsive drawer and standard cabinet page adapters. A project
-cabinet asset depends on it and normally publishes only its token/brand file
-plus exceptional product screens. Do not copy the reference shell back into
-`client-portal.css`; change reusable cabinet behavior in
-`BackendCabinetAsset` and customize geometry or branding through `--sx-*`.
-The `skeeks.com` migration removed the 20 KB project `client-portal.css` from
-the active asset graph and retained only `client-portal-theme.css`.
+Customer cabinets depend directly on `BackendAppAsset` and use the same
+`BackendShellHeaderAsset`, `BackendShellMenuAsset`, shell widgets and layout
+contract as the administration area. Do not introduce a second cabinet shell
+asset or copy shell geometry into `client-portal.css`. A project cabinet asset
+normally publishes only its token/brand file and exceptional product screens;
+customize shared geometry or branding through `--sx-*`. Product-specific
+header links and account actions remain slot content, but their wrappers must
+follow the standard backend header markup.
 
 Legacy project service-status renderers may keep
 `sx-cabinet-service-status` with semantic success/danger/info modifiers, but
 their geometry must live in a conditional project asset registered by the
-owning controllers. `BackendCabinetAsset` must not publish that adapter on
+owning controllers. The global backend shell must not publish that adapter on
 every cabinet page. Map its colors to the common status tokens and do not
 preserve `u-tags-v1`, `g-bg-*` or inline status colors.
 
@@ -831,9 +852,11 @@ On 2026-08-05 the skeeks.com split moved the site/hosting status adapter to
 `BackendSiteStatusAsset`, the monitoring summary to
 `ClientPortalSitesAsset`, and the order filter row to
 `ClientPortalOrderAsset`. The latter two are registered by their owning views;
-unrelated support pages publish none of the three stylesheets. The global
-`cabinet.css` dropped from 12,158 to 10,275 raw bytes and from 2,266 to 1,945
-gzip bytes without changing `theme.css`.
+unrelated support pages publish none of the three stylesheets. The former
+global `cabinet.css` was then removed after the portal adopted the standard
+backend shell markup directly. On 2026-08-06 its reusable comfortable menu,
+header action/caption and centered footer geometry moved into the semantic
+shell assets and the variables documented above were added to `theme.css`.
 
 After direct administration detachment,
 `cms-backend-admin\AdminTheme -> BackendTheme` published no Unify CSS or
@@ -931,6 +954,17 @@ return only an additional `sx-shell-sidebar--*` modifier from its historical
 `slideNavClasses` hook. Do not return Bootstrap grid classes, `u-sidebar-*`
 classes or `js-scrollbar` from a migrated theme.
 
+Use `sx-shell-sidebar--comfortable` for a customer-facing cabinet and
+`sx-shell-sidebar--default` for the dense administration navigation. Optional
+help content belongs in the sidebar `afterMenu` slot and uses
+`sx-shell-sidebar__support`, `__support-title`, `__support-text` and
+`__support-link`; do not reintroduce a project `portal-sidebar-*` vocabulary.
+Put the comfortable sidebar's visible right border on `.sx-sidebar-inner`,
+not only on the outer `<aside>`: the full-width inner layer owns the sidebar
+background and otherwise covers the outer element's final border pixel. Verify
+the computed border and the rendered line in both themes; a computed outer
+border alone is not sufficient visual evidence.
+
 The shared sidebar uses native vertical overflow and the
 `--sx-shell-sidebar-*` token family for background, text, muted/icon, border,
 opened, active and special states. Keep `--sx-unify-sidebar-*` only inside the
@@ -947,6 +981,13 @@ wrapper, so extracting account composition does not change established flex
 geometry. Product themes should keep `_header.php` as orchestration and render
 focused `_header-brand`, `_header-context`, `_header-actions` and
 `_header-profile` partials; they must not duplicate the outer header structure.
+Brand captions use `sx-shell-header__brand-caption`; ordinary and icon-only
+header links use `sx-shell-header__action` and the `--icon` modifier. These
+classes replace Bootstrap grid/spacing utilities in migrated cabinet headers.
+Profile/account toggles use `sx-shell-profile`, `__toggle`, `__avatar`,
+`__label` and `__chevron`; their padding, gap and media size come from the
+`--sx-shell-header-profile-*` variables, including the shared hover/open
+background state.
 The verified `skeeks.com` UPA and standard administration both use this
 composition while preserving their 64px and 65px visual baselines.
 
@@ -967,8 +1008,11 @@ inline jQuery click handlers in UPA or administration headers.
 
 The shared footer frame is
 `skeeks\cms\backend\widgets\BackendShellFooterWidget`. Products pass footer
-content plus a semantic modifier; UPA uses its normal-flow portal footer and
-administration uses `sx-shell-footer--sticky`. The old
+content plus a semantic modifier. Use `sx-shell-footer--centered` for the
+shared centered cabinet presentation and combine it with
+`sx-shell-footer--sticky` only when the product layout intentionally keeps the
+footer at the viewport bottom. Administration uses its own sticky modifier.
+The old
 `u-footer--bottom-sticky` class must not be emitted by migrated layouts.
 
 The active `cms-backend-admin` header and the administration footer must also
