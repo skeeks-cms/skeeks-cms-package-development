@@ -88,14 +88,22 @@ projects or cabinet types can use the same contract.
    backend contract. Prefer semantic `sx-*` hooks with CSS Grid or flex for
    new and deliberately migrated layouts. Existing local Bootstrap markup may
    remain until its screen is intentionally migrated.
-10. Project theme CSS assigns shared `--sx-*` brand values directly; do not
+10. Treat Bootstrap independence and complete Bootstrap removal as separate
+    milestones. Prioritize migrating Admin pages from `sx-block`/`sx-panel` to
+    `sx-surface`; remove Bootstrap layout utilities opportunistically from each
+    touched screen, but keep explicit Yii/plugin behavior providers and
+    compatibility adapters while they still have consumers. Do not make a
+    zero-Bootstrap runtime a prerequisite for the surface migration. Schedule
+    complete removal only after separate CSS and JavaScript usage audits prove
+    that forms, dropdowns, modals and installed widgets have replacements.
+11. Project theme CSS assigns shared `--sx-*` brand values directly; do not
    create a parallel project token graph that only aliases back to `--sx-*`.
-11. Domain screens that are explicitly project-owned, such as the current
+12. Domain screens that are explicitly project-owned, such as the current
     `skeeks.com` GPD/store workflow, keep their established layout and
     project CSS. A namespace cleanup to `sx-gpd-*`/`sx-store-*` does not make
     that markup a reusable backend contract; promote only independently
     proven common primitives and do not redesign those screens incidentally.
-12. Do not routinely clear published assets when keyed asset URLs already
+13. Do not routinely clear published assets when keyed asset URLs already
     provide cache busting.
 
 Do not update the shared vendor index unless the user explicitly asks.
