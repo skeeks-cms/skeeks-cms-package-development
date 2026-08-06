@@ -35,14 +35,24 @@ The shared semantic UI entry point is `skeeks/cms-backend`:
   widget-level assets.
 
 The default backend accent palette is shared by administration and new
-cabinet themes. Its verified light values are `#ed7044` accent,
-`#d95a32` hover/active, `#10141a` contrast, `#fff4ea` soft and `#f0b9a6`
-border. Dark mode uses `#f08a62`, `#ff9d79`, `#3b2b27` and `#84523f`.
-Keep these values in `theme.css`, including matching focus/action fallbacks.
-A project that wants this standard orange palette must not repeat it in its
-theme file; override only genuinely different brand values such as a custom
-gradient. Verify the computed palette in both administration and UPA whenever
-the shared defaults change.
+cabinet themes. Its standard SkeekS pair is `#ee4d7d` primary plus `#efd740`
+secondary in light mode and `#f06f91` plus `#efd740` in dark mode. The primary
+accent owns active/focus states and the first primary-action gradient stop;
+the secondary accent owns the second stop. Keep the corresponding hover,
+contrast, soft, border and focus defaults in `theme.css`. A project that wants
+this standard palette must not repeat it in its theme file. Verify the computed
+palette in both administration and UPA whenever the shared defaults change.
+
+The standard backend button contract also belongs to `theme.css`. Its default
+primary action uses a gradient derived from `--sx-color-accent` and
+`--sx-color-accent-secondary`, so the palette editor updates both gradient
+stops and the accent-colored shadows during live preview. Text contrast is
+chosen against both stops. It has a 42px medium
+height, 8px radius, 600 weight, no reserved border and shared normal, hover and
+active shadow/brightness states. Secondary buttons use the semantic surface,
+border and soft-accent hover tokens. Admin/UPA/project styles must not repeat
+these `--sx-button-*` defaults or add later generic `.btn`/`.btn-primary`
+rules; customize only an intentional product variant through semantic tokens.
 
 `BackendUiAsset` is the compatibility entry point. Existing controllers and
 widgets may keep depending on it. Do not make consumers register both
@@ -654,7 +664,8 @@ The shared shell also exposes presentation variables for product-level tuning
 without a second stylesheet implementation:
 
 - header: `--sx-shell-header-inline-padding`,
-  `--sx-shell-header-brand-gap`, `--sx-shell-header-actions-gap`,
+  `--sx-shell-header-brand-gap`, `--sx-shell-header-context-gap`,
+  `--sx-shell-header-actions-gap`,
   `--sx-shell-header-caption-margin`, `--sx-shell-header-caption-padding`,
   `--sx-shell-header-action-height` and
   `--sx-shell-header-action-inline-padding`,
@@ -981,13 +992,25 @@ wrapper, so extracting account composition does not change established flex
 geometry. Product themes should keep `_header.php` as orchestration and render
 focused `_header-brand`, `_header-context`, `_header-actions` and
 `_header-profile` partials; they must not duplicate the outer header structure.
+The optional context slot receives the shared context gap only when its trimmed
+content is non-empty, so desktop controls do not touch the brand and an empty
+mobile partial does not reserve phantom space.
 Brand captions use `sx-shell-header__brand-caption`; ordinary and icon-only
 header links use `sx-shell-header__action` and the `--icon` modifier. These
 classes replace Bootstrap grid/spacing utilities in migrated cabinet headers.
-Profile/account toggles use `sx-shell-profile`, `__toggle`, `__avatar`,
-`__label` and `__chevron`; their padding, gap and media size come from the
-`--sx-shell-header-profile-*` variables, including the shared hover/open
-background state.
+Semantic icon actions center their `BackendIcon` child through the action's
+own flex geometry. Do not add the legacy absolute `sx-icon-centered` class:
+it centers against an outer compatibility wrapper whose line box may be taller
+than the 40px action and visibly shifts the glyph on hover.
+Profile/account toggles are rendered by
+`skeeks\cms\backend\widgets\BackendShellProfileWidget`; product partials own
+only their menu items and identity data. The widget emits `sx-shell-profile`,
+`__toggle`, `__avatar`, `__label` and `__chevron`. The canonical defaults are a
+40px action/profile control, 31px avatar and 8px control radius; their geometry
+comes from `--sx-shell-header-action-*` and `--sx-shell-header-profile-*`
+variables, including the shared hover/open background state. Product CSS must
+not restyle these dimensions or interaction states unless the product is
+deliberately defining a different shell variant.
 The verified `skeeks.com` UPA and standard administration both use this
 composition while preserving their 64px and 65px visual baselines.
 
@@ -1073,13 +1096,15 @@ administration moved from legacy Open Sans to the same shared stack.
 ## Theme customization contract
 
 Store user-editable themes through `BackendTheme::$palette`, not as arbitrary
-CSS variables. Its stable partial `light`/`dark` schema is `accent`, `canvas`,
-`surface`, `surfaceMuted`, `text`, `textMuted`, `border`, `success`, `warning`
-and `danger`. `BackendThemePalette` validates hex inputs and derives state,
-soft, `on-soft`, `on-surface`, contrast, border and focus variants. Components
-consume those derived tokens instead of changing or duplicating editor input.
-Keep branded gradients, uploaded artwork and exceptional product geometry out
-of the palette.
+CSS variables. Its stable partial `light`/`dark` schema is `accent`,
+`accentSecondary`, `canvas`, `surface`, `surfaceMuted`, `text`, `textMuted`,
+`border`, `success`, `warning` and `danger`. `BackendThemePalette` validates
+hex inputs and derives state, soft, `on-soft`, `on-surface`, contrast, border
+and focus variants. `accentSecondary` is limited to the second primary-action
+gradient stop; old stored palettes without it fall back to the generated accent
+hover color. Components consume derived tokens instead of changing or
+duplicating editor input. Keep uploaded artwork and exceptional product
+geometry out of the palette.
 
 Scope stored customization by product (`admin`, `upa`, then future cabinets)
 so one product does not silently recolor another. Use the normal component
