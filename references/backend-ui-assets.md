@@ -1112,6 +1112,13 @@ settings cascade for user, site and defaults. Only administrators may change a
 site/default value; resetting a user mode removes that mode's palette and
 header override together and reveals the inherited value.
 
+Expose a separate administrator-only shared reset for each color scheme. It
+must be POST-only, require the same permission as applying settings for
+everyone, ask for confirmation and remove the selected mode's palette and
+header override together from the site/default level. It must not delete
+personal overrides: users with their own palette keep it, while everyone else
+falls back through the normal cascade to the package defaults.
+
 Keep `BackendTheme::$headerModes` as the shared header configuration contract.
 Store one `dark`, `light` or `theme` choice for each light/dark page mode;
 resolve `theme` against the current page mode before rendering. Invalid or
