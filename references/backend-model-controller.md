@@ -599,12 +599,15 @@ only the serializable entity payload. Keep destructive actions in the model
 header action slot and retain their confirmation runtime. A destructive action
 must never become the default entity link.
 
-Render a related or primary entity that owns a backend `view` action with
-`BackendEntityLink`. It keeps a normal `/controller/view?pk=...` href for
-keyboard and no-JavaScript fallback while progressively enhancing the same
-link into the shared drawer. It must target `view` explicitly rather than
-inferring an action from priority or declaration order. Pass encoded text via
-`label`; use `content` only for deliberately trusted composed markup.
+Render a related or primary entity with `BackendEntityLink`. It keeps a normal
+backend action URL for keyboard and no-JavaScript fallback while progressively
+enhancing the same link into the shared drawer. With no explicit `action`, load
+the target controller's available model actions, preserve their sorted
+`priority` order and open the first action. Pass `action` only for an
+intentional override. A controller-owned `view` may therefore lead for that
+entity without adding `view` globally to `BackendModelStandartController`.
+Pass encoded text via `label`; use `content` only for deliberately trusted
+composed markup.
 
 Use `BackendEntityLinkColumn` for a grid primary entity. Configure
 `controllerId` explicitly and use `viewAttribute`, `modelIdAttribute`, `url`,
@@ -616,8 +619,10 @@ model primary-key attribute, then delegates all rendering to
 the explicit canonical column, especially for entities owned by another
 controller.
 
-`BackendModelStandartController` must provide a safe read-only `view` card by
-default; its standard `model-view` renderer uses `BackendSurfaceWidget`.
+`BackendModelStandartController` must not provide a global `view` action. A
+controller that needs a safe read-only card registers `BackendModelViewAction`
+explicitly and links to it explicitly; its standard `model-view` renderer uses
+`BackendSurfaceWidget`.
 The standard `model-log` renderer and CMS activity-list items also use the
 canonical surface contract and must not register `BackendBlockAsset`.
 Existing custom cards may retain the functional `BackendPanelAsset`
