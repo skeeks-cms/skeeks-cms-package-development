@@ -38,6 +38,8 @@ Canonical structure uses:
 - `sx-surface__header`, `__heading`, `__title`, `__hint`, `__actions`,
   `__body` and `__footer` slots;
 - `__header--bordered`, `__body--flush` and `__footer--stretch` slot modifiers;
+- `sx-surface-stack` for a vertical group of sibling surfaces with canonical
+  spacing;
 - semantic `--sx-surface-*` tokens from `BackendUiAsset`.
 
 Project themes may override surface variables for brand geometry and palette.

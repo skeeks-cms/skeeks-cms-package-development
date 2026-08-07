@@ -773,6 +773,20 @@ height and make asynchronous notification titles overlap. Long titles wrap
 inside the popup, and neither the view nor its actions should depend on
 Bootstrap display/button utilities.
 
+Do not mount `CmsWebNotifyWidget` in `BackendTheme`, `BackendAppAsset` or the
+default customer-cabinet shell. A product that needs notifications renders the
+widget explicitly in its header actions slot; only then may its CMS asset,
+initial unread-count query and polling runtime load. The widget's default
+contract is notifications only. Administration-specific idle/stale work
+checks, schedule queries and reminder dialogs are opt-in through
+`enableWorkReminders`; the admin header enables that flag, while customer
+cabinets leave it disabled unless the product explicitly owns that workflow.
+Entity links inside notification rows must override generic icon-action
+geometry with full available width and automatic height so long titles wrap as
+normal lines instead of collapsing into a narrow character column. Match
+collection links by using accent color, not an underline, for hover/focus
+feedback inside the compact notification row.
+
 The current-user schedule/timer control follows the same rule:
 `CmsUserScheduleAsset` owns its responsive geometry, refresh behavior and
 reduced-motion fallback, while the PHP view provides only the current state
