@@ -311,8 +311,9 @@ the `sx-surface*` contract described in `surfaces.md`. `BackendPanelAsset`
 remains a functional conditional bundle for installed `.sx-panel*` consumers,
 while `.sx-block*` belongs to deprecated `BackendBlockAsset`. The UPA shell is
 a clean reference consumer and depends on neither compatibility asset. The
-Admin shell may depend on the block asset during migration. Do not add new
-component dependencies or markup using those compatibility names.
+standard Admin shell also no longer loads the block asset globally; installed
+legacy views must register it explicitly. Do not add new component dependencies
+or markup using those compatibility names.
 
 Dashboard grid and layout CSS belongs to `AdminDashboardAsset` in
 `cms-backend-admin` and is registered only on dashboard pages. Keep jQuery UI
@@ -743,12 +744,16 @@ project subclass.
 Project administration themes should subclass `AdminTheme`, point
 `appAssetClass` at a thin project bundle whose first dependency is
 `BackendAdminAppAsset`, and add only an optional brand asset after it. A
-module-level `beforeRun` hook that no longer emits Unify markup must instantiate
-that project theme and call its inherited `initBeforeRender()` directly; do
-not compensate by registering an Unify-dependent project bundle during
-`EVENT_END_BODY`. On 2026-07-31 the skeeks.com hosting module moved to this
-path with unchanged 21 CSS / 51 JS response counts, zero legacy class tokens
-and zero horizontal overflow in both themes. Legacy CRM modules are outside
+backend component selects such a project theme through its `themeClass`; do
+not install it from a module-level `beforeRun` hook or compensate by registering
+an Unify-dependent project bundle during `EVENT_END_BODY`. `cms-hosting`
+provides `HostingBackendTheme` as its shared-shell default and allows a project
+to replace it through `hostingVpsBackend.themeClass`. Its historical
+`layouts/main.php` is only a compatibility alias to the common backend layout,
+and the package-owned VPS context bar uses semantic shell classes and
+`BackendIcon`. The skeeks.com hosting route retained unchanged 21 CSS / 51 JS
+response counts, zero legacy class tokens and zero horizontal overflow in both
+themes during the original shell migration. Legacy CRM modules are outside
 this migration and must remain untouched.
 
 `BackendTheme::initBeforeRender()` owns the product-neutral runtime provider
@@ -1054,13 +1059,13 @@ views and JavaScript must add the semantic class. The migrated administration
 task page rendered its active row with `sx-row-in-work` and contained no
 remaining `u-*` or `g-*` tokens anywhere in the page DOM.
 
-Administration dashboard panels use `AdminPanelAsset` and the
-`sx-admin-panel*` contract. `AdminPanelWidget` must not emit Unify
-`g-*`/`u-link-*` utilities or recreate them in page-local CSS. Keep panel
-geometry in the widget-level asset so ordinary backend pages do not download
-dashboard CSS. The verified dark/light dashboard emitted zero legacy class
-tokens and retained `3px` radius, `20px` spacing and responsive
-`20px 30px 15px` header padding.
+Administration dashboard widgets compose `BackendSurfaceWidget` and the
+canonical `sx-surface*` contract. `AdminDashboardAsset` owns only the dashboard
+grid, sortable hooks and fullscreen behavior and depends directly on
+`BackendUiAsset`; it must not pull `AdminPanelAsset` or `BackendPanelAsset` into
+the dashboard graph. Keep dashboard geometry in this page-level asset so
+ordinary backend pages do not download it. Sortable and fullscreen behavior
+use stable `data-sx-dashboard-*` hooks rather than surface structure classes.
 
 Before removing an old class from live markup, move every required geometry,
 responsive state and interaction hook to an equivalent `sx-*` selector and

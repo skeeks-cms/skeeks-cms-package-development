@@ -55,18 +55,21 @@ add either as a dependency of a new component.
 
 The UPA/client shell is already outside this compatibility boundary and must
 stay free of `sx-block`, `sx-panel` and both compatibility bundles. The
-administration shell temporarily loads deprecated `BackendBlockAsset` through
-`BackendAdminAppAsset` while old administration views still emit `sx-block`.
-Administration-only `AdminPanelWidget`/`AdminPanelAsset` still adapt historical
-`sx-panel` markup through `BackendPanelAsset`. Do not treat these adapters as
-new primitives or copy them into another cabinet.
+standard administration shell also no longer loads `BackendBlockAsset` through
+`BackendAdminAppAsset`; an installed legacy view that still emits `sx-block`
+must register the compatibility asset explicitly. Administration-only
+`AdminPanelWidget`/`AdminPanelAsset` remain explicit compatibility entry points
+for external historical `sx-panel` consumers through `BackendPanelAsset`; no
+standard Admin dashboard or hosting shell loads them. Do not treat these
+adapters as new primitives or copy them into another cabinet.
 
 Migrate administration incrementally, screen by screen. Each touched screen
 must replace its `sx-block`/`sx-panel` composition with
 `BackendSurfaceWidget` or canonical `sx-surface` slots and stop registering
-the obsolete compatibility bundle when it has no remaining consumer. Remove
-`BackendBlockAsset` and `BackendPanelAsset` only after repository and rendered
-DOM checks confirm that all installed administration consumers have migrated.
+the obsolete compatibility bundle when it has no remaining consumer. Keep the
+deprecated asset classes functional as explicit compatibility entry points;
+remove them only after repository and rendered DOM checks confirm that no
+installed consumer remains.
 
 When migrating a screen, remove project-era panel/card selectors after their
 remaining product-specific layout has been separated from the global surface
