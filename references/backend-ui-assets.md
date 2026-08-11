@@ -122,7 +122,8 @@ The standard administration chain is now:
 3. `BackendAdminHeaderAsset` and `BackendAdminMenuAsset`;
 4. shared `BackendShellHeaderAsset` and `BackendShellMenuAsset`.
 
-It receives jQuery/Bootstrap/Sortable providers, the native `BackendWindow`,
+It receives jQuery/Bootstrap providers, the conditional SortableJS adapter,
+the native `BackendWindow`,
 the semantic theme and shell directly from `cms-backend`. It does not publish
 `unify-theme.css` or Unify JavaScript on the standard signed-in shell.
 `cms-backend-admin` also owns `unauthorized`, `main-empty`, `AuthWidget` and
@@ -301,7 +302,7 @@ own widgets:
 - grid and backend collection behavior;
 - search and filter forms;
 - Select2 and Krajee adapters;
-- JQuery UI sortable/theme;
+- the SortableJS adapter for editable collections;
 - context menus;
 - file input and specialized editors.
 
@@ -316,9 +317,34 @@ legacy views must register it explicitly. Do not add new component dependencies
 or markup using those compatibility names.
 
 Dashboard grid and layout CSS belongs to `AdminDashboardAsset` in
-`cms-backend-admin` and is registered only on dashboard pages. Keep jQuery UI
-sortable permission-scoped to dashboard editors. Charts, maps, upload runtimes
-and specialized grids remain owned by their individual widgets.
+`cms-backend-admin` and is registered only on dashboard pages. Keep
+`BackendSortableAdapterAsset` permission-scoped to dashboard editors. Charts,
+maps, upload runtimes and specialized grids remain owned by their individual
+widgets.
+
+## Sortable ownership
+
+Use `BackendSortableAdapterAsset` plus
+`sx.backend.sortable.create(element, options)` for every new or migrated
+backend sortable collection. The adapter owns the SortableJS provider,
+normalized update events, connected-list groups, handles, cancel selectors,
+item selectors and enable/disable/destroy lifecycle. Register it only when the
+current user may reorder the collection.
+
+Use `onUpdate`, not provider-specific `out`, `stop` or `update` callbacks, to
+persist the final DOM order. Connected lists share an explicit group name;
+scope that name to the owning widget when multiple instances may coexist.
+Exclude action links, buttons and form controls from drag start. For file and
+form widgets, rebuild submitted hidden/select values from the new DOM order
+before firing their normal change workflow.
+
+`BackendSortableWidget` and `BackendSortableAsset` are deprecated on-demand
+jQuery UI compatibility for `yii\jui\Sortable` callers that have not migrated.
+The Unify `JuiSortableWidget`/`JuiSortableAsset` names are thin deprecated
+aliases. Do not register these classes from new code or add their provider to
+a global shell asset. Keep the backend container mapping only while excluded
+legacy consumers such as `skeeks/crm` still call `yii\jui\Sortable`; removing
+it early would make those callers load Yii's full jQuery UI bundle.
 
 Standard backend, Admin and UPA collections use
 `skeeks\cms\backend\widgets\BackendScrollAndSpPager`; the Unify pager is only
@@ -759,14 +785,15 @@ this migration and must remain untouched.
 `BackendTheme::initBeforeRender()` owns the product-neutral runtime provider
 bootstrap. It maps Yii jQuery/Bootstrap bundles to `BackendJqueryAsset`,
 `BackendBootstrapAsset` and `BackendBootstrapPluginAsset`, selects
-`BackendSelectField` and `BackendSortableWidget`, maps Bootstrap 3
-form/alert/modal entry points to the supported Bootstrap 4 implementations
-and normalizes LinkPager classes. `BackendSortableWidget` owns the selective
-jQuery UI asset formerly supplied by the Unify theme; old Unify widget/asset
-class names are thin compatibility subclasses.
-`UnifyThemeAdmin::initBeforeRender()` must call the parent and add only
-historical compatibility mappings. Product themes must not duplicate this
-provider configuration.
+`BackendSelectField`, maps Bootstrap 3 form/alert/modal entry points to the
+supported Bootstrap 4 implementations and normalizes LinkPager classes. Its
+`yii\jui\Sortable` mapping is a deprecated fallback only;
+`BackendSortableWidget` owns the selective jQuery UI asset for remaining
+legacy callers. Old Unify widget/asset class names are thin compatibility
+subclasses. `UnifyThemeAdmin::initBeforeRender()` must call the parent and add
+only its select-field compatibility mapping; it must not repeat the inherited
+Sortable mapping. Product themes must not duplicate this provider
+configuration.
 
 The common document and content composition is
 `@skeeks/cms/backend/views/layouts/main.php`. The historical Unify
@@ -879,8 +906,9 @@ After direct administration detachment,
 JavaScript. The populated task reference loaded 26 CSS / 64 JavaScript
 resources, retained its exact `65px` header, `250px` sidebar, Inter stack,
 stored light/dark choice and zero horizontal overflow. Quick access still
-opened/closed through `BackendAppAsset`. The live Sortable consumer published
-the backend-owned selective jQuery UI modules.
+opened/closed through `BackendAppAsset`. Migrated editable collections publish
+the conditional backend-owned SortableJS adapter; the selective jQuery UI
+modules remain only for deprecated callers.
 
 The standard guest administration path is also independent of Unify.
 `cms-backend-admin` owns `unauthorized.php`, `main-empty.php`, its
@@ -1066,6 +1094,9 @@ grid, sortable hooks and fullscreen behavior and depends directly on
 the dashboard graph. Keep dashboard geometry in this page-level asset so
 ordinary backend pages do not download it. Sortable and fullscreen behavior
 use stable `data-sx-dashboard-*` hooks rather than surface structure classes.
+Dashboard column movement uses the shared SortableJS adapter with an explicit
+dashboard-scoped connected-list group and direct `.sx-dashboard-widget` item
+selector.
 
 Before removing an old class from live markup, move every required geometry,
 responsive state and interaction hook to an equivalent `sx-*` selector and
