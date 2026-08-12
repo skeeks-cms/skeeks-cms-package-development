@@ -126,6 +126,9 @@ Read the relevant reference completely before acting:
 - For new Admin/UPA containers, surface composition and migration away from
   `sx-block`/`sx-panel`, read
   [references/surfaces.md](references/surfaces.md).
+- For standard in-cabinet web notifications, the header notification center,
+  task notification rules and recipient selection, read
+  [references/backend-notifications.md](references/backend-notifications.md).
 
 For a complete backend UI implementation or migration, also follow the
 installed package runbook at `skeeks/cms-backend/BACKEND_UI_GUIDE.md`. Treat
