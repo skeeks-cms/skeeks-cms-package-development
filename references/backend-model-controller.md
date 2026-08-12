@@ -10,6 +10,7 @@
 - [Empty and no-results states](#empty-and-no-results-states)
 - [Adaptive filters](#adaptive-filters)
 - [Grid renderer](#grid-renderer)
+- [Bulk actions and iframe mass editing](#bulk-actions-and-iframe-mass-editing)
 - [List/items renderer](#listitems-renderer)
 - [Theme contract](#theme-contract)
 - [Model cards and entity links](#model-cards-and-entity-links)
@@ -21,6 +22,10 @@ Inspect the installed package code before relying on this reference:
 
 - `skeeks/cms-backend/src/controllers/BackendModelStandartController.php`;
 - `skeeks/cms-backend/src/actions/BackendGridModelAction.php`;
+- `skeeks/cms-backend/src/actions/BackendGridModelRelatedAction.php`;
+- `skeeks/cms-backend/src/actions/BackendModelMultiWindowAction.php`;
+- `skeeks/cms-backend/src/actions/assets/BackendGridModelMultiActionAsset.php`;
+- `skeeks/cms-backend/src/actions/assets/BackendModelMultiWindowActionAsset.php`;
 - `skeeks/cms-backend/src/widgets/GridViewWidget.php`;
 - `skeeks/cms-backend/src/widgets/ListViewWidget.php`;
 - `skeeks/cms-backend/src/widgets/EmptyStateWidget.php`;
@@ -193,6 +198,14 @@ Both accept:
 When `emptyState.action` is omitted, visible `create` is used automatically.
 Set a state to `false` to use the renderer's historical empty output.
 
+Resolve `backendAction` from the controller-owned action instance before
+falling back to `createAction()`. A related collection may enrich that live
+action with parent model parameters at runtime. Recreating it for a page
+header or empty-state CTA drops those parameters and makes two visually
+identical actions behave differently. The header action and the empty-state
+CTA must therefore share the same resolved URL, access, window mode and
+`ControllerActionsWidget` payload.
+
 ## Adaptive filters
 
 The default policy is:
@@ -270,6 +283,148 @@ If a route previously stored a materially different Grid configuration,
 version the action `configKey` rather than deleting saved
 `BackendShowing` records. This gives the new presentation safe defaults while
 still allowing showing managers to customize and save it.
+
+## Bulk actions and iframe mass editing
+
+Treat mass editing as a standard backend action, not as page-specific
+JavaScript. The default decision is:
+
+- no input is required: execute `BackendModelMultiAction` immediately;
+- the operator must choose values: open `BackendModelMultiWindowAction` in the
+  standard backend iframe;
+- an old screen already uses `BackendModelMultiDialogEditAction`: preserve it
+  only until that screen is migrated.
+
+Do not build a new Bootstrap modal, pre-render a hidden form into the index
+page or create a custom iframe opener. The standard action keeps selection,
+permissions, validation, theme, close/reload behavior and future cabinet
+changes on one contract.
+
+`BackendModelMultiWindowAction` is the canonical parameterized workflow:
+
+1. the grid posts selected primary keys to the action;
+2. the server stores them in its cache under a short-lived, user-bound opaque
+   token;
+3. the grid opens the token URL through the standard `BackendAction` iframe;
+4. `ActiveFormAjaxBackend` validates one form model;
+5. the action resolves the selected records again, checks per-record access
+   and applies the update in a transaction by default;
+6. the normal `model-update` event closes or keeps the iframe open according
+   to the pressed standard button and reloads the owning grid.
+
+### Implementation checklist
+
+1. Register the action in the controller's model multi-action set with a clear
+   user label, normally `Редактирование`, and use
+   `BackendModelMultiWindowAction::class`.
+2. Create a small domain form model. Normalize empty strings to `null`, make
+   unchanged fields optional, reject a request with no changes, and validate
+   every selected relation through its scoped query.
+3. Return the action fields from a controller callback. Reuse the same widgets
+   and relation rules as the single-record edit form where practical; do not
+   copy an entire update form with fields that cannot be changed safely in
+   bulk.
+4. Scope the selected records with `modelsQueryCallback`, check each record
+   with `eachAccessCallback`, then mutate it in `applyCallback` and return
+   exactly `true`.
+5. Keep `useTransaction` enabled unless the operation has explicitly designed
+   non-transactional side effects.
+6. For a related grid, prefill company, client, project or another parent from
+   the propagated request context, but validate it again and keep the control
+   editable.
+7. Let the standard action emit `model-update`; do not manually close the
+   iframe or reload the grid from domain JavaScript.
+8. Verify the action from the general collection and from every supported
+   parent context, with one and many selected records, invalid input, denied
+   records, an expired token, light theme and dark theme.
+
+Keep its client runtime conditional. `BackendGridModelActionAsset` owns only
+the collection/filter code needed by an ordinary grid. The grid registers
+`BackendGridModelMultiActionAsset` only after it has confirmed a non-empty
+`modelMultiActions` set, and each `BackendModelMultiWindowAction` registers its
+own `BackendModelMultiWindowActionAsset`. Do not add a specialized multi-action
+script or the legacy `GridViewStandartAsset` back to the unconditional grid
+asset dependencies.
+
+The token keeps large ID lists out of the URL and out of hidden form fields.
+It is bound to the current user and action and expires after 15 minutes by
+default. Never replace it with a comma-separated GET parameter. Configure
+`modelsQueryCallback` whenever the collection has a visibility scope; the
+action must resolve records through the same scope instead of trusting posted
+IDs.
+
+Keep domain validation in a small form model owned by the domain package. The
+generic backend action should not know that a project belongs to a company or
+that assigning a company clears a direct client relation. For a general bulk
+edit form, make every editable attribute optional and treat an empty value as
+"keep the current value". Reject a completely empty form, and apply only
+attributes whose values were explicitly supplied. This prevents a form used
+for changing an executor from accidentally clearing relations or durations.
+
+Distinguish "leave unchanged" from "clear the current value" explicitly. If
+the product requires clearing a field in bulk, add a separate boolean/mode or
+an explicit sentinel choice; do not overload an empty selector because empty
+already means that the attribute is not part of this update.
+
+```php
+'edit-multi' => [
+    'class' => BackendModelMultiWindowAction::class,
+    'name' => 'Редактирование',
+    'buttons' => ['save'],
+    'formModel' => TaskBulkEditForm::class,
+    'fields' => [$this, 'bulkEditFields'],
+    'modelsQueryCallback' => function (ActiveQuery $query) {
+        $query->forManager();
+        return $query;
+    },
+    'eachAccessCallback' => function (Task $task) {
+        return Yii::$app->user->can('task/manage', ['model' => $task]);
+    },
+    'applyCallback' => function (
+        Task $task,
+        TaskBulkEditForm $form
+    ) {
+        if ($form->executor_id !== null) {
+            $task->executor_id = $form->executor_id;
+        }
+        if ($form->company_id !== null) {
+            $task->company_id = $form->company_id;
+            $task->project_id = $form->project_id ?: null;
+        }
+        return $task->save();
+    },
+],
+```
+
+The `applyCallback` must return exactly `true`. Throw a descriptive exception
+when a model cannot be saved so the whole default transaction rolls back.
+Disable `useTransaction` only for an operation whose external side effects
+cannot participate in a database transaction and whose partial-result policy
+is explicitly designed and communicated.
+
+A related collection may prefill a known parent relation.
+`BackendGridModelRelatedAction` passes its bound `relation` values to every
+`BackendModelMultiWindowAction` by default. The domain form initializes itself
+from those GET values. Validate every parent through the same scoped query used
+by its selector; never trust the URL merely because the collection was opened
+from a parent card. Set `passRelationContextToMultiWindowActions` to `false`
+only when a related collection intentionally must not expose its parent context.
+`BackendModelMultiWindowAction` merges the preparation request query into its
+configured URL before it adds the selection token, so the iframe and its Ajax
+requests retain company, client, project or another domain relation. Keep
+relation controls editable so the operator may deliberately switch away from
+the prefilled parent.
+
+Access control has three layers and none is optional for scoped data:
+
+- action-level visibility/access decides whether the control is offered;
+- `modelsQueryCallback` prevents posted primary keys from escaping the current
+  manager/site/domain scope;
+- `eachAccessCallback` checks the concrete permission for every resolved
+  record before the transaction starts.
+
+Never trust the IDs posted by the grid, cached in the selection token or
+received in the parent context without resolving them through these scopes.
 
 ## List/items renderer
 
@@ -696,10 +851,12 @@ At minimum verify:
 | Saved theme choice | The same explicit theme survives reloads and is shared by admin and cabinet on the origin |
 | Direct `GridViewWidget` | Base grid CSS loads before `BackendAsset`; table surfaces use semantic colors |
 | Direct `EmptyStateWidget` | A page without Grid/List receives `BackendUiAsset`, rich empty markup and the semantic CTA in both themes |
+| Related collection, zero records | The toolbar/header create action and empty-state CTA carry the same parent parameters and open through the same backend action contract |
 | Legacy `.sx-block` | Shared CMS views receive the semantic panel without project CSS; new UPA/admin views use canonical surface/panel classes |
 | Model-card data matrix | `sx-data-table` headers, values, borders, links and empty cells plus adjacent `sx-detail-section` blocks follow the active palette without fixed light surfaces |
 | Custom model header | Title, metadata, split main/side layout, status stack, toolbar, inactive state, hint icons and actions reuse `sx-model-header__*`/`.sx-status`; no view-local CSS or inline `silver`/fixed palette remains in either theme |
 | Disabled bulk actions | Labels, icons, borders and surfaces remain visibly disabled but readable in light and dark |
+| Parameterized bulk edit | Selected PKs become a short-lived user-bound token; the standard iframe form validates and updates transactionally; general and related collections reload through `model-update`; no multi-action assets load on a controller without multi-actions |
 | Grid/List pagination | Normal, hover, active and disabled pages use the collection palette in both renderers |
 | Bootstrap alerts | Default, info, success, warning and danger states remain legible without theme-specific fixed colors |
 | Backend form, light and dark | Native controls, labels, help/error states and disabled controls remain legible |

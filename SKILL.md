@@ -1,6 +1,6 @@
 ---
 name: skeeks-cms-package-development
-description: "Develop and evolve shared SkeekS CMS Composer packages such as skeeks/cms and skeeks/cms-backend. Use only for internal package engineering: public PHP contracts, reusable backend controllers, grids, filters, actions, widgets, assets, migrations, package architecture and cross-project compatibility. Do not use for routine website content, CRM operations or project-only customization."
+description: "Develop and evolve shared SkeekS CMS Composer packages such as skeeks/cms and skeeks/cms-backend. Use only for internal package engineering: public PHP contracts, reusable backend controllers, grids, filters, bulk and iframe actions, widgets, assets, migrations, package architecture and cross-project compatibility. Do not use for routine website content, CRM operations or project-only customization."
 ---
 
 # SkeekS CMS package development
@@ -113,8 +113,8 @@ Do not update the shared vendor index unless the user explicitly asks.
 Read the relevant reference completely before acting:
 
 - For `BackendModelStandartController`, `BackendGridModelAction`, collection
-  renderers, page actions, empty states, adaptive filters and theme tokens,
-  read
+  renderers, page actions, empty states, adaptive filters, bulk editing through
+  standard iframe actions and theme tokens, read
   [references/backend-model-controller.md](references/backend-model-controller.md).
 - For personal accounts and customer cabinets built on the SkeekS backend
   foundation, read both
