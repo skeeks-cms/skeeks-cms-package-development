@@ -1273,6 +1273,42 @@ drawer click.
 
 ## Collection density and hierarchy
 
+### When to extend `cms-backend`
+
+Do not extend the backend layer merely to make one screen shorter or to avoid a
+small amount of local markup. Promote a UI primitive to `skeeks/cms-backend`
+only when all of these conditions hold:
+
+1. At least two independent controllers, packages, projects or cabinet types
+   already need the same semantic element and its states. Prefer evidence from
+   more than one owning package when the primitive crosses package boundaries.
+2. The shared code contains only presentation mechanics: semantic markup,
+   accessibility, image/fallback behavior, theme tokens and interaction
+   states. Entity-specific routes, permissions, labels, relation selection and
+   business rules remain in the consuming package.
+3. The primitive composes existing backend contracts and tokens. Reuse an
+   existing class or widget first; do not create a parallel component family.
+4. Its CSS/JS can live in an already-required conditional or shared bundle.
+   Adding a new global dependency requires a shell-wide reason and a measured
+   payload check.
+5. The public API is smaller and more stable than the duplicated implementations
+   it replaces, and both image-present and fallback/empty states are verified in
+   light and dark themes.
+
+Keep a primitive local when its geometry, copy, data choice or behavior is
+specific to one product screen, even if it visually resembles a backend
+component. Start locally when reuse is only hypothetical; promote after a
+second real consumer proves the common contract.
+
+`BackendEntityMedia` is the verified collection-media example. It owns the
+canonical circular image crop and the accent-colored semantic fallback icon.
+Consumers decide which image relation and semantic icon apply, and wrap it in
+their own `BackendEntityLink`. Do not move company/deal/payment relation logic
+into that widget. This promotion is justified because company, user, deal,
+payment, bill, contractor and document collections use the same media states
+across `skeeks/cms` and `skeeks/cms-shop`, while the existing `BackendAsset`
+already delivers the required collection CSS.
+
 Keep the visual role of a cell distinct from its data type:
 
 - the primary entity in a row may use the stronger collection title;

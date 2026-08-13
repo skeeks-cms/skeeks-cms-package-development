@@ -67,6 +67,11 @@ Keep project-specific text, access rules and visual identity in the project.
 Move behavior into a shared package only when at least two controllers,
 projects or cabinet types can use the same contract.
 
+For a reusable backend UI primitive, also require the boundary test documented
+in `references/backend-ui-assets.md`: prove repeated semantics and states,
+keep domain decisions in their owning package, and avoid widening the global
+asset graph when an existing backend bundle already reaches every consumer.
+
 ## Work conservatively
 
 1. Read the target package's `AGENTS.md` completely.
