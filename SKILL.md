@@ -134,6 +134,9 @@ Read the relevant reference completely before acting:
 - For standard in-cabinet web notifications, the header notification center,
   task notification rules and recipient selection, read
   [references/backend-notifications.md](references/backend-notifications.md).
+- For reusable HTML/PDF reports, print settings, pagination, task-result
+  formatting, attachments and default-template migrations, read
+  [references/pdf-report-rendering.md](references/pdf-report-rendering.md).
 
 For a complete backend UI implementation or migration, also follow the
 installed package runbook at `skeeks/cms-backend/BACKEND_UI_GUIDE.md`. Treat
