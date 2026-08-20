@@ -63,6 +63,13 @@ needed by another administration or cabinet.
 Move application behavior into a package only after its contract is reusable
 across sites or cabinet types.
 
+Customer support built directly on `CmsTask`, CMS projects, companies,
+comments and task widgets belongs to `skeeks/cms`, including its UPA
+controller, access scope, create/comment workflow, view, resolver and
+page-specific asset. Product packages such as `cms-hosting` link to the CMS
+route and may keep only thin legacy-route wrappers; they must not own a second
+copy of the task-support workflow.
+
 ## Application shell
 
 Configure a dedicated backend component such as `upaBackend` in the

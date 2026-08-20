@@ -58,6 +58,15 @@ intended contract, but let current executable code win when they differ.
 7. Verify empty, small, large and filtered collections with regular and manager
    users. Verify a multi-action admin controller separately.
 
+When a controller is moved from an application into a reusable package, keep
+only a thin inheritance wrapper at the old application route when compatibility
+is required. The package controller must resolve custom views and assets through
+package aliases (normally by overriding `getViewPath()`; use an action-level
+view option only when that action class explicitly supports it). Inherited actions
+must never derive those resources from the wrapper's application namespace.
+Point new menus and links at the package route, and test both routes until the
+compatibility wrapper can be removed.
+
 ## Index action settings
 
 Configure these custom `BackendGridModelAction` properties:
