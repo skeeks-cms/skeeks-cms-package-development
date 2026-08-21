@@ -914,6 +914,11 @@ the same semantic theme adapter and use shared button, form, surface and error
 tokens; do not keep a separate fixed authorization palette or inline light
 preloader/footer colors.
 
+The shared administration error action renders its unauthorized layout and
+403 view through package aliases under `@skeeks/cms/admin/views`. Never require
+an `@app/views/error/unauthorized-403.php` project copy merely to turn an
+access-denied exception into a valid response.
+
 Profile and personal-account screens are CMS domain components. Keep their
 shared presentation and behavior in `skeeks/cms`, not in a project stylesheet
 and not as a second generic backend palette. Register `CmsProfileAsset` for
