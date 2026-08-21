@@ -44,6 +44,41 @@ action when that package is installed. Keep the source adapter backward-aware:
 the source submission must remain usable when the lead class or table is not
 yet available during a staged package rollout.
 
+## System activity entries
+
+`CmsLead` owns the readable activity stream of a lead. Every system event is a
+`CmsLog` with `LOG_TYPE_COMMENT` written through `CmsLead::addSystemActivity()`,
+which fills `model_code`, `model_id` and `model_as_text` from the lead, escapes
+nothing by itself and throws when the entry cannot be stored. Callers escape
+every dynamic fragment with `Html::encode()` and own the surrounding
+transaction, so a rejected entry rolls the domain change back instead of
+leaving the stream out of sync. Do not create a parallel activity table and do
+not write these entries from views or controllers of consumer packages.
+
+`CmsLead::recordCreationActivity()` writes the single creation entry and is
+idempotent per model instance. Its wording is derived from the source, not from
+the calling surface: a partner lead reads `«<author> добавил лид «<name>»»`,
+any other authored source reads `«<author> создал лид «<name>»»`, and the
+author is resolved from `created_by`, then `submitted_by_id`, then
+`partner_id`. When an explicit author is passed, set it as the
+`BlameableBehavior` value on the log; assigning `created_by` alone is silently
+replaced by the current session on insert.
+
+Sources that persist a complete lead in one save record the entry from the lead
+lifecycle. `SOURCE_FORM` is the deliberate exception: its contacts are stored
+after the lead row, so the lifecycle skips it and `CmsLeadService` calls
+`recordCreationActivity()` after the phone and email relations and before the
+commit. That entry names the submitted form, its submission number from
+`source_data.form_send_id` with a `source_ref` fallback, the lead name and the
+main `CmsLeadPhone`. A lead returned from the `source_ref` lookup is not new and
+must never receive a second entry; the same rule applies to contact
+synchronization of an already ingested lead.
+
+A financial outcome is announced only after its money exists. The shop listener
+of the partner-success event writes its entry after the reward row and its
+bonus transaction are saved, never before, and formats the amount as
+`rtrim(rtrim(number_format((float)$value, 2, '.', ' '), '0'), '.')`.
+
 ## Existing CRM identity matching
 
 Treat lead-to-client/company matching as read-only candidate discovery, not as
