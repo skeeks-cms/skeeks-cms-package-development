@@ -33,6 +33,11 @@ new assignments, executor changes, status changes and comments. Inspect those
 rules before adding another task notification so the same event is not emitted
 twice.
 
+For a task authored by a customer (`created_by` equals `cms_user_id`), status
+and employee-comment notifications to that author use the package UPA support
+card instead of the Admin task controller. Comment notifications deep-link to
+the originating `CmsLog`; keep the Admin link for employee recipients.
+
 ## Unassigned client support tasks
 
 A task created from the client cabinet uses the `client-support` scenario. If

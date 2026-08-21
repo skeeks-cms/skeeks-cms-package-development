@@ -15,6 +15,16 @@ Windows workstation its editable working copy is
 When the user asks to extend or correct this skill, edit that repository.
 Do not edit an installed or cached copy under the Codex user directory.
 
+Maintain the skill as part of substantial shared-package work, even when the
+user did not separately ask for documentation. When implementation or
+verification establishes an important architectural decision, invariant,
+reusable backend/admin/cabinet pattern, package ownership boundary,
+compatibility rule or development convention, record that durable knowledge in
+this repository in the same task. Keep `SKILL.md` concise and route detailed
+topics to a focused file under `references/`. Do not record plans, guesses,
+one-off project behavior or facts that the source code has not verified, and do
+not duplicate the same contract across references.
+
 ## Establish scope
 
 Treat changes as shared framework work. They may affect every project that
@@ -140,6 +150,9 @@ Read the relevant reference completely before acting:
 - For reusable HTML/PDF reports, print settings, pagination, task-result
   formatting, attachments and default-template migrations, read
   [references/pdf-report-rendering.md](references/pdf-report-rendering.md).
+- For free-text search in grids and AJAX selects, query `search()` contracts,
+  multi-word queries, phone normalization and join cost, read
+  [references/entity-search.md](references/entity-search.md).
 - For shared lead ingestion, source adapters, idempotency, source payloads and
   source-submission links, read
   [references/lead-ingestion.md](references/lead-ingestion.md).
