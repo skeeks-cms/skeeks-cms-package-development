@@ -180,6 +180,9 @@ site-scoped.
 - Automatic CRM identity matching uses normalized phones and exact emails only.
   Names and company names are display data, not identity evidence, and must not
   produce candidates by themselves.
+- `CmsCompany` is global and has no `cms_site_id`. Match and link companies
+  through `CmsCompany::find()->forManager()`; do not apply the generic
+  `cmsSite()` scope to company queries. User candidates remain site-scoped.
 
 ## Lead notifications
 
