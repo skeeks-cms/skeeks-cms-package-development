@@ -186,9 +186,11 @@ site-scoped.
 - A new lead sends `CmsWebNotify` to the managers who can take it. If the
   authenticated submitter or partner belongs to a CRM company with responsible
   managers, or has directly assigned managers, notify only those employees who
-  also have lead access. A known CRM identity with no responsible manager must
-  not fall back to every worker. Use the all-active-workers fallback only for
-  an anonymous lead with no submitter or partner identity.
+  also have lead access. If a known CRM identity has no eligible responsible
+  manager, notify active administrators who have both Admin and lead access as
+  a narrow triage fallback; do not broadcast it to every worker. Use the
+  all-active-workers fallback only for an anonymous lead with no submitter or
+  partner identity.
 - A status change or employee comment on a partner-linked lead notifies the
   partner.
 - A partner comment notifies the responsible executor. Before assignment it
