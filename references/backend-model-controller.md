@@ -424,6 +424,12 @@ requests retain company, client, project or another domain relation. Keep
 relation controls editable so the operator may deliberately switch away from
 the prefilled parent.
 
+`BackendGridModelRelatedAction` creates the related controller inside the
+parent controller's request. At that point the request `pk` still identifies
+the parent model. A related controller that overrides `getModel()` must resolve
+that `pk` only when it is the application's current controller; otherwise it
+must leave its model unset while its index actions are being initialized.
+
 Access control has three layers and none is optional for scoped data:
 
 - action-level visibility/access decides whether the control is offered;

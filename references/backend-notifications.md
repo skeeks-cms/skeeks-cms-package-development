@@ -19,6 +19,14 @@ signed-in user must see in the backend or customer cabinet.
   requires confirmation.
 - Avoid duplicate rows for one event and recipient. For broadcasts, resolve a
   unique set of active user IDs before creating records.
+- When the recipient must open an entity in a different application surface
+  than the model's configured backend controller, store an explicit
+  notification URL and prefer it while rendering. Keep `model_code` and
+  `model_id` for context and fallback rendering.
+- Activity/comment notifications should carry the canonical `sx-log-id` query
+  parameter and `#sx-log-{id}` fragment so the recipient opens the exact log
+  entry. Build partner-facing lead URLs from the configured UPA prefix, not
+  from the backend active when the notification is created.
 
 `skeeks/cms/src/Skeeks.php` contains established task notification examples:
 new assignments, executor changes, status changes and comments. Inspect those
