@@ -33,6 +33,13 @@ source submission ID, source entity metadata, page URL, UTM values and a small
 allowlist of request metadata. Do not duplicate raw cookies, sessions, full
 server dumps or unrestricted request payloads into the lead.
 
+Keep the canonical lead name as the short contact identity used to prefill a
+client or company. A Form2 lead's display name adds the form name, submission
+number and main phone at read time, for example
+`Form on site «Callback» #243: Alexander, +7 900 000-00-00`; use that display
+name in lead lists and card headers so existing records benefit without a data
+migration.
+
 Store canonical `utm_source`, `utm_medium`, `utm_campaign`, `utm_content` and
 `utm_term` values in dedicated indexed lead columns for filtering and
 analytics. The shared ingestion service normalizes explicit adapter values and
@@ -40,9 +47,19 @@ falls back to the source payload or `source_url`; adapters still retain the
 original URL and payload so normalization never discards source evidence.
 
 A lead card may link back to the source package's standard read-only submission
-action when that package is installed. Keep the source adapter backward-aware:
-the source submission must remain usable when the lead class or table is not
-yet available during a staged package rollout.
+action when that package is installed. The factual source-submission card also
+shows the reverse relation: an existing lead is a standard clickable backend
+entity, while an older submission without a lead offers an explicit POST-only
+manual projection through the same idempotent source adapter. Repeated manual
+projection returns the lead identified by site, source type and source reference
+instead of creating a duplicate.
+
+Keep source viewing read-only: opening a historical submission must not assign a
+manager, change its legacy status or create a lead. If the old source workflow
+still needs editing during migration, expose it as a separate processing action
+and keep the canonical ongoing work in the lead. Keep the source adapter
+backward-aware: the source submission must remain usable when the lead class or
+table is not yet available during a staged package rollout.
 
 ## System activity entries
 
@@ -81,6 +98,11 @@ bonus transaction are saved, never before, and formats the amount as
 
 ## Existing CRM identity matching
 
+The candidate surface must use the same link-eligibility predicate as the
+write action and domain service. For a lead that is not in work, keep the
+evidence visible, replace link controls with an instruction to claim the lead,
+and return expected write rejections to the card as a readable message.
+
 Treat lead-to-client/company matching as read-only candidate discovery, not as
 conversion. Load it independently from the main card so contact joins do not
 delay the activity and workflow UI. Exact normalized phone and email evidence
@@ -93,6 +115,13 @@ action on an in-work lead. Recheck entity visibility and the client-company
 relation on the server, never overwrite an existing different link, and record
 the choice in the lead activity. Keep the original lead/source identity after
 linking so attribution and submission audit remain intact.
+
+Lead deletion is an administrator-only, single-record action using the
+standard confirmed POST backend delete flow. Keep bulk deletion disabled.
+Deleting a lead removes its phone and email rows through their database
+cascades, preserves the factual source submission, and leaves canonical
+telephony calls intact with their lead reference set to null. Do not widen
+ordinary manager permissions or implement a parallel delete endpoint.
 
 ## Telephony activity
 
