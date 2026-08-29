@@ -139,8 +139,7 @@ brand-token asset, not on `UnifyAdminAllAsset`. Module-specific `beforeRun`
 hooks that already render semantic `sx-*` markup should select the same project
 administration theme instead of registering a compatibility bundle at
 `EVENT_END_BODY`. Verify the module beside a normal admin route and UPA in both
-themes. Do not apply this migration to the retired `skeeks/crm` package or its
-legacy module.
+themes.
 
 ## Standard cabinet shell
 
@@ -752,12 +751,11 @@ alignment belong to the shared `WorkerTasksCalendarAsset`. Do not rebuild
 this strip with Bootstrap `row`/`col`/`pull-*`, inline margins or Unify
 `g-mb-*` helpers. The 2026-07-31 administration check preserved the existing
 desktop geometry in both themes, kept zero horizontal overflow and removed
-the final live `g-*` token from the CMS calendar page without changing the
-legacy `skeeks/crm` package.
+the final live `g-*` token from the CMS calendar page.
 When equivalent widgets exist in several domain packages, keep their queries
 and markup in those packages but move the shared presentation asset to
 `skeeks/cms-backend`. Every domain widget registers that same asset; do not
-copy a calendar stylesheet into `skeeks/cms`, `skeeks/crm` or a project.
+copy a calendar stylesheet into `skeeks/cms` or a project.
 For CMS-only widget families such as comments and activity logs, register one
 domain asset from every entry widget. Keep reusable interactive states on
 backend primitives (`.sx-chip`, `.sx-icon-action`), while the CMS asset owns

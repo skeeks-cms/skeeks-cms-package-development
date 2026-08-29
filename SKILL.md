@@ -66,13 +66,6 @@ Tune cabinet presentation through the shared `--sx-shell-*` variables and
 semantic header/sidebar/footer slots; keep only brand values and exceptional
 product screens in project assets.
 
-`skeeks/crm` is a legacy package scheduled for removal. Do not add features,
-UI migrations, compatibility work or other new changes there. Treat existing
-uncommitted changes in that repository as a separate legacy workstream and do
-not include them in new shared UI/theme stages. Put reusable replacement
-contracts in their current owning packages, primarily `skeeks/cms` and
-`skeeks/cms-backend`, after inspecting active non-CRM consumers.
-
 Keep project-specific text, access rules and visual identity in the project.
 Move behavior into a shared package only when at least two controllers,
 projects or cabinet types can use the same contract.

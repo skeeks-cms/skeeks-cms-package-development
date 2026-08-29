@@ -342,9 +342,9 @@ before firing their normal change workflow.
 jQuery UI compatibility for `yii\jui\Sortable` callers that have not migrated.
 The Unify `JuiSortableWidget`/`JuiSortableAsset` names are thin deprecated
 aliases. Do not register these classes from new code or add their provider to
-a global shell asset. Keep the backend container mapping only while excluded
-legacy consumers such as `skeeks/crm` still call `yii\jui\Sortable`; removing
-it early would make those callers load Yii's full jQuery UI bundle.
+a global shell asset. Keep the backend container mapping only while remaining
+legacy consumers still call `yii\jui\Sortable`; removing it early would make
+those callers load Yii's full jQuery UI bundle.
 
 Standard backend, Admin and UPA collections use
 `skeeks\cms\backend\widgets\BackendScrollAndSpPager`; the Unify pager is only
@@ -779,8 +779,7 @@ to replace it through `hostingVpsBackend.themeClass`. Its historical
 and the package-owned VPS context bar uses semantic shell classes and
 `BackendIcon`. The skeeks.com hosting route retained unchanged 21 CSS / 51 JS
 response counts, zero legacy class tokens and zero horizontal overflow in both
-themes during the original shell migration. Legacy CRM modules are outside
-this migration and must remain untouched.
+themes during the original shell migration.
 
 `BackendTheme::initBeforeRender()` owns the product-neutral runtime provider
 bootstrap. It maps Yii jQuery/Bootstrap bundles to `BackendJqueryAsset`,
