@@ -49,6 +49,19 @@ outputs.
 - Allow paragraphs, lists and other semantic fragments to flow onto the next
   page.
 
+## Stream large HTML into mPDF
+
+- Do not pass a complete unbounded report to one `WriteHTML()` call. mPDF
+  rejects an input string larger than `pcre.backtrack_limit` before parsing it.
+- Put explicit chunk markers between complete report blocks: cover, summary,
+  tasks or task sections, and table rows. Remove the markers while sending each
+  chunk through its own `WriteHTML()` call.
+- Keep every potentially long task divisible into bounded semantic sections so
+  one task cannot recreate the same oversized call.
+- Do not raise the process-wide PCRE limit merely to accommodate the total
+  report size. Verify with a low-limit smoke test that a single call fails and
+  streamed calls still produce a valid PDF.
+
 ## Design for print fragmentation
 
 Chromium may not reproduce a spanning parent's background, border or padding on
