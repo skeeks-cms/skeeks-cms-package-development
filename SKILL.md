@@ -137,6 +137,9 @@ Read the relevant reference completely before acting:
 - For standard in-cabinet web notifications, the header notification center,
   task notification rules and recipient selection, read
   [references/backend-notifications.md](references/backend-notifications.md).
+- For live telephony widgets, employee call isolation, polling, status and
+  cancellation authorization, read
+  [references/telephony.md](references/telephony.md).
 - For the shared shop partner program, its package boundary, financial
   invariants, site scope and project integration, read
   [references/partner-program.md](references/partner-program.md).
