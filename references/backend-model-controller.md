@@ -808,6 +808,14 @@ pages. Legacy cards may retain `.sx-block`, `.sx-block-title`,
 `.sx-edit-btn`; `BackendBlockAsset` owns their compatibility presentation. New
 simple blocks use `BackendSurfaceWidget` instead of adding page-local geometry.
 
+When a workflow has terminal statuses, make its card read-only through one
+shared domain access predicate used by visible edit/process actions, inline
+contact controls and their server endpoints. Returning a terminal record to
+active work is a separate explicit POST action in the model header, guarded by
+the corresponding reopen predicate and the model's allowed-status transition;
+clear terminal timestamps and fields through the normal model lifecycle rather
+than bypassing validation with a direct database update.
+
 The shared Ajax action runtime must subscribe to one-shot completion handlers
 before starting the content request so cached or immediately completed
 responses still open on the first click. Do not accumulate completion handlers
