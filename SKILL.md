@@ -120,6 +120,9 @@ Do not update the shared vendor index unless the user explicitly asks.
 
 Read the relevant reference completely before acting:
 
+- For package migration registration, cms/migrate compatibility and migration
+  history identity, read
+  [references/package-migrations.md](references/package-migrations.md).
 - For `BackendModelStandartController`, `BackendGridModelAction`, collection
   renderers, page actions, empty states, adaptive filters, bulk editing through
   standard iframe actions and theme tokens, read
