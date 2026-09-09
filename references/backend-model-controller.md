@@ -43,6 +43,13 @@ intended contract, but let current executable code win when they differ.
 `delete` and `delete-multi`. Configure the collection page under
 `actions()['index']`; do not duplicate CRUD plumbing in each cabinet.
 
+For a custom destructive model operation that needs its own callback, use
+`BackendModelDeleteAction` instead of a generic `BackendModelAction`. The
+delete action owns the complete confirmation contract: AJAX transport, POST
+method and server-side verb filtering. Setting only `method => 'post'` on a
+generic action changes the method only after `request => 'ajax'` is also set;
+without that transport flag the client follows the URL as a normal GET.
+
 ## Implementation workflow
 
 1. Inspect the controller action set, permissions, opening behavior and current

@@ -155,6 +155,25 @@ Read the relevant reference completely before acting:
 - For shared lead ingestion, source adapters, idempotency, source payloads and
   source-submission links, read
   [references/lead-ingestion.md](references/lead-ingestion.md).
+- For background jobs, the queue, run history, progress reporting, resource
+  locking, overlap and retry policy, and the active-record base-class rules for
+  high-write tables, read
+  [references/background-jobs.md](references/background-jobs.md).
+- For large resumable browser uploads, chunk identity, offset reconciliation,
+  temporary-file safety and form integration, read
+  [references/resumable-file-uploads.md](references/resumable-file-uploads.md).
+- For console commands that construct a web application to inspect routes,
+  controllers or backend menus, read
+  [references/console-web-bootstrap.md](references/console-web-bootstrap.md).
+- For billable services owned by a company or person, deal-derived expiry and
+  activity, the owner/deal form block and deal-based access scoping, read
+  [references/service-deal-ownership.md](references/service-deal-ownership.md).
+- For API keys and other external-service secrets referenced by database
+  records but supplied by project configuration, read
+  [references/external-service-secrets.md](references/external-service-secrets.md).
+- For authoritative DNS zone management, system RRsets, public delegation
+  checks and staged migration from another DNS provider, read
+  [references/dns-zone-management.md](references/dns-zone-management.md).
 
 For a complete backend UI implementation or migration, also follow the
 installed package runbook at `skeeks/cms-backend/BACKEND_UI_GUIDE.md`. Treat

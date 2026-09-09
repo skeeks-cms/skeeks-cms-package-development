@@ -33,12 +33,15 @@ source submission ID, source entity metadata, page URL, UTM values and a small
 allowlist of request metadata. Do not duplicate raw cookies, sessions, full
 server dumps or unrestricted request payloads into the lead.
 
-Keep the canonical lead name as the short contact identity used to prefill a
-client or company. A Form2 lead's display name adds the form name, submission
-number and main phone at read time, for example
-`Form on site «Callback» #243: Alexander, +7 900 000-00-00`; use that display
-name in lead lists and card headers so existing records benefit without a data
-migration.
+Persist the complete operator-facing lead title in the canonical `name` field.
+For Form2, build it during ingestion from the form name, submission number,
+recognized contact name and main phone, for example
+`Form on site «Callback» #243: Alexander, +7 900 000-00-00`. Lead lists and
+card headers render that stored name directly, so a manager edit is reflected
+verbatim and presentation code never wraps the editable value in a second
+generated title. CRM creation forms that need a short client or company name
+must derive or request it separately instead of treating the lead title as a
+contact-only field.
 
 Store canonical `utm_source`, `utm_medium`, `utm_campaign`, `utm_content` and
 `utm_term` values in dedicated indexed lead columns for filtering and

@@ -1270,6 +1270,14 @@ standard backend action presentation. Verify both the published
 `typeof sx.classes.backend.widgets.Action === "function"` before testing the
 drawer click.
 
+The `cms-job` JobButton follows this same contract for asynchronously resolved
+run links. A consumer supplies a normal `url` fallback and an optional
+`windowUrl` produced by `BackendUrlHelper::enableEmptyLayout()` and
+`enableNoActions()`. The widget opens that URL through the standard Action,
+preserves modified-click navigation, and registers ControllerActionsWidgetAsset
+conditionally. Keep the active label in the button only; the supporting line
+contains actual progress/message or a terminal outcome, not a duplicate label.
+
 ## Collection density and hierarchy
 
 ### When to extend `cms-backend`
