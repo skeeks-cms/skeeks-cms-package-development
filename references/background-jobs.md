@@ -46,25 +46,18 @@ in consumers. Workers are deployed explicitly, never started by registration.
 Per-type timeout and leaseSeconds determine message TTR; lane TTR is not a
 universal execution limit. Regression fixture lanes must stay in test config.
 
-cms-hosting's `hosting.vps-site.update-disk-usage` type owns the `hosting`
-lane. It scans all hosting sites, so dedup/resource keys are installation-wide,
-not site-specific. It performs remote SSH `du` reads and stores measurements;
-a local database copy does not make an execution isolated from real servers.
-See the scheduler bridge section below for its resumable per-site execution.
-
 ## Migrating an existing domain queue
 
-cms-hosting requires cms-job and publishes individual DNS operations directly to
-`hosting-dns`, separately from disk usage on `hosting`. The payload contains all
-operation input; there is no DNS-local queue, claim/retry loop, mode switch or
-terminal-state projection. DnsOperation is an in-memory DTO, not an ActiveRecord.
-Active deduplication is handled by cms-job, not permanent request IDs.
-Before removing an old queue, stop producers and drain old consumers. The DNS
-retirement migration refuses unfinished legacy work and existing active DNS jobs
-before DDL, removes the old schedule and archives completed history without live
-foreign keys (an empty table is dropped). Runtime never reads the archive. Applied migration files remain
-unchanged. The disposable-DB tests execute with no old queue table; real PowerDNS
-I/O and production cutover need separate verification. DNS-JOBS.md owns rollout.
+Publish domain operations directly through cms-job and include the input needed
+by the handler in the payload. Keep execution state, active deduplication,
+progress and retries on the common job contract instead of maintaining a second
+domain queue or mirroring terminal status into it.
+
+Before retiring an existing queue, stop producers and drain consumers. Guard
+unfinished work before DDL, preserve required history and leave applied
+migrations unchanged. Test fresh installation and upgrade separately. The
+owning domain package documents its lane names, retirement migration, external
+I/O checks and production cutover.
 
 ## Active record base class for high-write tables
 
@@ -214,14 +207,6 @@ immutability; the config loader uses its explicit trusted scenario. Existing
 broken schedules can be disabled with their routing/payload unchanged, but
 cannot be reactivated while invalid. Manual push leaves schedule dates intact
 and shares the scheduled push's deduplication key and skip policy.
-
-The hosting disk-usage job calls the shared site measurement method directly.
-It snapshots IDs in the cursor and processes one site per delivery, keeping the
-same run on continuation. Never paginate by OFFSET over disk_usage_updated_at
-while updating that field. Its lease exceeds the synchronous SSH timeout;
-progress and cooperative cancellation occur between measurements, not inside
-the blocking call. The migration preserves the old schedule ID and history.
-Deployment and isolated checks are documented in cms-hosting/DISK-USAGE-JOB.md.
 
 `CmsAgentComponent::$onHitsEnabled` runs the whole scheduler synchronously from
 a web request. Leave the default alone for compatibility, but any project with
@@ -575,31 +560,6 @@ workers; do not enable both deployment modes unintentionally. No schema changes
 or new domain reservation mechanism are involved. Cron requires PHP CLI and
 child-process support; do not silently disable isolation or use a web hit.
 Deployment examples and housekeeping remain in cms-job's `DEPLOYMENT.md`.
-
-Per-site worker provisioning belongs to `cms-hosting`, not to `cms-job` or the
-general backend shell. Its `admin-vps-site/queues` action composes standard
-backend surfaces; package configuration discovery and OS worker liveness are
-separate data sources. Run site PHP as the site user, never as the infrastructure
-SSH/root user. Manager-created systemd/cron files must be namespaced by site and
-channel, carry an ownership marker, and remain disableable when CLI discovery
-breaks or a channel disappears from configuration. See cms-hosting's
-`QUEUE-WORKERS.md` for the implementation boundary and acceptance-test limits.
-Adopting an existing `skeeks-job@{channel}` instance records ownership in a
-comment-only per-instance drop-in after validating effective systemd properties.
-Adoption must not start, stop, reload or restart the process. Preserve the
-original unit name; subsequent control uses that unit instead of provisioning a
-second consumer. Never mark an entire shared template as owned by one site.
-
-cms-hosting's existing-site queue policy is opt-in: no policy row means no
-automated changes. Only AFTER_INSERT of a new SkeekS site seeds all/systemd;
-migrations and updates never opt existing sites in. Policy edits and job publication share the same DB transaction;
-reconciliation reads the latest revision under the same named lock used by
-edits. A failed configuration read must never be interpreted as removed lanes.
-Keep the control-plane `hosting-control` lane outside automatic site policies,
-or switching its mode/stopping it can strand every subsequent reconciliation.
-Separate desired policy, last attempted check and confirmed convergence in the
-UI. The periodic publisher and an explicit after-deploy hook command are not
-proof that an external deployment pipeline has installed that hook.
 
 Register the module under the dashed id and keep the camelCase id working.
 Worker routes end up in Supervisor and systemd unit files, so changing them

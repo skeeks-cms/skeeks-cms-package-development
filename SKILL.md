@@ -1,6 +1,6 @@
 ---
 name: skeeks-cms-package-development
-description: "Develop and evolve shared SkeekS CMS Composer packages such as skeeks/cms and skeeks/cms-backend. Use only for internal package engineering: public PHP contracts, reusable backend controllers, grids, filters, bulk and iframe actions, widgets, assets, migrations, package architecture and cross-project compatibility. Do not use for routine website content, CRM operations or project-only customization."
+description: "Build SkeekS CMS administration sections and customer cabinets using existing backend, scheduler, queue and notification contracts; develop the shared Composer packages that provide them. Use for source-code integration and reusable package engineering, not routine website content or CRM data operations."
 ---
 
 # SkeekS CMS package development
@@ -19,11 +19,28 @@ Maintain the skill as part of substantial shared-package work, even when the
 user did not separately ask for documentation. When implementation or
 verification establishes an important architectural decision, invariant,
 reusable backend/admin/cabinet pattern, package ownership boundary,
-compatibility rule or development convention, record that durable knowledge in
-this repository in the same task. Keep `SKILL.md` concise and route detailed
-topics to a focused file under `references/`. Do not record plans, guesses,
+compatibility rule or development convention useful across sections and sites,
+record that durable knowledge in this repository in the same task. Keep
+`SKILL.md` concise and route detailed topics to a focused file under
+`references/`. Do not record plans, guesses,
 one-off project behavior or facts that the source code has not verified, and do
 not duplicate the same contract across references.
+
+Choose the documentation owner by what the rule teaches:
+
+- This skill owns reusable CMS contracts: building sections and cabinets,
+  standard actions/forms/grids, scheduling, queued work, notifications and
+  integration boundaries that consumers should not reinvent.
+- A domain package's `AGENTS.md` and linked documents own its business rules,
+  specific handlers, lanes, schemas, infrastructure and rollout procedures.
+  Being installed under shared vendor does not make those rules universal.
+- Project instructions own deployment instances, servers, credentials sources,
+  branding and project-only workflows.
+
+For `skeeks/cms-hosting`, read its own `AGENTS.md` and the documents it routes
+to. DNS, VPS, service billing rules and per-site worker provisioning belong
+there. When domain work reveals a reusable mechanism, document only the verified
+common contract here and keep the domain implementation with its package.
 
 ## Establish scope
 
@@ -43,6 +60,30 @@ Choose the owning package before editing:
   reusable UI, shell behavior or semantic renderers here;
 - `skeeks/cms-mcp`: MCP/REST transports, tool contracts and API services;
 - `skeeks/cms-oauth2-server`: OAuth resources, clients, codes and tokens.
+
+## Building a section or cabinet
+
+Start with the existing provider for each part of the feature:
+
+- CRUD, collections, filters and confirmed model actions: `cms-backend`,
+  following [backend-model-controller.md](references/backend-model-controller.md).
+- Cabinet shell and navigation: the shared backend foundation, following
+  [customer-cabinets.md](references/customer-cabinets.md); compose page content
+  with [surfaces.md](references/surfaces.md).
+- Scheduled triggers: `cms-agent`; background execution, progress, run history,
+  cancellation and retries: `cms-job`. Follow
+  [background-jobs.md](references/background-jobs.md) instead of adding a local
+  queue, worker loop or second schedule table.
+- Persistent in-cabinet notifications: `CmsWebNotify`, following
+  [backend-notifications.md](references/backend-notifications.md). Transient
+  UI feedback uses the standard `sx.notify.*` API in
+  [backend-ui-assets.md](references/backend-ui-assets.md).
+
+Keep entity permissions and business decisions in the consuming package or
+project. Extend a shared primitive only when an existing contract cannot serve
+the verified need; read provider code before creating a parallel mechanism.
+
+## Shared backend foundation
 
 The architectural target is one reusable `BackendComponent` foundation for
 administration, UPA/client accounts and future role- or product-specific
@@ -165,15 +206,9 @@ Read the relevant reference completely before acting:
 - For console commands that construct a web application to inspect routes,
   controllers or backend menus, read
   [references/console-web-bootstrap.md](references/console-web-bootstrap.md).
-- For billable services owned by a company or person, deal-derived expiry and
-  activity, the owner/deal form block and deal-based access scoping, read
-  [references/service-deal-ownership.md](references/service-deal-ownership.md).
 - For API keys and other external-service secrets referenced by database
   records but supplied by project configuration, read
   [references/external-service-secrets.md](references/external-service-secrets.md).
-- For authoritative DNS zone management, system RRsets, public delegation
-  checks and staged migration from another DNS provider, read
-  [references/dns-zone-management.md](references/dns-zone-management.md).
 
 For a complete backend UI implementation or migration, also follow the
 installed package runbook at `skeeks/cms-backend/BACKEND_UI_GUIDE.md`. Treat
@@ -181,7 +216,7 @@ it as the final checklist for presentation mode, entity cells, model cards,
 drawers, conditional assets, themes, verification and project/package
 boundaries.
 
-Add future package knowledge as focused files under `references/`. Keep this
+Add future cross-section contracts as focused files under `references/`. Keep this
 main workflow concise and do not duplicate the same contract in multiple
 references. Record a mechanism only after implementing or verifying it.
 Executable source remains the final source of truth.

@@ -772,14 +772,9 @@ Project administration themes should subclass `AdminTheme`, point
 `BackendAdminAppAsset`, and add only an optional brand asset after it. A
 backend component selects such a project theme through its `themeClass`; do
 not install it from a module-level `beforeRun` hook or compensate by registering
-an Unify-dependent project bundle during `EVENT_END_BODY`. `cms-hosting`
-provides `HostingBackendTheme` as its shared-shell default and allows a project
-to replace it through `hostingVpsBackend.themeClass`. Its historical
-`layouts/main.php` is only a compatibility alias to the common backend layout,
-and the package-owned VPS context bar uses semantic shell classes and
-`BackendIcon`. The skeeks.com hosting route retained unchanged 21 CSS / 51 JS
-response counts, zero legacy class tokens and zero horizontal overflow in both
-themes during the original shell migration.
+an Unify-dependent project bundle during `EVENT_END_BODY`. Product-specific
+theme classes, component IDs and context bars are documented by their owning
+package; they consume this same shell contract.
 
 `BackendTheme::initBeforeRender()` owns the product-neutral runtime provider
 bootstrap. It maps Yii jQuery/Bootstrap bundles to `BackendJqueryAsset`,
