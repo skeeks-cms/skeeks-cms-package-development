@@ -38,6 +38,14 @@ and employee-comment notifications to that author use the package UPA support
 card instead of the Admin task controller. Comment notifications deep-link to
 the originating `CmsLog`; keep the Admin link for employee recipients.
 
+## Widget version compatibility
+
+The admin header enables `CmsWebNotifyWidget::enableWorkReminders` only when
+`property_exists()` confirms that the installed CMS widget supports it. CMS
+6.4.9.5 lacks that property and must receive the legacy empty configuration.
+A separately updated backend-admin package must not pass optional new widget
+properties unconditionally while its supported dependency range includes older CMS.
+
 ## Unassigned client support tasks
 
 A task created from the client cabinet uses the `client-support` scenario. If

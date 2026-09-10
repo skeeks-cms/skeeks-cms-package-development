@@ -31,6 +31,11 @@ domain-local queue is the failure mode this package exists to remove: the
 pattern gets reimplemented per subsystem, each copy without history, progress
 or an interface.
 
+Hosting monitoring and lifecycle execution, deployment guards and project-owned
+notification routing are documented in cms-hosting/MONITORING-LIFECYCLE-JOBS.md;
+scheduled publication progress is documented in cms-hosting/SCHEDULED-JOBS.md.
+Keep progress of publishing child runs distinct from their remote completion.
+
 The core depends only on `skeeks/cms` and `skeeks/cms-backend`. It must not
 reference a consumer package; a run records its trigger as free-form
 `trigger_ref` (`cms_agent:72`) rather than a foreign key, precisely so the core
@@ -246,6 +251,28 @@ details are easy to get wrong and were verified in a browser:
 
 Poll progress from a small dedicated JSON action rather than reloading the
 collection, and only while the run is unfinished.
+JobButton accepts `primary => true` for the main action of a domain screen;
+its default remains the standard secondary button for existing consumers.
+JobButton keeps the standard backend `aria-busy` spinner while the reported
+run status is `running`, not just during its polling request. Silent polls
+must not flash a spinner for queued runs; completion or a failed status check
+clears it so the status-retry control remains usable.
+After a successful status response, JobButton emits a bubbling `sx:job-status`
+DOM event with `detail.run` (including null when no run exists). Consumers may
+refresh dependent UI after a newly completed run; compare the initial run id
+and terminal state to avoid a reload loop when restoring finished history.
+`progress_message` is limited to 255 characters. Domain handlers must keep the
+stage summary within that bound and store complete remote diagnostics in the
+result/error fields; a failed progress flush can otherwise strand a running row.
+
+For remote operations observed through requeued jobs, local `queued` status may
+mean a transport poll is waiting while the remote operation is still running.
+The scoped status DTO may set `busy: true` for an unfinished remote operation;
+JobButton then retains its spinner through observer requeues. Terminal
+`finished: true` always clears it.
+Keep the remote stage in the scoped status DTO and do not reset a domain stepper
+to its initial waiting state on every requeue. Derive elapsed time from a stable
+operation/run timestamp; show percentages only when actual totals are known.
 
 ## Private diagnostic log storage
 
@@ -361,6 +388,14 @@ operation otherwise loses its lock mid-flight and a parallel job enters the
 same resource.
 
 ## Retry ownership
+
+For an external long-running operation, a retried observer must retain the
+original remote operation identity in its payload. A new cms-job retry row is
+not permission to repeat remote side effects. Mark such a handler idempotent
+only when the remote starter also deduplicates that identity and survives lost
+acknowledgements; observing completion and cancelling execution are separate
+capabilities. Domain deployment/recovery requirements belong in the consumer's
+runbook (for site releases: cms-hosting/SITE-UPDATES.md).
 
 Business retry belongs to the domain: classification, `maxAttempts` from the
 type definition, backoff with jitter, and the idempotency check. Ordinary library
