@@ -265,6 +265,11 @@ and terminal state to avoid a reload loop when restoring finished history.
 stage summary within that bound and store complete remote diagnostics in the
 result/error fields; a failed progress flush can otherwise strand a running row.
 
+Availability checks that require external work enqueue through an authorized POST;
+GET status stays read-only. A domain check and its mutation share the same resource
+key. Cached check results require target identity, expiry and invalidation after
+a newer mutation; failed checks never stand for an empty change set.
+
 For remote operations observed through requeued jobs, local `queued` status may
 mean a transport poll is waiting while the remote operation is still running.
 The scoped status DTO may set `busy: true` for an unfinished remote operation;
