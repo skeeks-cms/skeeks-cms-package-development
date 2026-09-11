@@ -205,6 +205,15 @@ command and synchronize as `job:<code>` in cms_agent. Synchronization is
 transactional and scoped to the current CMS site. Existing commands and their
 jobType bridge remain supported. No second schedule table is introduced.
 
+`CmsAgentComponent::getScheduleChanges()` is the read-only configuration diff
+used by both the admin load-button count and `loadAgents()`. It returns create,
+update and obsolete-system deletion groups; execution recalculates the diff in
+its transaction. Compare only configuration-owned fields, preserve activation
+and execution dates/flags, and ignore JSON formatting/object-key order while
+preserving payload value types. An entirely empty configuration retains the
+legacy no-op behavior. Hide the load button when every group is empty; expose
+deletions separately in the summary rather than presenting them as new records.
+
 The standard admin form exposes executionMode, registered job_type and a JSON
 object payload. Lane selection belongs to the type definition. Server-side
 validation checks registry membership, job permission and system-field
@@ -229,6 +238,18 @@ The agent grid consumes JobButton's `sx:job-status` event to apply existing
 out, succeeded with warnings, succeeded). Queued/running/cancelled or absent
 runs clear terminal colors. Keep the textual result and reuse backend palette
 tokens instead of introducing scheduler-specific status CSS.
+
+The section is labelled «Расписание»; package names and routes remain unchanged.
+Its mode/result/current-state filters use `CmsAgentModel::isJobBased` (including
+configured command bridges and `job:` markers), and the same active dedup key /
+latest key-and-type run selection as JobButton's status endpoint. Active work
+takes precedence over older results. Do not filter queued work through the
+legacy `cms_agent.is_running` flag, infer success from schedule dates, or disclose
+the state of a shared resource occupied by another site. Direct commands have
+no recorded result. State filters distinguish running, queued, idle and
+unavailable; idle is independent of schedule activation. A request-local batch
+snapshot avoids loading full history or querying once per schedule. The separate
+history tab continues to use exact trigger references as described below.
 
 The scheduler's read-only `view` uses `BackendModelViewAction`; its `jobs` tab
 uses `BackendGridModelRelatedAction` to reuse the job controller's standard
