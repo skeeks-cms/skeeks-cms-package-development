@@ -219,6 +219,17 @@ a cron or worker container should set it to `false`.
 
 ## Administration
 
+The agent index estimates scheduler freshness from all active schedules of the
+current site, independently of grid filters and pagination. A next execution
+strictly older than 60 seconds is a warning about possible cron failure, not
+proof of missing server configuration. No active schedules or missing dates
+must not imply healthy execution; timely dispatch does not prove worker health.
+The agent grid consumes JobButton's `sx:job-status` event to apply existing
+`sx-collection-item--danger`, `--warning` and `--success` classes (failed/timed
+out, succeeded with warnings, succeeded). Queued/running/cancelled or absent
+runs clear terminal colors. Keep the textual result and reuse backend palette
+tokens instead of introducing scheduler-specific status CSS.
+
 The scheduler's read-only `view` uses `BackendModelViewAction`; its `jobs` tab
 uses `BackendGridModelRelatedAction` to reuse the job controller's standard
 grid and filters. Always constrain that history by both the parent site's
@@ -272,6 +283,16 @@ a newer mutation; failed checks never stand for an empty change set.
 
 For remote operations observed through requeued jobs, local `queued` status may
 mean a transport poll is waiting while the remote operation is still running.
+For the shared list/card contract, domain handlers put
+`_job_execution: {state: "running", observed_at: <Unix integer>}` into the
+reported result only after observing real external execution. CmsJobRun's
+`displayStatus` and `statusText` use JobDisplayStatus; they never alter the stored
+status, claiming, retry, cancellation or technical status filters. The progress
+DTO retains raw `status` and adds `displayStatus`/`label`. An observation older
+than 120 seconds (or with invalid/future time) displays «Статус уточняется»;
+terminal business status always wins. Initial queueing and arbitrary domain
+result `status` fields do not imply execution. JobButton prefers displayStatus
+over the legacy busy hint, including clearing its spinner for stale observations.
 The scoped status DTO may set `busy: true` for an unfinished remote operation;
 JobButton then retains its spinner through observer requeues. Terminal
 `finished: true` always clears it.
@@ -494,8 +515,16 @@ If a child dies or times out before claim, acknowledge nothing: release its
 DB message reservation with an explicit delay, conditioned on message id,
 channel and delivery attempt. Do not merely move `cms_job_run.available_at`;
 that does not schedule transport delivery. Return false to the driver so it
-does not delete the released row. Already claimed crashes are recovered by
-the lease reaper, under domain idempotency rules.
+does not delete the released row. After a confirmed child exit, the parent
+finalizes the claimed run immediately using its original attempt token:
+`worker_crashed`, or `cancelled` if cancellation was requested. Only declared
+idempotent jobs with attempts left can retry. The lease reaper remains the
+fallback when the parent also dies. Never finalize a different owner's token.
+
+The isolated PHP command explicitly inherits the parent's effective
+`memory_limit` through `-d`; PHP CLI flags do not automatically propagate to a
+new PHP process. `--memoryLimit` remains the between-jobs worker recycling
+threshold, not a replacement for PHP's allocation limit.
 
 Count isolated deliveries in the parent, not via child-only AFTER_EXEC events.
 Restore messageHandler, loopConfig and event listeners in finally after each
