@@ -300,6 +300,14 @@ Keep the remote stage in the scoped status DTO and do not reset a domain stepper
 to its initial waiting state on every requeue. Derive elapsed time from a stable
 operation/run timestamp; show percentages only when actual totals are known.
 
+For local chunk continuations, a handler sets `_job_execution.state` to
+`awaiting_continuation` immediately before requeueing a saved cursor. The shared
+presentation shows «Ожидает продолжения» while raw status is `queued`; it does
+not claim that a worker is currently executing. This waiting state needs no
+freshness timestamp. A new claim shows `running`, terminal statuses win, and
+initial queued jobs without this explicit marker keep «В очереди». Do not use
+the remote `running` observation marker to hide local waiting between chunks.
+
 ## Private diagnostic log storage
 
 `jobLogs` (`JobLogStorage`) owns disposable diagnostic files, not CMS uploads.
