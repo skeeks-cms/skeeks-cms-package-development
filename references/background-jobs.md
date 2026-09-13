@@ -664,3 +664,22 @@ Worker routes end up in Supervisor and systemd unit files, so changing them
 later breaks deployments silently. A comma-separated lane list is rejected with
 the exact commands to run instead; accepting it and using the first name would
 leave the remaining lanes unattended.
+
+## Domain records linked to schedules
+
+An explicit nullable schedule reference belongs to the consuming domain model,
+not to cms-job and not to a name-matching convention. Validate the association
+against the domain record's site. Projects may backfill verified associations
+from their own import configuration; shared packages must not infer them from
+project class names or external supplier codes. If cms-agent is optional, avoid
+a foreign key to a table that might not exist; a deleted schedule is an absent
+automation, and an inactive linked schedule must not be reported as automatic.
+
+Keep scheduling configuration separate from execution evidence. A domain column
+showing the last completed outcome can deliberately retain a previous failure
+while a retry is queued/running. Resolve the schedule's effective job type and
+dedup key, scope history by site and type, and read the newest terminal run per
+key/type in a batched query. Do not copy a status onto the domain record or infer
+success from schedule timestamps. Missing history or unavailable configuration
+is unknown, never success. Apply the job type's permission before exposing its
+result, and use the same snapshot for the column and its filter.
