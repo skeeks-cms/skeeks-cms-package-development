@@ -84,3 +84,12 @@ native inventories and pending sets. A deliberate new explicit registration
 can produce an expected inventory difference; review it instead of blindly
 treating it as a regression. Never run `up`, `down`, `fresh` or history rewrites
 on production as a compatibility test.
+
+## Ownership of commercial seed data
+
+Keep site-specific plan names, prices and commercial offers in the consuming
+project's migrations. Shared packages own the schema and reusable resource
+semantics. Update an existing plan by its stable business key while preserving
+its ID and references; adding plans must be safe to repeat without duplicates.
+Do not instantiate provisioned service models to seed catalog records: their
+insert events may create external infrastructure, even with a local database.
