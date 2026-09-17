@@ -24,3 +24,10 @@ Verified by cms-shop/tests/gpd-catalog-receiver.php on disposable MariaDB: rollb
 after item writes, an intervening cursor commit during a network request,
 resumable native chunks over 10000 entities and cancellation before receipt.
 Domain API semantics and rollout are documented by the owning package.
+
+Test both the domain transport interface and the actual HTTP request formatter.
+A fake returning valid pages cannot detect a cursor serialized into a GET JSON
+body while the server reads query parameters. cms-shop's wire regression uses
+Yii Request::prepare with MockTransport: GET cursor/limit are in the URL and its
+body is empty; POST batch IDs remain JSON. Keep these tests independent of live
+credentials and never dump prepared request headers for diagnostics.
