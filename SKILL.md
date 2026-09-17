@@ -224,6 +224,9 @@ main workflow concise and do not duplicate the same contract in multiple
 references. Record a mechanism only after implementing or verifying it.
 Executable source remains the final source of truth.
 
+For SQL conditions in per-model permission checks, follow
+[model-access-queries.md](references/model-access-queries.md).
+
 ## Validate shared changes
 
 Verify in proportion to the blast radius:
