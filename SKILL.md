@@ -227,6 +227,9 @@ Executable source remains the final source of truth.
 For SQL conditions in per-model permission checks, follow
 [model-access-queries.md](references/model-access-queries.md).
 
+For task status transitions, timer side effects and API integration, read
+[task-workflow.md](references/task-workflow.md).
+
 ## Validate shared changes
 
 Verify in proportion to the blast radius:
