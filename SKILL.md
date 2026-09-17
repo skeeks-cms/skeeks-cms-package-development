@@ -200,6 +200,9 @@ Read the relevant reference completely before acting:
   locking, overlap and retry policy, and the active-record base-class rules for
   high-write tables, read
   [references/background-jobs.md](references/background-jobs.md).
+- For durable receipt of external change streams, transactionally committed
+  protocol cursors and receipt-versus-application boundaries, read
+  [references/external-change-streams.md](references/external-change-streams.md).
 - For large resumable browser uploads, chunk identity, offset reconciliation,
   temporary-file safety and form integration, read
   [references/resumable-file-uploads.md](references/resumable-file-uploads.md).
