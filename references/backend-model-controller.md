@@ -249,6 +249,14 @@ Common `filters` keys include `class`, `visibleFilters`, `isOpened`,
 `fields`. Keep query mutation in each field's `on apply` callback or the
 renderer/data-provider initialization callback.
 
+
+For saved representations on a standard index action, leave `backendShowings`
+unset or set it to `null`: BackendAction loads the available site/user records.
+`false` disables them; `true` is not a replacement for the iterable list.
+Creation controls still follow `canManageBackendShowings` and action permissions.
+For a 0/1 activity filter, explicitly configure BoolField with an empty/all choice
+and preserve zero in its apply callback: a truthiness check would discard “No”.
+Keep the SQL column qualified and retain the grid's site/domain scope.
 ## Grid renderer
 
 The default renderer is `GridViewWidget`. Important settings include:
