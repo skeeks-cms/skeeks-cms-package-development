@@ -206,13 +206,14 @@ transactional and scoped to the current CMS site. Existing commands and their
 jobType bridge remain supported. No second schedule table is introduced.
 
 `CmsAgentComponent::getScheduleChanges()` is the read-only configuration diff
-used by both the admin load-button count and `loadAgents()`. It returns create,
-update and obsolete-system deletion groups; execution recalculates the diff in
+used by both the admin load-button count and `loadAgents()`. Since cms-agent 3.2.5,
+it returns create/update groups and an empty legacy delete group. Missing
+configuration never authorizes deletion; removal requires a separate explicit
+administrator action or targeted migration. Execution recalculates the diff in
 its transaction. Compare only configuration-owned fields, preserve activation
 and execution dates/flags, and ignore JSON formatting/object-key order while
 preserving payload value types. An entirely empty configuration retains the
-legacy no-op behavior. Hide the load button when every group is empty; expose
-deletions separately in the summary rather than presenting them as new records.
+legacy no-op behavior. Hide the load button when every group is empty.
 
 The standard admin form exposes executionMode, registered job_type and a JSON
 object payload. Lane selection belongs to the type definition. Server-side
