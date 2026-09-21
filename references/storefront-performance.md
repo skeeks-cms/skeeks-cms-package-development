@@ -130,3 +130,12 @@ VanillaLazyLoadAsset, ShopUnifyProductCardAsset и ProductListImagesAsset вне
 Проверка cms-shop/tests/store-url-rules.php использует реальные правила и
 родительский маршрутизатор с изолированной SQLite: чужие URL без SQL, выбор
 по сайту/параметру, пустой набор и наличие склада при запуске backend.
+
+## Повторное чтение контента и основного домена
+
+На главной theme-unify-shop один результат shopContents используется для
+проверки и обоих товарных блоков; глобальный getter не мемоизируется.
+Контракт кеша CmsSite::getCmsSiteMainDomain и его тест описаны в cms/AGENTS.md.
+Кнопка AdminCacheController инвалидирует тег сайта и тег схемы БД, а не все
+табличные теги. Общий кеш с ручным сбросом должен зависеть от тега сайта;
+автоматическая инвалидация модели отдельно использует HasTableCache.
