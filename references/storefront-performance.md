@@ -60,3 +60,10 @@ a production application:
 
 After deployment, measure actual page and PJAX profiles again. Do not present
 microbenchmarks or fixture query counts as production before/after results.
+
+## CSS dependency boundary
+
+For CSS compression dependency ownership in `skeeks/yii2-assets-auto-compress`,
+read that package's `AGENTS.md` and `src/vendor/mrclay/README.md`. Its namespaced
+CSS subset is self-contained; the legacy Mrclay HTML adapter is optional.
+Copying PHP files to production does not update the consumer's Composer lock.
