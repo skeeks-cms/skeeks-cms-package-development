@@ -230,6 +230,9 @@ For SQL conditions in per-model permission checks, follow
 For task status transitions, timer side effects and API integration, read
 [task-workflow.md](references/task-workflow.md).
 
+For storefront profiling, HTML compression and product-list query batching, read
+[storefront-performance.md](references/storefront-performance.md).
+
 ## Validate shared changes
 
 Verify in proportion to the blast radius:
