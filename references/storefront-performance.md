@@ -67,3 +67,16 @@ For CSS compression dependency ownership in `skeeks/yii2-assets-auto-compress`,
 read that package's `AGENTS.md` and `src/vendor/mrclay/README.md`. Its namespaced
 CSS subset is self-contained; the legacy Mrclay HTML adapter is optional.
 Copying PHP files to production does not update the consumer's Composer lock.
+
+## Списки коллекций
+
+В `theme-unify-shop` шаблоны `collections/collection-list.php` и
+`collections/collection-list-no-page.php` добавляют `image`, `images`,
+`shopCollectionStickers`, `brand.country` в eager loading запроса провайдера
+до загрузки его моделей. Сохранять текущие фильтры, сортировку, пагинацию,
+порядок изображений и пустые связи. Это пакетная загрузка в рамках запроса,
+а не общий кеш; переопределённые проектом шаблоны должны принять тот же подход.
+`theme-unify-shop/tests/collection-lists.php <vendor/autoload.php>` проверяет
+оба настоящих шаблона и ListView на изолированной SQLite; включать
+`short_open_tag=1`. Тест проверяет отсутствие SQL при чтении связей карточек,
+а HTML реальных карточек следует сравнивать отдельно на сайте.
