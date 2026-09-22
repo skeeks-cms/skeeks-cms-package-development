@@ -233,6 +233,9 @@ For task status transitions, timer side effects and API integration, read
 For storefront profiling, HTML compression and product-list query batching, read
 [storefront-performance.md](references/storefront-performance.md).
 
+For asynchronous storefront search, suggestion visibility, session locks and
+read-only price context, read [storefront-search.md](references/storefront-search.md).
+
 ## Validate shared changes
 
 Verify in proportion to the blast radius:
