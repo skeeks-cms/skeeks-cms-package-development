@@ -74,6 +74,9 @@ Start with the existing provider for each part of the feature:
   cancellation and retries: `cms-job`. Follow
   [background-jobs.md](references/background-jobs.md) instead of adding a local
   queue, worker loop or second schedule table.
+  For registering a channel/type/handler and operating the site dispatcher,
+  first read the active `skeeks/cms-job/README.md` and `DEPLOYMENT.md`
+  ([published guide](https://github.com/skeeks-cms/cms-job/blob/master/README.md)).
 - Persistent in-cabinet notifications: `CmsWebNotify`, following
   [backend-notifications.md](references/backend-notifications.md). Transient
   UI feedback uses the standard `sx.notify.*` API in

@@ -412,6 +412,69 @@ domain — models, registry, runner, reporter, handlers, locks, business retry,
 admin UI, scheduler — must not change. Do not describe this as a three-class
 swap.
 
+## Persistent DB worker connection budget
+
+For the complete channel/type/handler registration and enqueue examples, read
+the active cms-job [README](https://github.com/skeeks-cms/cms-job/blob/master/README.md)
+and [deployment guide](https://github.com/skeeks-cms/cms-job/blob/master/DEPLOYMENT.md).
+Register `jobQueueFactory.queues` and `jobRegistry.types` in shared web/console
+configuration. The domain package owns the channel, handler and type definition;
+publish through `Yii::$app->jobs->push()`, never direct transport-table writes.
+Do not copy the package's full tutorial here; keep its examples with its API.
+
+Configuration is loaded at process start, not hot-reloaded. After adding a
+channel, changing type TTR or changing concurrency, gracefully restart consumers.
+The hosting dispatcher policy discovers the effective configuration and handles
+the stop/drain/reconfigure/start transition during reconciliation. Standalone
+deployment must arrange it itself. Without `--queues`, a new dispatcher reads
+all configured queues; an explicit allowlist must also be updated. Empty queues
+can remain in a dispatcher: they cost polling, not resident children.
+
+cms-job also provides a site dispatcher (`cms-job/worker/dispatch`), selected
+by the default no-channel `cms-job/worker` command. Explicit `--queue` retains
+the single-channel worker and cron remains compatible. Configure `jobWorker`
+with `mode` (`dispatcher`/`workers`), `maxProcesses` (10),
+`channelConcurrency` (1) and optional `channels` concurrency overrides.
+Hosting/deployment owns selecting and draining OS services; it can explicitly
+select either command without changing package-level delivery semantics.
+
+The dispatcher is in the yii2-queue adapter: native DB reservation/release,
+shared isolated-child lifecycle, attempt fencing, hard TTR and crash handling.
+It checks capacity before reserving, rotates channel selection, stops accepting
+on signals and drains active children. A local close-on-exec flock excludes a
+second dispatcher; it does not constrain workers on other servers or manually
+started single-channel consumers. Never replace this with domain-layer polling
+or a second SQL reservation implementation. Concurrency counts child jobs, not
+idle PHP workers; no child remains resident while its channel is empty.
+
+The native `yii\queue\db\Queue::run()` retains its DB connection while sleeping
+between empty polls. The cms-job `DbQueue` adapter now closes MySQL connections
+after an empty reservation; `Yii2QueueConsumer` also asks this adapter to close
+before launching an isolated child. Reservation and acknowledgement remain with
+the library, and the next query reconnects lazily. Other DB drivers keep their
+previous lifecycle (closing an in-memory SQLite connection destroys its data).
+
+Keep the adapter as the factory default. An explicit native/custom driver
+override retains its own lifecycle. `releaseIdleConnection=false` opts out for
+custom session-state/lock requirements. Use nonpersistent PDO connections;
+PDO persistent sessions do not provide the same server-side release guarantee.
+Increasing polling delay alone never closes a connection. Lane registration
+itself opens no connection and starts no worker.
+
+Connection-lifecycle changes belong in the transport adapter. Preserve the
+shared connection for transactional publication; never close it inside a
+transaction or while a connection-scoped mutex is held. The native reservation
+method releases its mutex before returning. Keep all configured lanes covered
+when reducing worker counts; one single-lane worker cannot replace five
+different lane consumers. Closing idle DB sessions alone does not release the
+memory of resident PHP workers.
+
+The opt-in `cms-job/tests/job-idle-connection.php` verifies the effective site
+driver, idle reopen/close, transaction rollback, reservation mutex protection,
+isolated-child parent-session absence and acknowledgement, and in-process
+execution. It uses only a random private transport channel and disables domain
+recovery in its minimal application; it must not consume production lanes.
+
 ## Atomic enqueue without an outbox
 
 `yii\queue\db\Queue::pushMessage()` writes through `$this->db->createCommand()`.
