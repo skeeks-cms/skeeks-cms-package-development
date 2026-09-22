@@ -257,6 +257,14 @@ Creation controls still follow `canManageBackendShowings` and action permissions
 For a 0/1 activity filter, explicitly configure BoolField with an empty/all choice
 and preserve zero in its apply callback: a truthiness check would discard “No”.
 Keep the SQL column qualified and retain the grid's site/domain scope.
+For opt-in custom filters, declare their labels explicitly in
+`filtersModel.attributeLabels`, even when each field already has a `label`.
+`QueryFiltersWidget::_applyFilters()` removes hidden builder fields before
+`getEditData()` exports `filtersModel->attributeLabels()` as `availableColumns`.
+Labels inferred only from field definitions therefore disappear from the settings
+picker when those filters are hidden. Explicit model labels survive this step.
+Verify the settings metadata after applying visibility, not just the field callback.
+
 ## Grid renderer
 
 The default renderer is `GridViewWidget`. Important settings include:
