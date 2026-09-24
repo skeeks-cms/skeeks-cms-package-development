@@ -41,6 +41,11 @@ substitution in suggestions. Full-results links and submission retain the origin
 query, since the full page now searches all spellings itself.
 Brands use their `logo` relation, not `image`. Product matching includes brand name.
 
+`SuggestQuery::applyProduct()` adds exact positive numeric product-ID matching
+inside the existing site, visibility and content constraints, with ID matches
+ranked before text/SKU matches. Both suggestions and full results use it. Do not
+apply an ID `orWhere()` to the complete scoped query or match partial IDs with LIKE.
+
 The shop full-results template uses `StorefrontSuggest::productQuery()` and the
 same navigation providers through `page()`. `SuggestQuery::applyAll()` combines
 original and transliterated conditions in SQL before LIMIT/OFFSET; original
