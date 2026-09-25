@@ -215,6 +215,9 @@ Read the relevant reference completely before acting:
 - For API keys and other external-service secrets referenced by database
   records but supplied by project configuration, read
   [references/external-service-secrets.md](references/external-service-secrets.md).
+- For component settings levels (default/site/user), which record
+  administration edits and how programmatic writers must save, read
+  [references/component-settings.md](references/component-settings.md).
 
 For a complete backend UI implementation or migration, also follow the
 installed package runbook at `skeeks/cms-backend/BACKEND_UI_GUIDE.md`. Treat
