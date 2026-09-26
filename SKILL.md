@@ -245,6 +245,10 @@ API integration, read
 For storefront profiling, HTML compression and product-list query batching, read
 [storefront-performance.md](references/storefront-performance.md).
 
+For schema.org markup of product cards versus section/filter listings
+(CollectionPage, ItemList, no Product on listings), read
+[storefront-structured-data.md](references/storefront-structured-data.md).
+
 For asynchronous storefront search, suggestion visibility, session locks and
 read-only price context, read [storefront-search.md](references/storefront-search.md).
 
