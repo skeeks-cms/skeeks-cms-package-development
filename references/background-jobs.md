@@ -108,6 +108,11 @@ must obtain `created_at` from `TimestampBehavior`, not from
   such as `is_running` on a scheduler row only protects that row from itself;
   a full and an incremental job over the same supplier are different rows over
   the same data. Use a `resource_key` derived from the entity.
+- Related native operations may share one installation-level resource lock while
+  keeping a distinct dedup key per operation. This serializes different catalog
+  updates without discarding one as a duplicate of another; a repeat of the same
+  operation still uses skip. Scope keys to the data rather than multiplying jobs
+  by historical site fields when an installation operates as one site.
 - Resource locks live in their own table keyed by `resource_key`, acquired with
   `INSERT`. The primary key makes the acquisition atomic; a read-then-write
   check would race.
@@ -206,14 +211,11 @@ transactional and scoped to the current CMS site. Existing commands and their
 jobType bridge remain supported. No second schedule table is introduced.
 
 `CmsAgentComponent::getScheduleChanges()` is the read-only configuration diff
-used by both the admin load-button count and `loadAgents()`. Since cms-agent 3.2.5,
-it returns create/update groups and an empty legacy delete group. Missing
-configuration never authorizes deletion; removal requires a separate explicit
-administrator action or targeted migration. Execution recalculates the diff in
+used by both the admin load-button count and `loadAgents()`. It returns create and update groups; the legacy delete group stays empty; execution recalculates the diff in
 its transaction. Compare only configuration-owned fields, preserve activation
 and execution dates/flags, and ignore JSON formatting/object-key order while
 preserving payload value types. An entirely empty configuration retains the
-legacy no-op behavior. Hide the load button when every group is empty.
+legacy no-op behavior. Hide the load button when every group is empty; never infer deletion permission from a missing configuration entry.
 
 The standard admin form exposes executionMode, registered job_type and a JSON
 object payload. Lane selection belongs to the type definition. Server-side
@@ -226,6 +228,64 @@ and shares the scheduled push's deduplication key and skip policy.
 `CmsAgentComponent::$onHitsEnabled` runs the whole scheduler synchronously from
 a web request. Leave the default alone for compatibility, but any project with
 a cron or worker container should set it to `false`.
+
+### Upgrading a command schedule in place
+
+For existing package-owned command schedules, keep the original route key in
+commands and add jobType/jobPayload. CmsAgentModel resolves this bridge both
+from a raw config array and from an instantiated CmsAgent. Existing rows without
+stored job_type switch immediately, without loading schedules or modifying
+IDs, dates, activation or intervals. An explicit stored job_type still wins.
+Moving the same route to jobs under a new job: key instead makes the loader
+delete/recreate the system schedule and loses that identity.
+
+Job permissions must name an existing RBAC permission, not an assumed controller
+route. For admin-only maintenance in the scheduler, use the same stable
+CmsManager::PERMISSION_ROLE_ADMIN_ACCESS contract as the scheduler controller.
+A route string absent from authManager hides the button and rejects both status
+and manual push, even if that route appears in a package's old role config.
+Verify the permission exists and the intended role inherits it at rollout.
+
+The domain package owns its registry type, permission, allowed console route,
+resource and deduplication keys, and declares compatible cms-agent/cms-job
+dependencies. For a command operating on installation-wide tables, use a shared
+key rather than a site or schedule ID. A console command must return nonzero
+on failure; a caught exception printed to stdout otherwise produces a false
+successful job. Keep backup files private, separate from diagnostic artifacts.
+
+cms-agent/tests/package-command-bridge-smoke.php accepts a package common config
+and verifies the bridge, fresh-site registration, preserved schedule state,
+route allowlist, cross-site deduplication and missing-runtime rejection on
+SQLite in memory. Domain rollout and retention behavior belong in the owning
+package's documentation.
+
+### Native handlers retaining legacy schedules
+
+A package may keep a historical commands route key as schedule identity while
+binding jobType to a native handler with empty payload. This is only scheduler
+compatibility; it does not require ConsoleCommandJobHandler or running a console
+route. Keep the type name and accept old harmless payloads during cutover so
+already queued run IDs remain executable. Install new classes before the new
+registry config and restart consumers; do not rewrite run history.
+
+For direct-file deployment, account for the deployment process umask: mkdir
+with mode 0755 under umask 0077 still creates an unreadable 0700 directory.
+Explicitly set application source-directory permissions and verify handler
+instantiation plus service/SQL readability as the actual application user,
+not root, before accepting the rollout.
+
+Extract a domain service shared by the native handler and retained CLI entry
+point. Native handlers report actual work through JobReporterInterface and
+propagate errors/cancellation. For long streaming work, callbacks must renew
+the lease during execution, not only at the beginning and end.
+
+The worker's already instantiated CMS component may hold settings for another
+site. When a domain uses site-specific component settings, clone it, restore
+callAttributes, set cmsSite from JobContext and clear cmsUser, then apply
+getSettings(false). This preserves project defaults while avoiding both stale
+site overrides and mutation of shared worker state. Fail if a referenced run
+site no longer exists. Do not confuse site-specific retention settings with
+the data scope: an installation-wide cleanup still needs a shared lock.
 
 ## Administration
 
@@ -747,3 +807,58 @@ key/type in a batched query. Do not copy a status onto the domain record or infe
 success from schedule timestamps. Missing history or unavailable configuration
 is unknown, never success. Apply the job type's permission before exposing its
 result, and use the same snapshot for the column and its filter.
+For a resumable pass over records that can remain pending, progress counts attempted records in that pass. Count unvisited work after the cursor, not all pending records: otherwise a deferred record is counted once as processed and again in the denominator. Keep the backlog separate from pass completion; report deferred work with warnings and bounded diagnostic details instead of implying successful application.
+
+## One-time replacement of legacy schedules
+
+CmsAgentComponent::getScheduleChanges/loadAgents creates and updates configured schedules; it never deletes records missing from configuration (cms-agent 3.2.5+). Keep the legacy delete result key empty for compatibility. Removal requires a separate explicit administrator action or targeted migration. Migration-owned schedules absent from configuration should use is_system=0, including for compatibility with older loaders. Reconciliation of
+an existing configured command preserves its is_active state, so a migration can
+retain the old command definition while disabling its existing schedule. Preserve
+existing native job payloads and activation when migrating an already configured
+site. Queue registration and provisioning the worker process are separate concerns;
+keep worker provisioning with the deployment/hosting owner.
+
+A legacy scheduler's is_running flag can outlive its process after an abnormal
+exit. Do not treat that boolean alone as process liveness during a cutover.
+After stopping producers, use verifiable execution evidence before clearing a
+stale flag; unavailable evidence must remain an explicit failure. Clear it in
+the same transaction as schedule replacement. A local process inspection is
+not a distributed lock and does not replace stopping producers on all hosts.
+
+### Automatic expired-run recovery
+
+The standard cms-job queue consumer invokes JobRecovery at startup and between
+jobs, throttled to once per minute per consumer. It reuses the same fenced
+reapExpired operation as worker/reap. Only declared idempotent jobs with attempts
+remaining may retry; cancellation requests finalize as cancelled, other exhausted
+or unsafe jobs as timed_out. Terminal recovery clears overlap deduplication.
+Live leases remain untouched. This is polling, not a timer interrupting handlers:
+when all workers are busy or down, an independently scheduled worker/reap is
+needed for bounded recovery latency. Restart workers after package deployment.
+
+### Serial parent workflows
+
+Use CmsJobComponent::pushChild for child operations: it records parent_id,
+root_id and trigger_type=child while retaining an explicit trigger_ref for
+domain history. Keep domain screens selecting the same child job types and
+domain references for both manual and scheduled starts; parent linkage must
+not replace the domain reference.
+
+For a serial workflow, persist the active child ID and cursor in the same DB
+transaction as child publication (the DB queue uses the same connection).
+An unfinished child means wait, not publish again. A completed child is not
+necessarily successful: inspect its terminal status and domain result.
+A workflow that must stop across future scheduled runs after uncertainty needs
+a durable domain-owned stop latch. Queue overlap/dedup alone only protects
+active executions and is not that latch. Domain-specific eligibility,
+acknowledgement and failure policies belong in the consuming package.
+
+### Commit work before reporting progress
+
+A long maintenance transaction must not include job reporter writes on the
+same DB connection. Such heartbeats remain uncommitted, hold run/lease locks
+and can block recovery and unrelated workers. Commit bounded, idempotent
+domain batches before reporting progress; cancellation preserves committed
+batches and a retry recomputes the remainder. Atomic domain receipt application
+is a separate case: keep each individual receipt and its revision in one short
+transaction, never wrap the whole job in it.

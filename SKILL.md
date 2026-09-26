@@ -61,6 +61,11 @@ Choose the owning package before editing:
 - `skeeks/cms-mcp`: MCP/REST transports, tool contracts and API services;
 - `skeeks/cms-oauth2-server`: OAuth resources, clients, codes and tokens.
 
+Keep OAuth client transport opt-ins in the canonical `cms-mcp/scripts`
+clients; do not fork authorization flows in projects. The package's `AGENTS.md`
+owns client flags and endpoint validation rules; project memory owns the
+approved deployment origin and its transport choice.
+
 ## Building a section or cabinet
 
 Start with the existing provider for each part of the feature:
@@ -254,3 +259,6 @@ Verify in proportion to the blast radius:
    active filters, simple controllers and multi-action controllers.
 5. Check light and dark semantic variables when adding reusable CSS.
 6. Recheck Git diff and do not stage or commit unrelated work.
+
+For image preview encoding, explicit/default quality and unchanged binary
+responses, read [references/image-preview-response.md](references/image-preview-response.md).

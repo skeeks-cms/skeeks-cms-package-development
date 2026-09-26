@@ -1245,6 +1245,24 @@ stored mode to the opposite mode, reload, confirm
 that the inline bootstrap appears before the first stylesheet and that both
 responses contain one shared theme script.
 
+## Third-party widgets inside the backend shell
+
+Backend UI styles bare elements under `html[data-sx-theme]` (for example
+`html[data-sx-theme] pre` in `cms-backend` `ui.css` is a generic code
+surface). A widget that renders its own internal markup with such elements,
+like CodeMirror rendering every editor line as a `pre`, is broken by these
+rules. Do not add widget exceptions to the shared backend layer.
+
+The widget package owns the integration: ship an asset bundle registered by
+the widget itself, scope every rule to `html[data-sx-theme]` so non-backend
+pages keep the stock look, restore the widget's own box model with a more
+specific selector, and take colors from the `--sx-color-*` / `--sx-form-control-*`
+variables so light and dark modes follow the shared switcher. Apply theme
+colors only to the widget's default skin so explicitly selected widget themes
+keep their palette. Reference implementation:
+`skeeks/yii2-widget-codemirror` `CodemirrorBackendAsset`
+(`assets/sx-codemirror.css`, release 1.0.6).
+
 ## Manual controller-action links
 
 `BackendModelAction` and the standard backend action widgets register their

@@ -924,3 +924,14 @@ At minimum verify:
 Run `php -l` on changed PHP files and a runtime smoke test for a new renderer.
 Use browser testing with multiple authorized users when the page behavior
 depends on record count or permissions.
+
+## Delegating related action access
+
+When domain operations must follow a model's settings access, evaluate the
+controller's access and its update action's isAllow with the same current
+model. Reuse this predicate for tabs and hidden read/write endpoints; keep
+operation eligibility and POST guards separately. Do not replace action access
+with a role-name check: that loses action permissions and model-aware callbacks.
+The delegated action must not call back into the same predicate. Avoid resolving
+the filtered modelActions collection from access callbacks because collecting
+visible model actions can recursively evaluate those callbacks.
