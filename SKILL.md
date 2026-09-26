@@ -238,7 +238,8 @@ Executable source remains the final source of truth.
 For SQL conditions in per-model permission checks, follow
 [model-access-queries.md](references/model-access-queries.md).
 
-For task status transitions, timer side effects and API integration, read
+For task status transitions, timer side effects, task comments/results and
+API integration, read
 [task-workflow.md](references/task-workflow.md).
 
 For storefront profiling, HTML compression and product-list query batching, read
