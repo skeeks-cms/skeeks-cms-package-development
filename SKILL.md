@@ -248,6 +248,10 @@ For storefront profiling, HTML compression and product-list query batching, read
 For asynchronous storefront search, suggestion visibility, session locks and
 read-only price context, read [storefront-search.md](references/storefront-search.md).
 
+For ecommerce dataLayer events, the single purchase source, order-item product
+lines and fractional quantities, read
+[storefront-ecommerce.md](references/storefront-ecommerce.md).
+
 ## Validate shared changes
 
 Verify in proportion to the blast radius:
