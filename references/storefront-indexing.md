@@ -44,6 +44,20 @@ conservative — when visibility cannot be determined, nothing is excluded, and
 filters by properties or country stay in the sitemap (their empty pages carry
 `noindex`).
 
+## 404 page
+
+`cms` routes errors to `cms/error/error`; `base\Controller::render` resolves
+the view through the theme, so `theme-unify-shop`
+`views/modules/cms/error/error.php` overrides the core
+`@skeeks/cms/views/error/error` for shops. For 404 it renders navigation:
+`ShopSite::catalogMainCmsTree` and its active children (without free-link
+`redirect` sections), falling back to active level-1 sections when a site has
+no catalog, plus a `contacts`/`kontakty` level-1 section and the site phone.
+It keeps HTTP 404, registers meta robots `noindex, follow`, gets no canonical
+(`cms/error` is not in the CanUrl list) and never redirects. Navigation
+lookups are wrapped in `try/catch` so the error page cannot fail. Other status
+codes render the core view.
+
 ## SEO templates
 
 `{=minMoney}` in tree-type meta templates is replaced with the listing's

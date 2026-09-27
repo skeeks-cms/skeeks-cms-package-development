@@ -256,8 +256,8 @@ For ecommerce dataLayer events, the single purchase source, order-item product
 lines and fractional quantities, read
 [storefront-ecommerce.md](references/storefront-ecommerce.md).
 
-For canonical URLs, noindex of empty listings, stock-aware sitemap exclusion
-and the sitemap job, read
+For canonical URLs, noindex of empty listings, stock-aware sitemap exclusion,
+the sitemap job and the shop 404 page, read
 [storefront-indexing.md](references/storefront-indexing.md).
 
 ## Validate shared changes
