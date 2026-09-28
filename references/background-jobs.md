@@ -839,6 +839,32 @@ commands remain single-pass and do not acquire the native resource lock; avoid
 parallel legacy schedules. Cleanup covers terminal history and private log/CSV
 artifacts only, never arbitrary working directories or CMS storage files.
 
+### Managed temporary workspaces
+
+New handlers obtain temporary input/intermediate files with
+`$context->getWorkspace()->path('offers.jsonl')`; no per-handler cleanup command
+is needed. Read the active cms-job/WORKSPACES.md for the API and rollout contract.
+The common root is `@root/console/runtime/cms-jobs/workspaces`, with per-run
+`runs/<id>/data` directories and private ownership manifests. The context holds
+an OS flock through the handler lifetime; runner finally releases it on every
+outcome. A dead DB lease does not release a live old process's filesystem lock.
+Same-run continuations reuse data; a manual new run gets a new directory.
+
+The system `cms-job.cleanup-workspaces` schedule runs hourly, retaining success
+for 7 days and warnings/failures/cancellation/timeouts for 14 days from finished_at.
+Unfinished, held, unknown and missing-owner workspaces are retained. Cleanup uses
+the same locks, a same-filesystem quarantine and a durable removal receipt for
+process-crash recovery. History cleanup/model deletion must preserve owners while
+resources remain; transient jobs using workspaces retain terminal history too.
+
+The protocol assumes trusted cooperating code on a local filesystem with flock
+and atomic rename. Do not share workspaces with child jobs or detached processes.
+Logs/error CSV remain reporter artifacts; persistent outputs and shared caches
+need separate ownership. Legacy run-ID folders may be listed explicitly in
+historyProtectionRoots to protect history only; this never authorizes adoption
+or deletion. Deploy the package and consumer adapter together and drain old
+workers before a separately approved legacy cleanup.
+
 ### Automatic expired-run recovery
 
 The standard cms-job queue consumer invokes JobRecovery at startup and between

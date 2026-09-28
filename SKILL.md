@@ -82,6 +82,9 @@ Start with the existing provider for each part of the feature:
   For registering a channel/type/handler and operating the site dispatcher,
   first read the active `skeeks/cms-job/README.md` and `DEPLOYMENT.md`
   ([published guide](https://github.com/skeeks-cms/cms-job/blob/master/README.md)).
+  For temporary inputs and intermediate files, also read the active
+  `skeeks/cms-job/WORKSPACES.md` and use the managed `JobContext` workspace.
+  Its lifecycle contract is summarized in `references/background-jobs.md`.
 - Persistent in-cabinet notifications: `CmsWebNotify`, following
   [backend-notifications.md](references/backend-notifications.md). Transient
   UI feedback uses the standard `sx.notify.*` API in
