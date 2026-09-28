@@ -825,6 +825,20 @@ stale flag; unavailable evidence must remain an explicit failure. Clear it in
 the same transaction as schedule replacement. A local process inspection is
 not a distributed lock and does not replace stopping producers on all hosts.
 
+### Package-owned history and diagnostic cleanup
+
+cms-job declares native `cms-job.cleanup` and `cms-job.cleanup-logs` types on
+maintenance, with daily/hourly cmsAgent.jobs defaults when cms-agent is installed
+(supported minimum 3.2.5). Apply with cmsAgent/init; repeated reconciliation keeps
+existing activation and execution dates. Configuration does not provision the
+scheduler tick or worker. Both types share one installation-wide resource key,
+with distinct installation-wide dedup keys to cover multi-site installations.
+They reuse the CLI cleanup services, heartbeat/check cancellation, and continue
+bounded batches in the same run until the expired backlog drains. Legacy CLI
+commands remain single-pass and do not acquire the native resource lock; avoid
+parallel legacy schedules. Cleanup covers terminal history and private log/CSV
+artifacts only, never arbitrary working directories or CMS storage files.
+
 ### Automatic expired-run recovery
 
 The standard cms-job queue consumer invokes JobRecovery at startup and between
