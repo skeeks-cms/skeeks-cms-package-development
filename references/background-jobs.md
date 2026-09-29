@@ -354,6 +354,12 @@ After a successful status response, JobButton emits a bubbling `sx:job-status`
 DOM event with `detail.run` (including null when no run exists). Consumers may
 refresh dependent UI after a newly completed run; compare the initial run id
 and terminal state to avoid a reload loop when restoring finished history.
+Domain status adapters must prefer a terminal run's `error_message` over its
+last `progress_message`. An executor can fail before publishing a final result;
+retaining the observer's progress text must not make that failure look active.
+Status polling remains read-only; publishing an operation requires a separate
+authorized mutation endpoint.
+
 `progress_message` is limited to 255 characters. Domain handlers must keep the
 stage summary within that bound and store complete remote diagnostics in the
 result/error fields; a failed progress flush can otherwise strand a running row.
