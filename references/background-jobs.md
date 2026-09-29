@@ -225,6 +225,21 @@ broken schedules can be disabled with their routing/payload unchanged, but
 cannot be reactivated while invalid. Manual push leaves schedule dates intact
 and shares the scheduled push's deduplication key and skip policy.
 
+For domain operations with saved configurations, register a
+`CmsAgentComponent::$jobTargets` provider keyed by job type. The consumer
+implements `JobTargetProviderInterface`: label/items for the current site,
+selected(payload) for editing, and payload(id, siteId) for server-side
+resolution. The standard schedule form displays a searchable target choice
+and hides JSON for those types. `CmsAgentModel::validateJobTarget` rebuilds the
+payload from the selected object; hidden inputs are not an authorization
+boundary. Keep domain queries in the consumer, not in cms-agent or cms-job.
+Types without a provider retain the JSON form. Preserve unchanged system
+payloads and the ability to disable an invalid schedule. The reference consumer
+is cms-export; deploy the provider contract and consumer together (cms-agent
+3.3 / cms-export 1.1 release line). Queue publication stays asynchronous even
+when invoked from a retained legacy CLI route; use supported trigger values
+such as `manual`, not a new ad-hoc `console` value.
+
 `CmsAgentComponent::$onHitsEnabled` runs the whole scheduler synchronously from
 a web request. Leave the default alone for compatibility, but any project with
 a cron or worker container should set it to `false`.
