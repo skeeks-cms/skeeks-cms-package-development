@@ -899,6 +899,15 @@ a durable domain-owned stop latch. Queue overlap/dedup alone only protects
 active executions and is not that latch. Domain-specific eligibility,
 acknowledgement and failure policies belong in the consuming package.
 
+A domain batch summary can extend the cms-job controller via `controllerMap`
+and render its standard operation view below the domain table. Delegate other
+job types and retain the base access/actions. Keep detailed child projections
+opt-in on progress requests so list polling stays lightweight. Use the parent's
+site snapshot plus child results: after a stopped serial batch, untouched items
+are not started, not failed. Continue observing an active child even after its
+parent finishes or is cancelled. Read only bounded result fields rather than
+loading every child's full console log on each poll.
+
 ### Commit work before reporting progress
 
 A long maintenance transaction must not include job reporter writes on the
