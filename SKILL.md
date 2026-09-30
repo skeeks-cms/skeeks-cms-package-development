@@ -248,6 +248,10 @@ API integration, read
 For storefront profiling, HTML compression and product-list query batching, read
 [storefront-performance.md](references/storefront-performance.md).
 
+For carrier callbacks, shared automatic delivery recalculation, server-owned
+quote freshness, checkout verification and cart totals, read
+[storefront-delivery.md](references/storefront-delivery.md).
+
 For schema.org markup of product cards versus section/filter listings
 (CollectionPage, ItemList, no Product on listings), read
 [storefront-structured-data.md](references/storefront-structured-data.md).
