@@ -142,6 +142,13 @@ Per-item errors go to a streamed CSV artifact through
 dedicated errors table: at import scale that table would outgrow everything
 else and be read once.
 
+The cms-export adapter exposes `ExportResult::itemSkipped($id, $reason)` for
+expected exclusions such as missing required offer data. `ExportJobResult`
+increments skipped and processed counts and records a warning with the product
+ID and reason. Do not count an excluded product as successful or hide it by
+zeroing errors; unexpected failures still use `itemFinished($id, $error)`.
+Deploy the base result and job adapter together with consumers of this method.
+
 ## Progress writes must be buffered
 
 A handler may call `advance()` per item. The reporter buffers counters and
