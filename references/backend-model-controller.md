@@ -303,6 +303,17 @@ Use `on init` when the controller must constrain or extend the generated query:
 Do not move table-only columns, exports or bulk-selection controls into the
 shared collection-state API.
 
+Keep one SQL row per primary entity before applying a collection's LIMIT and
+OFFSET. ActiveRecord's deduplication after a has-many JOIN does not repair the
+data provider count or fill shortened pages. A membership-only filter should
+use IN/EXISTS against the related table, and an empty filter must not add that
+join. When joining child matches to their parent, make the parent-key projection
+unique first. Audit neighboring has-many filters and preserve existing grouping,
+computed price/quantity columns, HAVING conditions and sorting; a blanket
+DISTINCT/GROUP BY is not a substitute for understanding these query contracts.
+Verify both the provider total and the concatenated IDs of every page against
+an independent unique-entity query, including overlapping multi-select values.
+
 For customer services and tasks, prefer a real Grid when records have stable
 comparable fields. Set `presentation => 'client'` and build the first column
 with `sx-collection-cell--entity`, a shared `__media` marker and stacked
