@@ -172,6 +172,8 @@ Do not update the shared vendor index unless the user explicitly asks.
 
 Read the relevant reference completely before acting:
 
+- For model activity logs, readable relation snapshots, behavior ordering and
+  transaction rollback, read [references/model-activity-log.md](references/model-activity-log.md).
 - For package migration registration, cms/migrate compatibility and migration
   history identity, read
   [references/package-migrations.md](references/package-migrations.md).
