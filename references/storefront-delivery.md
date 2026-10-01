@@ -6,7 +6,7 @@ the order totals. Verify all three steps and reload the cart when changing a
 carrier adapter; an API response alone does not prove the checkout price works.
 
 The carrier-specific callback schema belongs in its delivery package. For
-`skeeks/cms-shop-delivery-cdek`, see its `README.md` for the widget v3 contract.
+`skeeks/cms-shop-delivery-cdek`, see its `README.md` for the widget contract.
 Keep optional price calculation compatible with configurations where the
 delivery form does not render a price input.
 
@@ -63,6 +63,9 @@ widget and retain fixed-price opt-out.
 Invalidate hidden maps without rebuilding them. Defer provider scripts/points
 until the buyer opens the map, and unload its iframe after confirming a point;
 server-side price refresh must remain independent of that map's presence.
+When upgrading a carrier widget, update its server protocol at the same time.
+Prefer provider-supported loading by visible bounds over fetching all pickup
+points; marker loading must stay independent of tariff/quote recalculation.
 Checkout widgets must update their calculation feedback from the response even
 when the theme updates totals without rendering the delivery widget again.
 Scope response handling to the current order and delivery, insert error text
