@@ -66,6 +66,10 @@ server-side price refresh must remain independent of that map's presence.
 When upgrading a carrier widget, update its server protocol at the same time.
 Prefer provider-supported loading by visible bounds over fetching all pickup
 points; marker loading must stay independent of tariff/quote recalculation.
+An explicit initial map centre can avoid geocoding at startup. Validate both
+coordinates together and convert their order to the provider's contract;
+camera settings must never change the shipping origin/destination or quote.
+Map access, text geocoding and carrier authorization are separate dependencies.
 Checkout widgets must update their calculation feedback from the response even
 when the theme updates totals without rendering the delivery widget again.
 Scope response handling to the current order and delivery, insert error text
