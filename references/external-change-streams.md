@@ -89,3 +89,20 @@ source lock while the saving transaction already owns membership rows. Discover
 missing source rows from the committed dirty journal outside the membership
 transaction instead. A two-connection regression must hold a source row locked
 and prove another membership insertion can still commit.
+
+An explicit audit of legacy local source identities must not advance a stream
+cursor or infer revocation from unordered absence. Fetch current ordered state,
+validate the complete response, then use the normal transactional applier and
+current policy. Reapply acknowledged revokes only for explicit audits; preserve
+idempotency for normal polling. Protect a parent dictionary while any local
+product remains, including inactive cards. Remove permitted saved filters and
+the empty parent atomically; do not detach retained products to make it empty.
+Verified by cms-shop/tests/gpd-reconcile-removal.php.
+
+An explicit audit of legacy local identities can repair missing server history
+only after an authoritative current entitlement check. Commit any resulting
+ordered exclusion state and event under the same stream lock and transaction;
+ordinary batch reads retain their unordered absence semantics. Make this
+write-producing audit opt-in and document it in the domain API. Repeated audits
+must reuse the existing exclusion revision. Bound the submitted identities and
+throttle resumable maintenance separately from ordinary change receipt.

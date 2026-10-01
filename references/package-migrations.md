@@ -72,6 +72,10 @@ vendor directories and otherwise follows standard Yii creation semantics.
 
 ## Verification
 
+When a migration checks columns added by an earlier migration, request a fresh
+schema with `getTableSchema($table, true)`. Persistent schema cache can still
+describe the pre-update table and falsely report missing prerequisites.
+
 `skeeks/cms/tests/migration-loader.php` runs on a private SQLite memory database:
 mixed migration styles, stable history identity, ordering, up/down/reapply,
 creation, CLI selection, discovery, namespace diagnostics and duplicate-source

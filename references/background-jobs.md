@@ -939,3 +939,13 @@ domain batches before reporting progress; cancellation preserves committed
 batches and a retry recomputes the remainder. Atomic domain receipt application
 is a separate case: keep each individual receipt and its revision in one short
 transaction, never wrap the whole job in it.
+
+For a serial, resumable job whose steps do not need independent execution,
+keep one native run/resource lock and project persisted per-step counters as
+rows rather than creating child jobs just for presentation. Persist step start,
+completion and initial total in bounded result metadata; a current delivery's
+`started_at` does not describe elapsed time across same-run continuations.
+Historical results without timing or reason fields must show unknown values,
+not inferred durations or fabricated explanations. Detailed projections stay
+opt-in and scoped to the current site. A `controllerMap` chooses one class;
+projects with multiple domain extensions must explicitly compose that class.
