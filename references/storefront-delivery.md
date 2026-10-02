@@ -93,6 +93,13 @@ saves omit the chosen tariff. Reject asynchronous options for an unsaved or
 changed address, even if the response belongs to the current order. Carrier
 quote calculation does not imply waybill creation or courier booking.
 
+Address entry must save on debounced `input`, with `change` as an immediate
+flush, so the last focused address field can load tariffs without a button or
+page reload. Cancel pending saves when the delivery is deactivated. Invalidate
+the displayed tariff revision on address edits and consume a response revision
+only when the address is complete and its visible widget can request options;
+an incomplete-form response is not a successfully loaded tariff list.
+
 Verify quantity increases/decreases, add/remove, reopen, expired quotes,
 destination/tariff/config changes, final forced verification, failures and
 unavailable tariffs, valid zero prices, fixed-mode opt-out and completed-order
