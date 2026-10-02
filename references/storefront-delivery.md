@@ -80,6 +80,9 @@ in hidden tabs. Scope input selectors and document event namespaces to each
 widget; one adapter instance must not unregister another's cart listener.
 Unload a map already built when its delivery tab is deactivated, not just when
 a destination is confirmed. Gate lazy requests on the active delivery.
+Check actual widget visibility rather than the initial `sx-hidden` class:
+the storefront cart can switch tabs with jQuery `show()`/`hide()` while retaining
+that class. Cover both directions from the initially selected delivery method.
 
 Courier adapters must verify the provider city identifier, store the complete
 address in handler data and map it to standard order delivery fields in
