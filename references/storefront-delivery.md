@@ -75,7 +75,26 @@ when the theme updates totals without rendering the delivery widget again.
 Scope response handling to the current order and delivery, insert error text
 as text (not HTML), and clear a stale error after a successful calculation.
 
+Multiple carrier delivery methods can render checkout widgets simultaneously
+in hidden tabs. Scope input selectors and document event namespaces to each
+widget; one adapter instance must not unregister another's cart listener.
+Unload a map already built when its delivery tab is deactivated, not just when
+a destination is confirmed. Gate lazy requests on the active delivery.
+
+Courier adapters must verify the provider city identifier, store the complete
+address in handler data and map it to standard order delivery fields in
+`modifyOrder()`. Include destination and sender/recipient modes in freshness
+keys and validate allowed modes server-side. Separate a disabled presentation
+select from the canonical submitted tariff input; otherwise concurrent form
+saves omit the chosen tariff. Reject asynchronous options for an unsaved or
+changed address, even if the response belongs to the current order. Carrier
+quote calculation does not imply waybill creation or courier booking.
+
 Verify quantity increases/decreases, add/remove, reopen, expired quotes,
 destination/tariff/config changes, final forced verification, failures and
 unavailable tariffs, valid zero prices, fixed-mode opt-out and completed-order
 stability. Prefer isolated tests; live cart checks do not require placing orders.
+
+When several delivery methods share a checkout-model class, a rendered widget
+must match both the model class and delivery ID. Otherwise inactive forms
+receive the active method's state and endpoints.
