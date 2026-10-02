@@ -921,10 +921,28 @@ a durable domain-owned stop latch. Queue overlap/dedup alone only protects
 active executions and is not that latch. Domain-specific eligibility,
 acknowledgement and failure policies belong in the consuming package.
 
-A domain batch summary can extend the cms-job controller via `controllerMap`
-and render its standard operation view below the domain table. Delegate other
-job types and retain the base access/actions. Keep detailed child projections
-opt-in on progress requests so list polling stays lightweight. Use the parent's
+### Domain run reports
+
+Every run gets the standard operation card. A job type that needs a domain
+report (stage table, per-site results) declares it in its definition:
+`'report' => SomeReport::class` (cms-job >= 1.4.0), implementing
+`JobRunReportInterface` (`canView`, `render`, `details`), usually by extending
+`skeeks\cms\job\reports\JobRunReport` (`$view`, optional `$permission`). The
+standard `AdminCmsJobRunController` renders the report above the card, so the
+report view draws only its own section and never re-renders the card; it
+receives `model`, `details` and `detailsUrl`, and polls `progress` with
+`details=1`, reading `data[<id>].report`. Details are added only on that opt-in,
+only for runs of the current site and only when `canView` allows.
+
+Never replace `cmsJob.controllerMap.admin-cms-job-run` from a package, and never
+make projects compose report controllers: the map holds one class per
+application and `yiisoft/config` throws a duplicate-key error when two vendor
+packages set it. The registry key is the job type, so reports of several
+packages coexist without project configuration. References:
+`cms-shop` `GpdReconcileReport`, `cms-hosting` `AutoSiteUpdateReport`.
+
+Keep detailed child projections opt-in on progress requests so list polling
+stays lightweight. Use the parent's
 site snapshot plus child results: after a stopped serial batch, untouched items
 are not started, not failed. Continue observing an active child even after its
 parent finishes or is cancelled. Read only bounded result fields rather than
@@ -947,5 +965,5 @@ completion and initial total in bounded result metadata; a current delivery's
 `started_at` does not describe elapsed time across same-run continuations.
 Historical results without timing or reason fields must show unknown values,
 not inferred durations or fabricated explanations. Detailed projections stay
-opt-in and scoped to the current site. A `controllerMap` chooses one class;
-projects with multiple domain extensions must explicitly compose that class.
+opt-in and scoped to the current site through the domain run report contract
+above.

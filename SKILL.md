@@ -210,8 +210,9 @@ Read the relevant reference completely before acting:
   source-submission links, read
   [references/lead-ingestion.md](references/lead-ingestion.md).
 - For background jobs, the queue, run history, progress reporting, resource
-  locking, overlap and retry policy, and the active-record base-class rules for
-  high-write tables, read
+  locking, overlap and retry policy, domain run reports in the operation card
+  (never a package `controllerMap` override), and the active-record base-class
+  rules for high-write tables, read
   [references/background-jobs.md](references/background-jobs.md).
 - For durable receipt of external change streams, transactionally committed
   protocol cursors and receipt-versus-application boundaries, read
