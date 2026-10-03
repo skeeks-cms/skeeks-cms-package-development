@@ -23,5 +23,12 @@ without removing the permission scope or replacing it with an administrator
 role check. Verify both an allowed model and a model outside the visible set
 under an ordinary identity, plus the administrator path.
 
+Entity notification recipient selection must reuse that same visibility scope
+with each recipient's explicit identity. When visibility depends on child rows
+(such as submitted contacts), persist those rows before evaluating recipients.
+Use correlated EXISTS evidence to avoid multiplying parent rows in grids and
+counts; keep matching read-only. Verified consumer: CmsLeadQuery and
+CmsLead::availableManagerIds(), covered by cms-lead-company-access.php.
+
 Verified consumer: `cms-hosting/AdminDnsZoneController::getModel()`, whose
 manager scope joins the related deal for non-administrators.
