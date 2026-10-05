@@ -273,6 +273,12 @@ For canonical URLs, noindex of empty listings, stock-aware sitemap exclusion,
 the sitemap job and the shop 404 page, read
 [storefront-indexing.md](references/storefront-indexing.md).
 
+## Client-facing release notes
+
+Write release titles, descriptions and changelog entries in Russian, using
+plain language that clients can understand. Explain the visible improvement
+or fixed problem. Keep implementation details, internal filenames and test
+reports out of client-facing notes unless they help the client use the update.
 ## Validate shared changes
 
 Verify in proportion to the blast radius:
