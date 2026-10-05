@@ -613,6 +613,32 @@ partials. Account dropdowns and quick-create menus use the shared
 `sx-shell-header__menu*` contract; do not restore a cabinet-only profile-menu
 geometry or duplicate the admin dropdown rules in project CSS.
 
+The shared `cms-backend` layout treats `_footer` and `_quick-access` as
+optional product slots: it renders them only when the active theme's
+`pathMap` resolves them to an existing file. `cms-backend` itself ships no
+such files, so the UPA cabinet on the base `BackendTheme` renders neither.
+Do not add empty defaults to `@skeeks/cms/backend/views/layouts`:
+`UnifyThemeAdmin` (store and cashier cabinets in `cms-shop`) maps the backend
+views before its own, and an empty default there would hide its footer and
+quick-access panel. Every other slot the layout renders unconditionally must
+have a default in `cms-backend`; otherwise a cabinet without a product theme
+fails with `ViewNotFoundException` on every page.
+
+Storefront sites on the Unify site theme show the customer cabinet inside the
+site design (site header, footer and `cms-theme-unify-v2/src/views/upa`
+layout), not in the standalone backend shell. `BackendComponent::run()`
+triggers `beforeRun` before `initTheme()`, and `initTheme()` replaces
+`view->theme` whenever `themeClass` is set; the `upaBackend.beforeRun` hook in
+`cms-theme-unify-v2/src/config/web.php` therefore resets `themeClass` to
+`null` when the active site theme is a `UnifyTheme` whose `upa_layout`
+setting is `site` (the default) and the component still has the default
+`BackendTheme`, then prepends the Unify UPA views to the site theme. The site
+administrator switches a site to the standalone cabinet in the Unify theme
+settings («Личный кабинет» → «Отдельный кабинет», `upa_layout = backend`). A
+project that sets its own `themeClass` in code (for example `skeeks.com` with
+`ClientPortalTheme`) keeps its cabinet shell regardless of that setting. Do
+not move storefront cabinets to the backend shell by changing this default.
+
 Keep vendor component CSS structural. Map project identity into semantic
 variables instead of copying component selectors:
 
