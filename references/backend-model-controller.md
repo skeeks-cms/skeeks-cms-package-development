@@ -4,6 +4,7 @@
 
 - [Source of truth](#source-of-truth)
 - [Implementation workflow](#implementation-workflow)
+- [Validation in related forms](#validation-in-related-forms)
 - [Index action settings](#index-action-settings)
 - [Presentation modes](#presentation-modes)
 - [Page header and actions](#page-header-and-actions)
@@ -73,6 +74,28 @@ view option only when that action class explicitly supports it). Inherited actio
 must never derive those resources from the wrapper's application namespace.
 Point new menus and links at the package route, and test both routes until the
 compatibility wrapper can be removed.
+
+## Validation in related forms
+
+For a composite Yii `unique` constraint, attach the validator to the visible
+editable attribute and put the full ownership/value pair in `targetAttribute`.
+Attaching it to both attributes can put the first error on a hidden parent ID;
+with `skipOnError`, the visible field then receives no error. Use a clear
+domain-specific message on that field. Normalize phone/email values before the
+uniqueness validator so formatted input is checked against the saved value.
+Keep the actual parent attribute in the related form rather than a copied ID
+from another model. Verify duplicate creation, alternate formatting, editing
+the same record, changing into a duplicate and the standard ActiveForm error
+response. `cms/tests/company-phone-validation.php` exercises this contract.
+
+`ActiveFormAjaxBackend` owns the default submit-error feedback for standard
+backend AJAX forms. Its callback displays deduplicated `data.validation`
+messages, then falls back to `response.message`, then to actionable generic
+save-failure text. Render these messages as text, never server-provided HTML;
+use `role="alert"` and `--sx-form-error-color` for accessible theme-aware
+feedback. Preserve custom `clientCallback` overrides and normal Yii field/error
+summary updates. `cms-backend/tests/form-submit-errors.cjs` executes the actual
+default callback against validation, hidden-field, server and empty responses.
 
 ## Index action settings
 
