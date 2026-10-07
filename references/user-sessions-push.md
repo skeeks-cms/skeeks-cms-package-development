@@ -69,3 +69,7 @@ The explicit JSON supplies project_id when the app has no explicit projectId.
 Yii Config's injected $params is distinct from Yii::$app->params. The mobile
 package explicitly maps its own params namespace into the application for both
 web and console; verify credentials using the real application bootstrap.
+Use the actual yii entry point when verifying worker settings: it can define
+YII_ENV differently from a diagnostic script. Shared delivery configuration must
+reach both environments; check enabled/realm and credential lookup in the worker
+environment before considering provider authentication sufficient.
