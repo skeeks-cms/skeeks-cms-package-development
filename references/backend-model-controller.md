@@ -254,6 +254,14 @@ For saved representations on a standard index action, leave `backendShowings`
 unset or set it to `null`: BackendAction loads the available site/user records.
 `false` disables them; `true` is not a replacement for the iterable list.
 Creation controls still follow `canManageBackendShowings` and action permissions.
+Saved widget settings are addressed by both `configClassName` and `configKey`.
+`ConfigBehavior` defaults `configClassName` to the concrete owner class, so
+replacing a configured widget with a subclass silently stops loading the base
+class's saved filters and values. Preserve the original class through
+`configBehaviorData.configClassName` before the init event loads settings.
+If the subclass has already saved settings under its own class, keep a fallback
+for those records and pass the selected class in the editing configuration too.
+Verify actual persisted filter values, not only the visible filter controls.
 For a 0/1 activity filter, explicitly configure BoolField with an empty/all choice
 and preserve zero in its apply callback: a truthiness check would discard “No”.
 Keep the SQL column qualified and retain the grid's site/domain scope.
