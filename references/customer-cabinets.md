@@ -282,6 +282,14 @@ Never accept a posted company, project or service ID without resolving it
 through a query scoped to the current user. Assign owner, creator, safe status
 and other server-controlled fields in code.
 
+For customer emails that deliberately exclude personal data, link to the
+authenticated cabinet record by ID, not to a public bearer-code URL. Keep the
+cabinet's record-owner query restriction and reject guests explicitly before
+querying a nullable owner column. A cabinet permission alone is insufficient.
+Do not reintroduce private data through free-text comments, metadata or a
+shared staff email template. Domain packages own their notification allowlist;
+`cms-shop/AGENTS.md` documents the verified shop implementation and its tests.
+
 ## Collection presentation
 
 Choose presentation by collection shape:
