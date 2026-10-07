@@ -50,6 +50,8 @@ installs the package.
 Choose the owning package before editing:
 
 - `skeeks/cms`: CMS models, domain behavior and administration;
+- `skeeks/cms-mobile`: optional native-app integration and push delivery;
+  login sessions and the base devices profile remain in `skeeks/cms`;
 - `skeeks/cms-backend`: reusable backend and cabinet controllers, actions,
   widgets, filters and presentation assets;
 - `skeeks/cms-backend-admin`: administration-specific component wiring,
@@ -172,6 +174,8 @@ Do not update the shared vendor index unless the user explicitly asks.
 
 Read the relevant reference completely before acting:
 
+- For revocable browser/mobile sessions, remember-me and native push ownership,
+  read [references/user-sessions-push.md](references/user-sessions-push.md).
 - For model activity logs, readable relation snapshots, behavior ordering and
   transaction rollback, read [references/model-activity-log.md](references/model-activity-log.md).
 - For package migration registration, cms/migrate compatibility and migration
