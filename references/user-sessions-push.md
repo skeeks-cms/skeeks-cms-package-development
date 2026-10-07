@@ -56,6 +56,8 @@ stable per-recipient event key and an internal route. The destination still
 checks permissions when opened. Delivery outcomes belong to cms-mobile; execution,
 leases, continuation and history use cms-job. Provider acceptance is not proof
 of receipt or reading. Never introduce a second push queue or worker loop.
+Mobile delivery jobs use visible history with 30-day retention, including
+successful provider acceptance. They are event-triggered jobs, not periodic agents.
 
 Native bridge configuration is a presentation setting, not an authentication
 factor. Firebase server credentials stay in server deployment configuration;
