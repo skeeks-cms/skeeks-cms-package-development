@@ -58,6 +58,12 @@ leases, continuation and history use cms-job. Provider acceptance is not proof
 of receipt or reading. Never introduce a second push queue or worker loop.
 Mobile delivery jobs use visible history with 30-day retention, including
 successful provider acceptance. They are event-triggered jobs, not periodic agents.
+The mobile job report uses the cms-job per-type report contract. Store only
+safe sending-time device metadata in results: current installation ownership
+must not rewrite historical recipients after rebinding. Legacy projection may
+use an installation only when recipient, generation and realm still match;
+missing evidence remains unknown. Count acceptance, cancellation and failure
+through the standard reporter without claiming device receipt.
 
 Native bridge configuration is a presentation setting, not an authentication
 factor. Firebase server credentials stay in server deployment configuration;
