@@ -1,5 +1,26 @@
 # Third-party dependencies of shared packages
 
+## Browser asset repository and file contracts
+
+`skeeks/yii2-sx` supplies Underscore through `npm-asset/underscore: ^1.13.8`
+and its `Undescore` compatibility class publishes `@npm/underscore/underscore-min.js`.
+Keep the class name for existing `Core` and project consumers. The UMD build
+provides the global `_` required by the SkeekS browser runtime; ESM and Node
+builds are not substitutes for a normal script tag. In npm 1.13.8,
+`underscore-min.js` and `underscore-umd-min.js` are byte-identical; retain the
+historical filename instead of changing consuming script conventions.
+
+When changing an asset dependency, verify the versions returned by the actual
+Composer repository with `show --available --no-cache`, not `show --all`:
+the latter also includes installed versions which the repository may no longer
+offer. A GitHub tag alone does not prove Composer availability. Verify the
+archive's browser filename and the resolved AssetBundle graph as well as the
+version constraint. The Bower Underscore feed was verified to offer only up to
+1.13.0 while the npm feed offered 1.13.8; the Bower 1.13.0 archive lacked the
+historical `underscore-min.js` file and broke the shared runtime after update.
+
+## Advisory blocking
+
 Composer 2.9+ refuses, by default (`policy.advisories.block`), to select any
 package version covered by a security advisory during `composer update`.
 `--no-audit` and `-W` do not lift it; `composer install` from an existing lock
