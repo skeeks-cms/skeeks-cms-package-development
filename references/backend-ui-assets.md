@@ -338,6 +338,13 @@ Exclude action links, buttons and form controls from drag start. For file and
 form widgets, rebuild submitted hidden/select values from the new DOM order
 before firing their normal change workflow.
 
+File-preview links are drag surfaces in the AjaxFileUpload gallery. Do not
+exclude every `a` through its sortable `cancel` selector: the preview image is
+inside a link, so that blocks sorting from the image and can send its native
+drag to the upload drop zone as a duplicate file. Exclude `.sx-controlls` and
+form controls instead. Verify dragging from the image itself, unchanged file
+count, and agreement between DOM order and submitted select values.
+
 `BackendSortableWidget` and `BackendSortableAsset` are deprecated on-demand
 jQuery UI compatibility for `yii\jui\Sortable` callers that have not migrated.
 The Unify `JuiSortableWidget`/`JuiSortableAsset` names are thin deprecated
