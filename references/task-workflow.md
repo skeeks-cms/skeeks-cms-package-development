@@ -26,6 +26,13 @@ a verified accepted/paused state, with normal audit and recalculation events.
 
 ## Task comments and results
 
+Task-card descriptions use `cms/helpers/TaskContentHelper::render()` at output,
+without rewriting the stored value. It escapes raw-text/document tags before
+HTML parsing, then applies Yii HtmlPurifier with `Core.EscapeInvalidTags`.
+Literal technical examples such as an unclosed `<title>` stay visible and
+cannot swallow the page; normal rich-text formatting survives and unsafe
+attributes/URLs are removed. Keep this output boundary when extending the card.
+
 A task comment is a `CmsLog` with `log_type=comment`, `model_code=CmsTask`
 and `model_id` = task id; administration leaves `cms_company_id` and
 `cms_user_id` empty. The core `CmsLog` after-insert handler notifies the task
