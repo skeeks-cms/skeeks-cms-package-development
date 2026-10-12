@@ -97,6 +97,28 @@ feedback. Preserve custom `clientCallback` overrides and normal Yii field/error
 summary updates. `cms-backend/tests/form-submit-errors.cjs` executes the actual
 default callback against validation, hidden-field, server and empty responses.
 
+## Single-record domain operation forms
+
+When an operation on one record needs its own input (for example "the call
+failed: when to call back"), register a hidden `BackendModelUpdateAction`
+instead of a custom modal or endpoint. In `on initFormModels` replace
+`formModels` with the domain form model only, so unrelated record fields
+cannot block the operation; return dotted field keys such as
+`'noAnswer.next'` from the `fields` callback. In `on beforeSave` set
+`isSaveFormModels = false` and call the domain service that performs all
+writes in one transaction. The standard AJAX submit, validation display,
+success toast and window close/reload then stay on the shared contract.
+Open the action from the card with `BackendUrlHelper::enableEmptyLayout()`
+and `enableNoActions()` through `sx.classes.backend.widgets.Action`.
+
+The AJAX branch does not catch exceptions from `beforeSave`: put every user
+error into form validation and leave the service exceptions for genuine
+failures. A conditional rule with `when` must also declare `whenClient`;
+otherwise Yii client validation applies the rule unconditionally and blocks
+the first submit with a false error. Field hints are rendered as HTML, so
+encode record values placed in a `hint`. `skeeks/cms`
+`AdminCmsLeadController` `no-answer` is the reference implementation.
+
 ## Index action settings
 
 Configure these custom `BackendGridModelAction` properties:
