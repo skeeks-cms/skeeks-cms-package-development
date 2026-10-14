@@ -70,6 +70,20 @@ application-config merging and legacy discovery for that invocation; configure
 both options when isolating both kinds of sources. `create` never discovers
 vendor directories and otherwise follows standard Yii creation semantics.
 
+## New columns read by other packages
+
+A package release and its migration do not reach every site at the same
+moment: Composer installs the code first, and dependent packages may be
+updated without the owning one. When a new column of a shared model is read
+by its own forms, cards or rules, or by another package, guard every access
+with `$model->hasAttribute('<column>')` (rules, form fields, card rows,
+consumers) and fall back to the previous behavior. An unguarded validation
+rule on a missing column breaks saving the whole model. Do not add a hard
+Composer constraint between packages only for such an optional column.
+Verified consumers: `CmsContractor.registration_date` and
+`CmsContractor.delivery_address` (skeeks/cms 6.4.9.48), read by
+`skeeks/cms-shop` `ShopDocument::createFromBill()` (3.2.7.36).
+
 ## Verification
 
 When a migration checks columns added by an earlier migration, request a fresh
