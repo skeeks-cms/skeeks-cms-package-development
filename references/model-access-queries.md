@@ -30,5 +30,16 @@ Use correlated EXISTS evidence to avoid multiplying parent rows in grids and
 counts; keep matching read-only. Verified consumer: CmsLeadQuery and
 CmsLead::availableManagerIds(), covered by cms-lead-company-access.php.
 
+A `forManager()` scope must not `joinWith()` many-to-many relations to filter
+visibility: each matching junction row duplicates the parent, so lists, counts
+and pagination differ from distinct records. Filter the primary key, qualified
+with `getPrimaryTableName()`, by `IN` subqueries over the junction tables (or
+EXISTS), and pass the explicit identity into nested scopes. Consumers that need
+a relation alias for their own filter join it themselves after the scope.
+Verified consumer: `CmsContractorQuery::forManager()` (skeeks/cms 6.4.9.46),
+checked locally for admin, a scoped worker (row count equals distinct count)
+and a worker without clients; bill/payment forms add their own
+`companies`/`users` joins.
+
 Verified consumer: `cms-hosting/AdminDnsZoneController::getModel()`, whose
 manager scope joins the related deal for non-administrators.
