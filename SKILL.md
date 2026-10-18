@@ -233,6 +233,10 @@ Read the relevant reference completely before acting:
 - For API keys and other external-service secrets referenced by database
   records but supplied by project configuration, read
   [references/external-service-secrets.md](references/external-service-secrets.md).
+- For creating content properties (характеристики) and their list values from
+  migrations, scripts or API services — handler-owned type and settings,
+  content/section bindings, shop flags, enum codes — read
+  [references/content-properties.md](references/content-properties.md).
 - For component settings levels (default/site/user), which record
   administration edits and how programmatic writers must save, read
   [references/component-settings.md](references/component-settings.md).
