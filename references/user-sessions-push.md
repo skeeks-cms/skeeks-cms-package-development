@@ -1,8 +1,16 @@
 # Revocable web sessions and native push
 
-`skeeks/cms` owns the opt-in `web/SessionUser`, `components/UserSessions`,
+`skeeks/cms` owns `web/SessionUser`, `components/UserSessions`,
 CmsUserSession and the shared Admin/UPA devices screen; see USER-SESSIONS.md.
 Core must work without mobile tables, routes, jobs or Firebase dependencies.
+
+Session tracking is on by default in the CMS web config (`trackSessions`);
+projects do not enable it. `SessionUser::init()` turns it off while the
+`cms_user_session` table is missing, so an update without migrations keeps
+plain Yii login. Turning tracking on signs every existing login out once:
+legacy sessions are not adopted, because accepting a remember-me cookie without
+its session cookie would let a revoked device back in. A site opts out only by
+an explicit `trackSessions = false`.
 
 `skeeks/cms-mobile` owns `components/MobilePush`, installations, provider
 transports, native bridges and push controls. Read its README.md and
