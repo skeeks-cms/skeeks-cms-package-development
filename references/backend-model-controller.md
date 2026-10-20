@@ -318,6 +318,17 @@ Labels inferred only from field definitions therefore disappear from the setting
 picker when those filters are hidden. Explicit model labels survive this step.
 Verify the settings metadata after applying visibility, not just the field callback.
 
+`QueryFiltersWidget` auto-generates a field for every integer column. For a
+`<name>_id` column whose model has the matching relation (`promo_project_id` →
+`getPromoProject()`), that generated field is a `NumberFilterField` with
+`isAllowChangeMode => false` and a nested AJAX selector. A custom field under the
+same key is merged into it, not substituted: declaring `'class' =>
+SelectField::class` keeps `isAllowChangeMode` and the index fails with
+`UnknownPropertyException` on `AdminSelectField`. Give such a custom filter a
+non-column key (for example `project`) and qualify the column in its `on apply`
+callback, or configure it as a `NumberFilterField`. Keys whose relation name does
+not match (`hosting_dns_cluster_id` with `getDnsCluster()`) are not affected.
+
 ## Grid renderer
 
 The default renderer is `GridViewWidget`. Important settings include:
