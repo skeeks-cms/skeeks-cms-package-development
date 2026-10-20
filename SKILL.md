@@ -216,6 +216,10 @@ Read the relevant reference completely before acting:
 - For shared lead ingestion, source adapters, idempotency, source payloads and
   source-submission links, read
   [references/lead-ingestion.md](references/lead-ingestion.md).
+- For adding requisites (contractors) to a company, lead or other owner with
+  INN deduplication and optional DaData, and for records owned by a lead
+  (phones, emails, addresses, links) and their transfer to a company, read
+  [references/crm-requisites.md](references/crm-requisites.md).
 - For background jobs, the queue, run history, progress reporting, resource
   locking, overlap and retry policy, domain run reports in the operation card
   (never a package `controllerMap` override), and the active-record base-class
