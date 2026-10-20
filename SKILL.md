@@ -263,6 +263,9 @@ For task status transitions, timer side effects, task comments/results and
 API integration, read
 [task-workflow.md](references/task-workflow.md).
 
+For discounted storefront prices and totals for selected quantities, read
+[storefront-pricing.md](references/storefront-pricing.md).
+
 For storefront profiling, HTML compression and product-list query batching, read
 [storefront-performance.md](references/storefront-performance.md).
 

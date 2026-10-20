@@ -37,13 +37,37 @@ or its offers). A brand or filter with products can therefore be empty.
 (`cms-job/worker/push seo.sitemap.generate`). It runs without a web session,
 so it must not use `AvailabilityFiltersHandler`, which reads the session.
 
-Brands and saved filters bound to a brand (`shop_brand_id`) are excluded when
-the brand has no products visible in the default listing: active site
-elements without child offers, with the same stock rule as above. The check is
-conservative — when visibility cannot be determined, nothing is excluded, and
-filters by properties or country stay in the sitemap (their empty pages carry
-`noindex`).
+Brands are excluded when the brand has no products visible in the default
+listing: active site elements without child offers, with the stock rule above.
+Saved filters using the `catalog` view check their own category query, including
+descendants and optional secondary bindings, plus the saved brand, country and
+property selector. A brand's stock elsewhere must not populate an empty category
+selection. Property selectors use the storefront EAV `property_id` + `value_enum`
+predicate and accept a match on the product or its child content element
+(`parent_content_element_id`, not `main_cce_id`). Apply the same default stock
+rule to the selected parent product. Unknown selectors and custom views are
+retained conservatively; a single matching visible product is sufficient.
 
+The generator excludes inactive trees and saved filters whose parent is inactive
+or explicitly non-indexable. For the `catalog` view, it checks active site
+products across descendants and optional secondary bindings, excludes child
+offers, and applies the same default stock rule. Other tree views are retained.
+Console execution reads `is_join_second_trees` from the active `CmsTheme.config`
+(PHP serialization, not JSON); `includeSecondaryTreeProducts` can explicitly
+override it when project theme defaults differ from the stored settings.
+Collections require an active collection and an active site product linked
+through `shop_product2collection`. Their listing does not apply the catalog's
+stock/offer exclusions, so the generator must not apply those exclusions either.
+
+Published sitemap parts are persistent public output, not a JobContext temporary
+workspace. Build complete XML in a locked staging directory, replace each part
+at its stable public address, then publish the index last. This gives complete
+individual XML responses, not an atomic snapshot across separate HTTP requests.
+When a group/part disappears, retain its stable address with an empty urlset;
+exclude it from the new index. This avoids cached-index 404s without keeping
+obsolete page URLs or accumulating one public directory per run. Static XML
+cache headers and migration of old versioned addresses belong to the web server;
+the owning `cms-seo/SITEMAP.md` documents the publication and rollout contract.
 ## 404 page
 
 `cms` routes errors to `cms/error/error`; `base\Controller::render` resolves
