@@ -211,6 +211,26 @@ but a schedule with a job type must fail closed if the runtime or type is
 missing; never fall back to executing its name as a console command.
 The scheduler has no hard Composer dependency on cms-job.
 
+OS-level staggering of the scheduler entry point is infrastructure policy,
+separate from application due dates and job delivery. Keep shell delays and OS
+locks outside stored schedule commands: changing a command's identity to add a
+delay can make the management UI create another scheduler. Hosting owns the
+generated cron wrapper and safe installation; cms-agent retains due-date
+calculation, and cms-job retains reservations, recovery and execution. The
+verified hosting mechanism is documented in
+[cms-hosting/CRON-SCHEDULES.md](../../cms-hosting/CRON-SCHEDULES.md).
+
+An OS scheduler-entry lock and job overlap protection solve different problems.
+A job-based scheduler can still block in bootstrap or database publication before
+returning. Hosting may serialize the whole foreground scheduler invocation before
+PHP starts; detached background work must not inherit that entry lock.
+When staggering starts, acquire the execution lock after the delay: a prior
+scheduler may finish during that delay, so checking at the minute boundary
+would incorrectly skip a non-overlapping scheduled start. Keep job
+deduplication/resource locks in cms-job, and do not imply that this OS wrapper
+also guards direct manual CLI calls. The hosting document above owns wrapper,
+capability checks, migration and runtime acceptance details.
+
 Native system schedules are registered in `CmsAgentComponent::$jobs`, keyed by
 a stable code, with `jobType`, `jobPayload`, `interval` and `name`. They have no
 command and synchronize as `job:<code>` in cms_agent. Synchronization is
@@ -967,3 +987,38 @@ Historical results without timing or reason fields must show unknown values,
 not inferred durations or fabricated explanations. Detailed projections stay
 opt-in and scoped to the current site through the domain run report contract
 above.
+
+### Expensive progress calculations
+
+Reporter buffering does not defer queries evaluated by the caller. Keep costly
+backlog aggregates outside per-item loops: take snapshots at chunk boundaries
+and recompute the final result. Do not infer remaining work by subtracting
+visited items when failures, pending records or concurrent receipt can change
+the backlog. Preserve per-item outcome counters and document snapshot freshness
+on cancellation. In the current JobReporter, setResult and setStage force a
+flush; calling them per item is not covered by advance/heartbeat throttling.
+
+## Auxiliary infrastructure failures
+
+In automatic model/lifecycle hooks, a failure of auxiliary infrastructure must
+not prevent the primary domain state from being applied externally. Complete
+critical access/nginx/site changes first, then run auxiliary synchronization
+through a separately caught path. Log a sanitized category and identifiers;
+never log raw commands, credentials or exception text that may contain them.
+Where a job reporter exists, preserve the failure as a warning requiring
+remediation. Explicit user actions targeting that infrastructure must still
+surface their errors. Verify this separation with failing provider doubles;
+remote acceptance remains the owning package's responsibility.
+
+When a parent operation deletes a batch of children, let the parent own one
+auxiliary synchronization after the batch/parent reaches its intended state;
+avoid a remote rebuild from each child's delete hook. Explicit single-child
+actions must retain their error contract. Invalidate loaded relations before
+rebuilding from persisted state, so removed children/parents cannot reappear
+through an already populated relation. Verify both batch and single-item paths.
+
+For optional, independently scoped infrastructure policies, a malformed opt-in
+list must not disable unrelated scopes. Fail closed for that list, cache its
+validation and log a sanitized warning once per unchanged configuration on the
+component instance; preserve independent valid policies. Explicit operator
+arguments still require strict rejection rather than a wider fallback scope.
