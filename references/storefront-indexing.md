@@ -29,6 +29,13 @@ The default listing hides out-of-stock products according to
 site's stores, `2` — stock in the site's and supplier stores (for the product
 or its offers). A brand or filter with products can therefore be empty.
 
+Collection pickers outside a listing apply the same rule without the session:
+`cms-shop` `BrandController::actionCollections` (the theme brand-line popup)
+keeps only collections whose `id` is in a subquery of active site elements
+joined through `shopProduct.collections` and passed to
+`ShopComponent::filterByQuantityQuery`; with mode `0` the list is unchanged.
+Reset the subquery's `groupBy` and select distinct `collections.id`.
+
 ## Sitemap
 
 `cms-seo` `SitemapGenerator` is shared by the native job
