@@ -43,3 +43,14 @@ cache invalidation of the component.
 
 `skeeks/cms-mcp` `cms_component_settings_update` implements this contract and
 returns `override` and optional `warnings` in its response.
+
+## Reading settings outside the current request site
+
+Verified 2026-10-21 with `skeeks/cms-communication` `MailFileSettings` in a
+console/queue context: `new SomeSettings()` or
+`new SomeSettings(['cmsSite' => $site])` returned only the class defaults even
+though a stored default record existed. Readers in jobs, consoles or for
+another site set the site and call `refresh()`, as `AdminComponentSettingsController`
+does: `$s = new SomeSettings(); $s->cmsSite = $site; $s->refresh();`
+(reference: `MailFilePolicy::siteValues()`). Cache per site within one run
+and reset the cache after saving.

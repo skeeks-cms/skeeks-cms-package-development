@@ -195,6 +195,11 @@ Read the relevant reference completely before acting:
 - For backend/UPA CSS and JS ownership, AssetBundle dependencies, payload
   budgets, icon providers and migration away from mandatory Unify assets, read
   [references/backend-ui-assets.md](references/backend-ui-assets.md).
+- For any rich-text (HTML) field use the shared `RichTextInputWidget` with a
+  preset and the same preset on the server (`RichTextBehavior`); read
+  [references/rich-text-editor.md](references/rich-text-editor.md).
+  `skeeks/yii2-ckeditor` is removed: see the "Rich-text editors" section
+  of [references/backend-ui-assets.md](references/backend-ui-assets.md).
 - For new Admin/UPA containers, surface composition and migration away from
   `sx-block`/`sx-panel`, read
   [references/surfaces.md](references/surfaces.md).
@@ -229,7 +234,8 @@ Read the relevant reference completely before acting:
   protocol cursors and receipt-versus-application boundaries, read
   [references/external-change-streams.md](references/external-change-streams.md).
 - For large resumable browser uploads, chunk identity, offset reconciliation,
-  temporary-file safety and form integration, read
+  temporary-file safety and form integration, and for storing or serving
+  non-public files (the CMS storage has no private cluster), read
   [references/resumable-file-uploads.md](references/resumable-file-uploads.md).
 - For console commands that construct a web application to inspect routes,
   controllers or backend menus, read

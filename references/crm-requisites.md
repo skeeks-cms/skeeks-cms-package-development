@@ -42,6 +42,14 @@ write), a muted empty state and a dashed full-width "+ Добавить …" but
 actions) and may add density options through `surface`; they do not write
 their own row markup. A new CRM card (client, deal) reuses the widget.
 
+Phone and email row actions go through
+`CrmContactBlockWidget::contactActions($type, $value, $owner, $defaults)`.
+The card passes its defaults keyed by id (`sms`, `call`, `mailto`) and the
+class-level `EVENT_CONTACT_ACTIONS` lets another package replace, add or
+remove them (for example a "write a letter" dialog instead of `mailto`).
+Handlers check their own permissions; a lead the employee cannot work with
+passes no phone defaults. Do not edit card views to add channel buttons.
+
 Icons are semantic `BackendIcon` names (`phone`, `mail`, `message`,
 `map-pin`, `id-card`, `link`, `more-vertical`, `help`, `close`, `plus`), never
 icon-font classes. `CrmContactBlockWidget::icon()` falls back to the matching

@@ -42,6 +42,15 @@ together. The behavior does not create a transaction for the caller. Callers
 requiring atomic business writes must establish one and propagate failures.
 Database rollback does not restore physical files deleted by storage.
 
+A package that writes its own log type (for example a message linked to a
+lead) registers it in the `skeeks` component instead of editing
+`CmsLog::render()`: `logTypes` for the label, `logRenderers` for a
+`CmsLogRendererInterface` class or callable that renders the entry from its
+`data` (store the id of the package's canonical record there, as calls do),
+and `activityLogTypes` to show it in the lead, company and client feeds
+(`CmsLogQuery::activity()`). Registrations merge; do not filter card feeds by
+a hard-coded type list.
+
 Verify real insert/update/deactivate/delete operations, readable old/new
 relations, excluded-only saves, and rollback of both owner and log. The
 `cms-shop/tests/reference-activity-log.php` integration test exercises real

@@ -732,6 +732,16 @@ administration retained `65px`, `250px`, no content maximum and a `64px`
 quick-access gutter. Both pages switched dark to light and back to the stored
 dark choice without horizontal overflow or console errors.
 
+Sticky parts of a page (a folder column, a list head) stick to the viewport
+under the fixed header: `top: var(--sx-shell-top-offset)`. The shell wrapper
+`.sx-main-wrapper` has `overflow: hidden`, which makes it a scroll container
+and silently disables `position: sticky` for everything inside. Verified on
+2026-10-21 in the `cms-communication` "Почта" screen: a section that needs
+sticky scopes `overflow: clip` (same clipping, no scroll container) to its own
+page in its own asset, e.g. `.sx-main-wrapper:has(.sx-mail)`. Changing the
+shared shell rule is a `cms-backend` decision that needs the owner's approval
+and a check of every cabinet.
+
 Treat the current `skeeks.com` UPA visual presentation as a regression
 baseline while moving shell ownership into `cms-backend`. This stage is an
 architectural refactor, not a redesign. Preserve:
@@ -1269,6 +1279,51 @@ colors only to the widget's default skin so explicitly selected widget themes
 keep their palette. Reference implementation:
 `skeeks/yii2-widget-codemirror` `CodemirrorBackendAsset`
 (`assets/sx-codemirror.css`, release 1.0.6).
+
+## Rich-text editors: `yii2-ckeditor` is removed
+
+Owner decision of 2026-10-21: `skeeks/yii2-ckeditor` (CKEditor 4.4.7, 2015,
+end of life, with known vulnerabilities in old CKEditor 4 releases, about
+23 MB of assets and skins that ignore the backend light/dark theme) is
+removed from the shared packages.
+
+- Do not use `skeeks\yii2\ckeditor\CKEditorWidget`, and do not add
+  `skeeks/yii2-ckeditor` to a package's requirements. The CMS wrapper
+  `skeeks\cms\widgets\formInputs\ckeditor\Ckeditor` no longer exists; a
+  project still referencing it fails with "class not found" — move that
+  field to the shared widget (skeeks.com did so for its promotion reports).
+- The replacement is the shared `skeeks/cms` field
+  `RichTextInputWidget` with the same preset on the server
+  (`RichTextBehavior` / `RichTextHtml::clean()`); its contract is in
+  [rich-text-editor.md](rich-text-editor.md). Do not write another
+  feature-owned editor; extend the shared one. A third-party editor would be
+  a new dependency agreed with the owner. Never trust editor HTML: clean it
+  on the server.
+- Migrated on 2026-10-21: task description, CRM comments
+  (form and editing), the letter form of `cms-communication`,
+  `ComboTextInputWidget` everywhere (its visual mode is always the shared
+  widget; sections, content elements, products, brands, deliveries, legal
+  texts, content property values and the rest), storage file descriptions,
+  FAQ answers, and in `cms-shop` the hidden site description, store and
+  supplier descriptions (presets per field in
+  [rich-text-editor.md](rich-text-editor.md)); dead imports and
+  commented-out CKEditor code were removed from companies, contractors,
+  projects, task schedules, cash boxes, store documents and product moves.
+  Then removed: the wrapper `cms` `widgets/formInputs/ckeditor/`, the
+  "visual editor" settings of `cms-backend-admin` `AdminSettingsComponent`
+  (`ckeditor*` properties, `getCkeditorOptions()`; values already saved in
+  `cms_component_settings` are harmless, settings load through
+  `setAttributes()` and skip unknown keys), the `CKEditorFuncNum`
+  file-browser callbacks (`GridView` select mode, `AdminStorageFilesController`,
+  `admin-tools/select-file`), the CKEditor theme sync of `cms-activity.js`
+  and the `skeeks/yii2-ckeditor` requirement of `skeeks/cms`. A project lock
+  keeps the installed package until its next `composer update skeeks/cms`;
+  Composer then removes it as unused. `cms-backend-admin` up to 2.1.1.10
+  references `CKEditorPresets` in `AdminSettingsComponent` property defaults,
+  so `skeeks/cms` requires `cms-backend-admin` `^2.1.1.11` (released
+  2026-10-21 without those settings): never relax it while the old release
+  could pair with a CMS that no longer installs CKEditor.
+  `rg -i ckeditor` over the shared packages finds only changelogs.
 
 ## Manual controller-action links
 

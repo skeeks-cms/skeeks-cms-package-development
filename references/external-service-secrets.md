@@ -18,3 +18,12 @@ project integrations should use the owning component. Never expose the secret
 map through model attributes, admin forms, debug output, exception messages or
 public component getters. Tests should prove that component-provided values are
 resolved while the application params array remains free of those secrets.
+
+Exception: credentials that administrators enter for records created in the UI
+(mailbox logins of `skeeks/cms-communication`) cannot live in project params.
+Store them encrypted (`Yii::$app->security->encryptByKey`) in a dedicated
+column, with the key supplied to the owning component from protected params or
+the environment as above. Keep the column out of `fields()`, render password
+inputs always empty (an empty value keeps the stored secret), decrypt only in
+transport code, and fail closed with a configuration message when the key is
+missing or cannot decrypt. `cms-communication/tests/accounts.php` verifies it.

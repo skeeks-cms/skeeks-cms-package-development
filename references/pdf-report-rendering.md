@@ -85,6 +85,13 @@ every page fragment.
 - For a missing image, show a neutral unavailable-file placeholder instead of a
   broken image icon. Keep the filename visible.
 - Apply the same attachment rules in HTML and PDF outputs.
+- Never hand mPDF an original upload. It embeds images at source resolution and
+  re-encodes WEBP through GD: one 1920×8224 screenshot needs about 63 MB per
+  buffer and kills a 128 MB request. Pass a cached downscaled copy (bounded
+  longest side, keyed by path, mtime and size); check `getimagesize()` against
+  the remaining `memory_limit` before decoding, and render an image that cannot
+  be reduced safely as a file link instead of failing the whole report
+  (`AdminCmsTaskController::prepareTaskReportPdfImages`).
 
 ## Keep light and dark themes explicit
 

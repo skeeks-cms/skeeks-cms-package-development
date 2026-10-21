@@ -1119,8 +1119,8 @@ Test at least:
     both themes; verify the shared CMS activity asset loads once after
     `BackendUiAsset`, comment/log views contain no embedded CSS/JS or inline
     palette, pin/share/value actions use semantic chip/icon classes with ARIA
-    state, CKEditor/files/telephony consume shared tokens, copied/highlight
-    motion respects reduced-motion preference, CKEditor iframe colors follow a
+    state, files/telephony consume shared tokens, copied/highlight
+    motion respects reduced-motion preference, the rich-text editor follows a
     live `sx:themechange`, and PJAX keeps handlers active.
 60. inspect backend notifications and idle/stale work dialogs in both themes;
     verify `CmsWebNotifyAsset` loads after `BackendUiAsset`, the popup and modal
