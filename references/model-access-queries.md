@@ -43,3 +43,11 @@ and a worker without clients; bill/payment forms add their own
 
 Verified consumer: `cms-hosting/AdminDnsZoneController::getModel()`, whose
 manager scope joins the related deal for non-administrators.
+
+`CmsTaskQuery::forManager($user)` and `CmsDealQuery::forManager($user)` pass
+the explicit user into their nested project/company/client scopes (skeeks/cms,
+2026-10-23); before, a check "may this employee see the task/deal" made for
+another employee silently used the current viewer. Verified consumer:
+`cms-communication` `CrmRecords::visibleQuery()` (letter visibility through a
+linked task or deal, choosing a responsible person among employees who may
+read a letter).
