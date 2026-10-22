@@ -173,6 +173,15 @@ self-requeue; a handler implements only `loadChunk`, `processChunk` and
 to survive memory growth on large runs, rather than fighting the ActiveRecord
 identity map.
 
+The same requeue shares a resource fairly. A long run that holds the
+`resource_key` of routine short jobs (a backfill over the mailbox that the
+receive job also locks) must not keep it for hours: save the cursor and call
+`JobContext::requestRequeue($delay)` after a time slice. The runner releases
+the resource lock on requeue, so the short job claims it in the pause; the long
+run returns later without spending an attempt. Verified consumer:
+`cms-communication` `MailHistoryJobHandler` (two-minute slices, the receive job
+`comm.mail.poll` ran between them on the stand).
+
 ## Legacy console commands
 
 `ConsoleCommandJobHandler` gives history, separated stdout/stderr, exit code

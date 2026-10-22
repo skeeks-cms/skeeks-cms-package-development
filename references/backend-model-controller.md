@@ -142,6 +142,31 @@ Inherited backend-action settings include `name`, `icon`, `priority`,
 `isOpenNewWindow`, `isDisplayBackendShowings`, `backendShowingKey`,
 `backendShowingParam`, `configKey`, `callback`, `defaultView` and `size`.
 
+### A section open to every employee
+
+`permissionName = null` does not open a controller: `BackendController::init()`
+replaces null with the route (`uniqueId`), and `THasPermissions` creates that
+permission on the first check and grants it to the admin and root roles only;
+other employees get 403. Set `permissionNames = []` (plus
+`generateAccessActions = false`) and filter the data itself, as
+`cms-communication` `AdminCmsCommMessageController` does with `forManager()`.
+
+### Record access with `generateAccessActions = false`
+
+With generated action permissions off, an action without its own
+`accessCallback` is allowed to anyone who has the controller permission. The
+inherited `delete` and `delete-multi` (whose default callbacks return true in
+this mode) and hidden model actions (`isVisible => false`) are no exception.
+Give each of them the same per-record check as `view`/`update`; for
+`delete-multi` keep the section check in `accessCallback` and the record check
+in `eachAccessCallback` (a denied record is reported "Нет доступа" and
+skipped). An entity link (`BackendEntityLink`) runs the first allowed action of
+a record, so a forgotten guard turns a link to an inaccessible record into
+"Удалить". Verified consumer: `AdminCmsCompanyController` (`delete`,
+`delete-multi`, `add-contractor`, `add-user`, `add-log` require
+`cms/admin-company/manage` with the model); `AdminCmsLeadController` guards
+`delete` and removes `delete-multi`.
+
 ## Presentation modes
 
 Use one of:

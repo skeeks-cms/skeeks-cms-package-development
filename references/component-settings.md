@@ -54,3 +54,13 @@ another site set the site and call `refresh()`, as `AdminComponentSettingsContro
 does: `$s = new SomeSettings(); $s->cmsSite = $site; $s->refresh();`
 (reference: `MailFilePolicy::siteValues()`). Cache per site within one run
 and reset the cache after saving.
+
+## Own settings page with dynamic reload
+
+A settings form rendered on a full admin page (not in a panel iframe) must get
+its own form id. `Component::beginConfigForm()` leaves the default `w0`, and the
+work timer form in the admin header is also `w0`; the dynamic reload of a field
+(`RequestResponse::DYNAMIC_RELOAD_FIELD_ELEMENT`) posts the first `#w0` on the
+page — it toggles the timer instead of reloading the settings. Override
+`beginConfigForm()` with an explicit `'id'` (see `cms-communication`
+`MailFileSettings`).
