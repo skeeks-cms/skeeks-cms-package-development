@@ -182,6 +182,33 @@ run returns later without spending an attempt. Verified consumer:
 `cms-communication` `MailHistoryJobHandler` (two-minute slices, the receive job
 `comm.mail.poll` ran between them on the stand).
 
+## A user action on an external system: asked-for state plus a coalescing job
+
+When an employee changes something that lives on an external server (move a
+letter in the mailbox, set its flag), the web request must not do the I/O and
+the screen must not wait for it. Verified pattern (`cms-communication`
+`MailboxActions` / `MailServerSync`, job `comm.mail.apply`):
+
+- the request validates the right and writes the *asked-for* state next to
+  the confirmed one (`target_role` beside `folder_role`); every list and
+  card reads `COALESCE(asked, confirmed)`, so the result shows at once.
+  Asking for the confirmed value again cancels a request not done yet;
+- it pushes one job per external resource with the same `resourceKey` as the
+  receive job of that resource and `overlapPolicy = coalesce`: a running job
+  keeps one waiting run beside it. The job reads all asked-for rows when it
+  runs, never a list from the payload, so requests made during a run are not
+  lost and payloads stay small (thousands of rows per request are fine);
+- on success the job writes the new confirmed state from the server's answer
+  and clears the request; on refusal it clears the request, keeps the
+  confirmed state and stores the reason on the row, and notifies the asking
+  employee (`CmsWebNotify`). Nothing is retried blindly: before acting the job
+  checks the object is still where the confirmed state says;
+- the periodic receive job of the same resource applies leftover requests
+  first, as a safety net.
+
+`visibility = transient` deletes a successful run row: check the effect on the
+data, not the run history, when verifying such jobs.
+
 ## Legacy console commands
 
 `ConsoleCommandJobHandler` gives history, separated stdout/stderr, exit code

@@ -216,7 +216,8 @@ Read the relevant reference completely before acting:
   formatting, attachments and default-template migrations, read
   [references/pdf-report-rendering.md](references/pdf-report-rendering.md).
 - For free-text search in grids and AJAX selects, query `search()` contracts,
-  multi-word queries, phone normalization and join cost, read
+  multi-word queries, phone normalization, join cost and search over large
+  bodies or whole threads (a narrow normalized search table), read
   [references/entity-search.md](references/entity-search.md).
 - For shared lead ingestion, source adapters, idempotency, source payloads and
   source-submission links, read
@@ -231,11 +232,13 @@ Read the relevant reference completely before acting:
   [references/crm-requisites.md](references/crm-requisites.md).
 - For background jobs, the queue, run history, progress reporting, resource
   locking, overlap and retry policy, domain run reports in the operation card
-  (never a package `controllerMap` override), and the active-record base-class
-  rules for high-write tables, read
+  (never a package `controllerMap` override), user actions on an external
+  system (asked-for state shown at once, a coalescing job per resource), and
+  the active-record base-class rules for high-write tables, read
   [references/background-jobs.md](references/background-jobs.md).
 - For durable receipt of external change streams, transactionally committed
-  protocol cursors and receipt-versus-application boundaries, read
+  protocol cursors, receipt-versus-application boundaries and objects moved
+  or deleted on the remote side without a change feed, read
   [references/external-change-streams.md](references/external-change-streams.md).
 - For large resumable browser uploads, chunk identity, offset reconciliation,
   temporary-file safety and form integration, and for storing or serving

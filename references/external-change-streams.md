@@ -106,3 +106,24 @@ ordinary batch reads retain their unordered absence semantics. Make this
 write-producing audit opt-in and document it in the domain API. Repeated audits
 must reuse the existing exclusion revision. Bound the submitted identities and
 throttle resumable maintenance separately from ordinary change receipt.
+
+## Objects moved by the remote side without a change feed
+
+A plain IMAP mailbox reports no moves or deletions to a client that reads
+only new UIDs: a letter moved in the web mail simply leaves one folder and
+appears under a new UID in another. Verified approach (`cms-communication`
+`MailServerSync::reconcile()`, run by the receive job under the same
+resource lock):
+
+- per container that holds known objects, ask the server which of their
+  remote ids still exist (`UID SEARCH UID <set>`, only ids of the current
+  UIDVALIDITY); missing ones are candidates;
+- every other container has a watch cursor (last id looked at); candidates
+  are matched by a stable external key (Message-ID) only among objects that
+  appeared after the cursor. The first look of a container scans the period
+  of the oldest candidate, bounded;
+- found: the local copy takes the new place; not found: mark it `gone`, keep
+  the local data, take it out of the usual views. Never resurrect or
+  duplicate: an object that comes back into a received container is matched
+  by its external key on receipt and its copy takes the new place;
+- objects with a pending local request are skipped: the request owns them.

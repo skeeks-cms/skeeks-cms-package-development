@@ -90,6 +90,15 @@ When a migration checks columns added by an earlier migration, request a fresh
 schema with `getTableSchema($table, true)`. Persistent schema cache can still
 describe the pre-update table and falsely report missing prerequisites.
 
+A new index whose first column carries a foreign key makes MySQL/MariaDB drop
+the index it created implicitly for that key (verified on MariaDB 10.5:
+`cms_comm_message_mailbox__connection_id` was replaced by
+`(cms_comm_connection_id, folder, uid)`). `down()` then cannot drop the new
+index ("needed in a foreign key constraint"): recreate the single-column index
+first when `SHOW INDEX` does not find it. MySQL DDL is not transactional, so a
+failed `down()` leaves a half-reverted schema; run up → down → up on the real
+database engine, not only on SQLite.
+
 `skeeks/cms/tests/migration-loader.php` runs on a private SQLite memory database:
 mixed migration styles, stable history identity, ordering, up/down/reapply,
 creation, CLI selection, discovery, namespace diagnostics and duplicate-source

@@ -66,3 +66,21 @@ intermediate relation a second time without its alias. Join the leaf table
 explicitly with `leftJoin()` against the alias already in the query.
 
 Keep `groupBy` on the primary key whenever a to-many relation is joined.
+
+## Search over large bodies: a narrow normalized table
+
+When the text to search lives in wide columns (letter HTML is ten times the
+plain text), `LIKE` over the entity table scans everything. Keep one
+normalized search line per row in its own table (lower case, "ё" as "е",
+plain text taken from HTML when there is no text part, bounded length,
+binary collation because the line is already normalized), written by the
+model's `afterSave()` so every writer keeps it current, and filled for old
+rows by the migration. Verified in `cms-communication` (`MailSearch`,
+`cms_comm_message_search`): about 30 ms instead of 190 ms on 1700 letters,
+and letters without a text part became findable.
+
+To find a thread where any message matches, filter the listed rows by
+`thread_id IN (threads whose rows match the word)`, one condition per word.
+Restrict matching rows to those the user may see (the same `forManager()`
+scope) unless the user sees everything: a hidden message must not reveal its
+words through a visible one.
