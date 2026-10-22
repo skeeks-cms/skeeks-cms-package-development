@@ -155,9 +155,17 @@ Inherited backend-action settings include `name`, `icon`, `priority`,
 `permissionName = null` does not open a controller: `BackendController::init()`
 replaces null with the route (`uniqueId`), and `THasPermissions` creates that
 permission on the first check and grants it to the admin and root roles only;
-other employees get 403. Set `permissionNames = []` (plus
-`generateAccessActions = false`) and filter the data itself, as
-`cms-communication` `AdminCmsCommMessageController` does with `forManager()`.
+other employees get 403. Require only the common administration permission
+— `permissionNames = [CmsManager::PERMISSION_ADMIN_ACCESS => 'Доступ к
+системе администрирования']` (plus `generateAccessActions = false`) — and
+filter the data itself, as `cms-communication` `AdminCmsCommMessageController`
+does with `forManager()`. Never an empty list: `THasPermissions::getIsAllow()`
+then checks nothing, so a guest passes the access behavior and the admin
+layer fails on the missing identity (HTTP 500 instead of the login redirect),
+and a signed-in user without administration access is let in as well.
+Verified 2026-10-22: with the admin permission a guest gets the standard
+302 to `admin/admin-auth`, an employee without the admin role opens the
+section.
 
 ### Record access with `generateAccessActions = false`
 
