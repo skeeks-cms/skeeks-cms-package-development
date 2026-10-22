@@ -31,7 +31,8 @@ in the source package and do not teach core about the source.
 - `created()` runs on `afterSave` inside a transaction opened on
   `beforeSave`; an exception rolls back the new record too. Link the record
   and write its feed entry here, never from the view.
-- To show where a saved record came from, also implement
+- To show where a saved record came from or what it is linked to (mail:
+  "Создано из письма", then "Письмо" / "Переписка, последнее из N"), also implement
   `skeeks\cms\source\RecordOriginInterface::origins($record)` (each item:
   plain `label`, trusted `html`; link to the source only when the employee
   may open it). `RecordOriginWidget` renders them at the top of the task,
