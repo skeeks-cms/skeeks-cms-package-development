@@ -97,6 +97,14 @@ feedback. Preserve custom `clientCallback` overrides and normal Yii field/error
 summary updates. `cms-backend/tests/form-submit-errors.cjs` executes the actual
 default callback against validation, hidden-field, server and empty responses.
 
+`SelectField` (select2) drops the label of an item with the empty key: an
+option `'' => 'Только мне'` renders as a blank choice and a null attribute
+shows an empty field. When "nothing" is a meaningful choice, give it an
+explicit key through a virtual attribute (getter/setter plus a `safe` rule)
+that maps it to null, and put the related validation error on that
+attribute. Verified 2026-10-22: `cms-communication` `CmsCommTemplate::$scope`
+(`SCOPE_OWN` ↔ `cms_comm_account_id = null`).
+
 ## Single-record domain operation forms
 
 When an operation on one record needs its own input (for example "the call

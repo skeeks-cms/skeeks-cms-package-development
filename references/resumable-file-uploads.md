@@ -92,3 +92,26 @@ temporary files older than one hour. Do not add a second cleanup mechanism.
   same-content reuse).
 - Drafts that must keep files longer than the cleanup window are owners of
   their own: store the files with the draft, not in the temporary area.
+  Reference implementation (`skeeks/cms-communication` `MailDrafts`, verified
+  2026-10-22): the open form keeps working with its temporary tokens; each
+  save copies only new uploads into the storage as draft files (same content
+  reused, the temporary file stays with the form) and records the token it
+  is open as; opening the draft in a session without that token puts the
+  stored bytes back with `TemporaryUploads::putBytes()` under a fresh token
+  and rewrites the stored text at once, so the form and the final save work
+  exactly as with new uploads. A storage file shared by drafts and owners is
+  deleted only when nothing refers to it; the draft term is cleaned by the
+  owner's daily job.
+- Session binding (verified 2026-10-22): a token belongs to its session by an
+  owner mark `.owner` in the token directory — the session id hashed with
+  HMAC-SHA256 under the request `cookieValidationKey` — never by a list in
+  the session data. A list rewritten by every request lost tokens of
+  parallel uploads (of three simultaneous uploads only one stayed usable).
+  Uploads of one session may therefore run in parallel; clients need no
+  upload queue. Consequences: a token is usable only while the session id
+  stays the same (login regenerates it, so uploads made before login are
+  lost); a file name never starts with a dot, so it cannot collide with the
+  mark; the daily cleanup removes the mark with the file, and the emptied
+  directory on a later run. Regression check: `skeeks/cms`
+  `tests/rich-text-editor.php` (parallel uploads in child processes, foreign
+  session, `forget()`, cleanup).

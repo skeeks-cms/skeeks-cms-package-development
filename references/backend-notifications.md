@@ -28,6 +28,33 @@ signed-in user must see in the backend or customer cabinet.
   entry. Build partner-facing lead URLs from the configured UPA prefix, not
   from the backend active when the notification is created.
 
+## Notifications created by background jobs
+
+Verified 2026-10-22 with `skeeks/cms-communication` `MailNotifier` (new
+letters, created by the receive job in the queue/console):
+
+- Do not store a backend URL built in the console: the project's backend
+  prefix (`backendAdmin.urlRule.urlPrefix`, `~sxx` on skeeks.com) is set in
+  the web config only, so the console builds the package default (`~sx`).
+  Refer to the record instead (`model_code` + `model_id`) and register the
+  model in `Skeeks::$modelsConfig` with its `controller`: the header center
+  renders `BackendEntityLink` at view time and opens the record's first
+  allowed action in the panel. The model needs `asText` for the link label.
+- `modelsConfig` is a plain public array: a package config entry would
+  replace the core list. Add the key at runtime instead
+  (`$app->skeeks->modelsConfig[Model::class] = [...]` in the package
+  bootstrap, as `CommunicationBootstrap` does).
+- `getHtml()` renders backend widgets and works only in a web request.
+- Recipient checks through core `forManager($user)` in a job need the
+  `user` application component: relations such as `CmsCompany::getManagers()`
+  and `User::getSubordinates()` read `Yii::$app->user->identityClass`, which a
+  console application lacks. Set a session-less `yii\web\User` with that
+  identity class only for the check and clear it afterwards
+  (`MailNotifier::withUserComponent()`); never leave it registered.
+- Collapse a burst into one row per recipient (several letters of one run —
+  one notification pointing at the latest) and mark it read when the user
+  opens the record (`CmsWebNotify::updateAll(['is_read' => 1], …)`).
+
 `skeeks/cms/src/Skeeks.php` contains established task notification examples:
 new assignments, executor changes, status changes and comments. Inspect those
 rules before adding another task notification so the same event is not emitted
