@@ -200,6 +200,10 @@ Read the relevant reference completely before acting:
   [references/rich-text-editor.md](references/rich-text-editor.md).
   `skeeks/yii2-ckeditor` is removed: see the "Rich-text editors" section
   of [references/backend-ui-assets.md](references/backend-ui-assets.md).
+- For files attached to a record in a form (comments, letters, tasks): the
+  shared compact `AttachmentsInputWidget` ("Прикрепить", drop, paste, chips,
+  temporary area until save), read
+  [references/form-attachments.md](references/form-attachments.md).
 - For new Admin/UPA containers, surface composition and migration away from
   `sx-block`/`sx-panel`, read
   [references/surfaces.md](references/surfaces.md).
@@ -226,6 +230,20 @@ Read the relevant reference completely before acting:
   letter, a call) in the standard create window (`?source=<type>:<id>`,
   `Skeeks::$recordSources`), read
   [references/record-sources.md](references/record-sources.md).
+- For a package's own block in lead, company and deal cards ("КП", later
+  "Счета": `CrmCardBlocksWidget`, `EVENT_BLOCKS`), quick sending of ready
+  shared documents from that block, and for client documents that keep
+  every sent version unchanged (proposal versions), read
+  [references/crm-card-blocks.md](references/crm-card-blocks.md).
+- For sending a package's document (proposal, bill) to a client by mail, SMS
+  or later messengers with a personal link per send ("Отправить клиенту",
+  "Прикрепить из…", `communication.sendables`, `SendableInterface`), read
+  [references/client-sends.md](references/client-sends.md).
+- For the public page of such a document by the code of one sending (no
+  sign-in, no site counters, honest "opened" by a page signal, link checks
+  of mail services, a transition page with UTM marks, "Принять",
+  "Задать вопрос"), read
+  [references/client-link-pages.md](references/client-link-pages.md).
 - For adding requisites (contractors) to a company, lead or other owner with
   INN deduplication and optional DaData, and for records owned by a lead
   (phones, emails, addresses, links) and their transfer to a company, read
@@ -272,8 +290,8 @@ Executable source remains the final source of truth.
 For SQL conditions in per-model permission checks, follow
 [model-access-queries.md](references/model-access-queries.md).
 
-For task status transitions, timer side effects, task comments/results and
-API integration, read
+For task status transitions, timer side effects, tasks made automatically
+by a package event, task comments/results and API integration, read
 [task-workflow.md](references/task-workflow.md).
 
 For discounted storefront prices and totals for selected quantities, read

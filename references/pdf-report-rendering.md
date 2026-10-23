@@ -100,6 +100,31 @@ every page fragment.
 - Keep page, task and result surfaces visibly distinct in both themes.
 - Test printed backgrounds instead of relying on the browser preview alone.
 
+## Other documents on the site's document template (mPDF)
+
+Verified 2026-10-23 with `skeeks/cms-proposal` `ProposalPdf` (mPDF 8 in
+kartik-v/yii2-mpdf):
+
+- Take the design from `CmsDocumentTemplate::findDefault($siteId, '<type>')`
+  (falls back to the "all documents" template; a type missing from
+  `documentTypes()` simply uses it) and `themeConfig`; without a template use
+  `CmsDocumentTemplate::preset(THEME_LIGHT)`. Logo: the template's file,
+  otherwise the site image for the dark theme and `logoLightImage` for the
+  light one, as a local path.
+- Paint the page background with
+  `$mpdf->SetDefaultBodyCSS('background', $theme['background_color'])`. An
+  `@page { background-color }` rule in the document CSS removes the
+  `SetHTMLFooter()` footer.
+- The default mPDF font (DejaVu Sans) has no ₽ sign: print rubles as
+  "руб." in PDF; the CRM pages keep ₽.
+- Lay out with tables and percentage widths: a `width="75mm"` cell next to
+  an auto cell is ignored and the block falls to the left.
+- Split rich text into WriteHTML() calls by its top-level nodes (DOMDocument),
+  not by a regex over closing tags, which can cut a list or a quote in the
+  middle.
+- Pictures pasted into rich text: only local `/uploads/` raster files, a
+  reduced cached copy above the size box, nothing for other URLs.
+
 ## Verify the complete matrix
 
 Test at least:

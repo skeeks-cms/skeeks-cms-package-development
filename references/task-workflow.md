@@ -24,6 +24,31 @@ An administrative recovery is separate from ordinary transitions: only unknown
 statuses with an unbroken audit chain and no open interval can be restored to
 a verified accepted/paused state, with normal audit and recalculation events.
 
+## Tasks made automatically by a package event
+
+A package may give an employee a core task when something happens outside
+the CRM (a client opened a proposal: `cms-proposal` `services\ProposalTasks`,
+verified 2026-10-23). Rules:
+
+- Create a plain `CmsTask` through the model, with `executor_id` and
+  `created_by` set to the employee: a task to oneself is accepted at once,
+  and the status rule never reads `Yii::$app->user->identity` (a guest on
+  a client page has none). The blameable behavior overwrites `created_by`
+  with the (absent) signed-in user on insert, so set it again with
+  `updateAttributes()` after saving.
+- `plan_start_at` may not be sooner than 30 minutes from now (the model
+  rule). "Today" means the first working period of the employee's
+  `work_shedule` (`CmsScheduleHelper::getSchedulesByWorktimeForDate()`)
+  that ends after now + 31 minutes, otherwise the start of the nearest
+  working period; use a default schedule for employees without one.
+- Core tasks know only the project, company, lead and client. Keep the link
+  to the package record in a package table (`cms_proposal_task`), use it to
+  skip a new task while the employee has an open one (`CmsTask::activeStatuses()`)
+  and show it at the top of the task card through `RecordOriginInterface`
+  of the package's record source.
+- The event must not fail because of the task: catch, log and go on. Let
+  the site switch the rule off with a component setting.
+
 ## Task comments and results
 
 Task-card descriptions use `cms/helpers/TaskContentHelper::render()` at output,

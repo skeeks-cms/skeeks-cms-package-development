@@ -80,7 +80,8 @@ changes the toolbar only; keep the cleaning options in step with it.
   "Вставить в текст" (images) and, with `attachLabel`, "Прикрепить файлом".
   The second zone (and non-image files dropped or pasted into the text)
   triggers the jQuery event `sx-rte:attach` with the files on the root
-  `[data-sx-rte]`; the host form attaches them its own way (mail does).
+  `[data-sx-rte]`; the shared attachments field of the same form picks them
+  up (`form-attachments.md`).
 - Forms are not submitted while pictures are uploading (capture-phase
   `submit` guard). `sx.RichText.isBusy(root)` is available for AJAX forms.
 - The toolbar is `position: sticky` under the shell header
