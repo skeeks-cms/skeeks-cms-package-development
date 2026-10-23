@@ -250,10 +250,19 @@ Read the relevant reference completely before acting:
   click and List-Unsubscribe, and imports of recipients into leads with
   duplicates, read
   [references/mailing-consent.md](references/mailing-consent.md).
+- For mailing campaigns (an audience fixed at launch, a letter per recipient
+  through the ordinary mail service, an offer document per recipient from a
+  template, pluggable campaign channels, the pace of a manager's mailbox in
+  a long-waiting job, the report) and for personal links made in jobs, read
+  [references/mailing-campaigns.md](references/mailing-campaigns.md).
 - For MCP/REST read tools of a package for AI clients (the client history
   as the card feed, the client overview, `params['cmsMcp']` extensions
   instead of a `cmsMcp` config block, masked contacts and hidden personal
   links), read [references/ai-read-api.md](references/ai-read-api.md).
+- For MCP/REST action tools for AI clients (AI prepares, a person sends or
+  launches; `confirm=true` with a dry run; per-row refusals; the server-set
+  "Подготовлено ИИ" mark from the OAuth client; limits and journal), read
+  [references/ai-actions.md](references/ai-actions.md).
 - For adding requisites (contractors) to a company, lead or other owner with
   INN deduplication and optional DaData, and for records owned by a lead
   (phones, emails, addresses, links) and their transfer to a company, read
