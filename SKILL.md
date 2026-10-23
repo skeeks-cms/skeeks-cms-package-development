@@ -273,6 +273,9 @@ Read the relevant reference completely before acting:
   system (asked-for state shown at once, a coalescing job per resource), and
   the active-record base-class rules for high-write tables, read
   [references/background-jobs.md](references/background-jobs.md).
+- For external payment attempt identities, ambiguous HTTP results and safe
+  interactive retries, read
+  [references/external-payment-attempts.md](references/external-payment-attempts.md).
 - For durable receipt of external change streams, transactionally committed
   protocol cursors, receipt-versus-application boundaries and objects moved
   or deleted on the remote side without a change feed, read
