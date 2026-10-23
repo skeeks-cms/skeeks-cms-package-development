@@ -231,7 +231,8 @@ Read the relevant reference completely before acting:
   `Skeeks::$recordSources`), read
   [references/record-sources.md](references/record-sources.md).
 - For a package's own block in lead, company and deal cards ("КП", later
-  "Счета": `CrmCardBlocksWidget`, `EVENT_BLOCKS`), quick sending of ready
+  "Счета": `CrmCardBlocksWidget`, `EVENT_BLOCKS`), a package tab in a core
+  section (`actionsMap` through the DI container), quick sending of ready
   shared documents from that block, and for client documents that keep
   every sent version unchanged (proposal versions), read
   [references/crm-card-blocks.md](references/crm-card-blocks.md).
@@ -244,6 +245,11 @@ Read the relevant reference completely before acting:
   of mail services, a transition page with UTM marks, "Принять",
   "Задать вопрос"), read
   [references/client-link-pages.md](references/client-link-pages.md).
+- For advertising consent and opt-out of a contact by topics, the stop list,
+  the check before an advertising send, the opt-out page with RFC 8058 one
+  click and List-Unsubscribe, and imports of recipients into leads with
+  duplicates, read
+  [references/mailing-consent.md](references/mailing-consent.md).
 - For adding requisites (contractors) to a company, lead or other owner with
   INN deduplication and optional DaData, and for records owned by a lead
   (phones, emails, addresses, links) and their transfer to a company, read

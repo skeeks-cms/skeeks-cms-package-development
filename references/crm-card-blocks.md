@@ -132,3 +132,45 @@ sets `window.location` to `data.afterSaveUrl`. An extra "Сохранить и �
 button in an update form sets `submit-btn` to its own value and submits the
 form; the update action keeps that value in `data.submitBtn`. Reference:
 `cms-proposal` `ProposalUi::nextStepFormCallback()` (verified 2026-10-23).
+
+## A tab of a package in a core section
+
+A package adds a tab to a core section (the leads section: "Канбан",
+"Таблица", "Отчёт", then "Импорт" of `cms-communication`, verified
+2026-10-23) without a core change: `BackendController::$actionsMap` is
+merged into `actions()`, and controllers are created through the DI
+container, so the package bootstrap (web only) extends the controller's
+container definition, keeping whatever is there:
+
+```php
+$class = \skeeks\cms\controllers\AdminCmsLeadController::class;
+$definition = \Yii::$container->getDefinitions()[$class] ?? [];
+$definition['actionsMap']['comm-import'] = [
+    'class' => \skeeks\cms\backend\ViewBackendAction::class,
+    'name' => 'Импорт', 'icon' => 'fas fa-file-import', 'priority' => 28,
+    'callback' => [\vendor\package\controllers\AdminImportController::class, 'renderLeadsTab'],
+];
+\Yii::$container->set($class, $definition);
+```
+
+Show the package's records in such a tab with its own standard grid, not a
+hand-made table: create the package controller, give its `index` action the
+tab's `configKey`/`backendShowingKey` through `actionsMap` (grid settings
+are kept per tab), set the action's `url` to the tab's `urlData` and return
+`$index->run()` — the way core shows another controller's list in a tab
+(`AdminCmsCompanyController::documents()`; with a parent record
+`BackendGridModelRelatedAction` does the same). Reference:
+`cms-communication` `AdminCmsCommImportController::renderLeadsTab()`.
+
+The tab inherits the section's permission (`cms/admin-lead`); the package
+grid filters anything narrower. Rows, "create" and every next step open in
+the standard backend window (`sx.classes.backend.widgets.Action` with
+`isOpenNewWindow`; links built with `enableEmptyLayout()` only, never
+`_sxb[noa]`); forms inside the window post and redirect with
+`BackendUrlHelper::...->setBackendParamsByCurrentRequest()` so the next step
+stays in the window; the window page triggers
+`sx.Window.openerWidgetTriggerEvent('model-update', {submitBtn: 'apply'})`
+and the list reloads when the window closes. Hide the package controller's
+own `index`/`create` tabs (`isVisible => false`) so the window has no tab
+bar. Prefer this to a separate menu item when the feature belongs to the
+section.
