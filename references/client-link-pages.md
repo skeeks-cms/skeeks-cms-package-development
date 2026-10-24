@@ -105,3 +105,55 @@ view, then leads on. Verified with `cms-proposal` presentations
 - Notify the responsible employee through `CmsWebNotify` with
   `model_code`/`model_id` of the document (see
   [backend-notifications.md](backend-notifications.md)).
+
+## Shared signal code
+
+The page signal and the browser signals are one script of
+`skeeks/cms-communication`: `assets\LinkSignalAsset` (`link-signal.js`,
+`window.sxLinkSignal.whenSeen(delay, send)` — `send` returns a promise, a
+failure re-arms on the next `visibilitychange`; `browserSignals()`). A page
+with its own layout prints it before its own script
+(`LinkSignalAsset::scriptUrl()`). The robots list is
+`LinkChecks::ROBOT_PATTERNS` / `isRobot()`; adding marks to an address is
+`LinkMarks::addParams()`. Do not copy them into a package. Verified
+2026-10-24: the page of an offer counts a view through the shared script.
+
+## Visits of our sites by links of letters
+
+Every letter leaves through `MailComposeService::queue()`, so that is the
+only place that marks links (`services\LinkMarks`, verified 2026-10-24 with
+real letter №2148 from the stand mailbox, a browser, `curl` and a page of a
+second installation):
+
+- Only the text written now is marked, before the quote, the forwarded
+  letter, the personal links of sendables and the opt-out link are added:
+  earlier letters keep their codes, a link that already has `sx` is never
+  touched, a resend reuses the stored body. Paths starting with `/~`
+  (personal pages) and other hosts, `mailto:`, `tel:`, anchors stay. Missing
+  `utm_*` are added, existing ones (any case) stay; there is no redirect.
+- The code (`cms_comm_track`, 16 url-safe characters) is one per letter and
+  its first "Кому" recipient with the recipient's CRM record; it is written
+  in the transaction of the letter, and only when a link was marked.
+- The site script (`assets\VisitAsset`) is registered by the package
+  bootstrap on `View::EVENT_END_BODY` only for a GET page with `?sx=` or the
+  visit cookie, never in a backend; the site's script compressor puts it in
+  a separate compressed file, other pages are unchanged. It removes `sx` from
+  the address bar at once, counts the visit only through `whenSeen()`, keeps
+  the visit token in a first-party cookie (`sx_visit`, session) and reports
+  next pages by the token (`POST /~comm-visit/seen|page`, fixed paths
+  prepended in the bootstrap).
+- `skeeks/cms-seo` canonical addresses redirect away unknown parameters on
+  some sites (seen on skeeks-platform.ru): the bootstrap adds `sx` with
+  `seo->canUrl->ADDminor_pname()` on frontend requests. A site on another
+  installation must do the same before including `/~comm-visit/visit.js` of
+  the CRM site.
+- A site on another installation posts across sites: the endpoints answer
+  with `Access-Control-Allow-Origin` only for origins on the configured
+  domains (403 otherwise), read no cookies and set none; requests are simple
+  (`FormData`, no preflight), so the browser sends the visit token, not a
+  cookie of the CRM. A signed-in employee is recognized only on the CRM site
+  itself.
+- One feed entry per visit, its pages read when the feed is shown; a link
+  check is written once per letter. The first counted visit of a code gives
+  the call task unless the executor has an open `Позвонить…` task on that
+  record (an offer's included): never two calls for one interest.

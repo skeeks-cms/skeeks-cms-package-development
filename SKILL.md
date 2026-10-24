@@ -243,7 +243,9 @@ Read the relevant reference completely before acting:
 - For the public page of such a document by the code of one sending (no
   sign-in, no site counters, honest "opened" by a page signal, link checks
   of mail services, a transition page with UTM marks, "Принять",
-  "Задать вопрос"), read
+  "Задать вопрос"), for the shared signal script, and for marks and the
+  personal code in links of letters with visits of our sites counted in
+  the feed (also from a site on another installation), read
   [references/client-link-pages.md](references/client-link-pages.md).
 - For advertising consent and opt-out of a contact by topics, the stop list,
   the check before an advertising send, the opt-out page with RFC 8058 one
