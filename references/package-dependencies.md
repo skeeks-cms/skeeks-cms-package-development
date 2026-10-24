@@ -47,3 +47,18 @@ Rules for `skeeks/*` packages:
 Example: `skeeks/cms-hosting` 2.6.9 replaced phpseclib 2 and
 `hguenot/yii2-gsftp` (pinned `~2.0`) with phpseclib 3 helpers; its
 `SSH-CLIENT.md` owns the SSH details.
+
+## A stand runs unreleased neighbours
+
+A local stand links every `skeeks/*` package to the shared vendor, so it
+runs the working copies of neighbouring packages, released or not. Code that
+uses something a neighbour has only in its working copy passes every stand
+check and fails in production. Verified 2026-10-24: `cms-communication`
+1.15.0 rendered `BackendIcon::render('inbox')`, an icon added to
+`cms-backend` after its 2.1.1.22 release; production (2.1.1.22) answered 500
+on "Чаты" (`Unknown backend icon: inbox`), fixed in 1.15.1.
+
+Before a release, check the new uses of a neighbour (icons, widgets, methods,
+CSS tokens) against its last tag, e.g. `git -C <neighbour> show
+<tag>:src/helpers/BackendIcon.php`; use what is released, or release the
+neighbour first and raise the requirement.
