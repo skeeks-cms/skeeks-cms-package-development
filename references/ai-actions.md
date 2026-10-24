@@ -111,6 +111,35 @@ Verified 24.10.2026 (`services\AiSend`, `cms_comm_api_send`,
   section's right; a send never creates it, and an empty list says what to
   set up.
 
+## Purpose, files and test sends of an API letter
+
+Verified 24.10.2026 (`services\LetterPurpose`, `services\AiDraftFiles`,
+`tests/ai-letters.php`).
+
+- The purpose is explicit in the request and checked against data, never
+  inferred from the text, an individual text, a manual send or an attached
+  document: advertising (topic, opt-out, mailing checks), personal (the
+  client wrote within N days), service (active deal or paid bill). Personal
+  and service take no topic and no opt-out link; complaints and bounces stop
+  any purpose. The letter form validates the same purpose, so the screen and
+  the API refuse alike. The purpose is part of the check fingerprint and of
+  the send journal.
+- Files are referenced by storage id, never by path or URL of the server:
+  only the OAuth user's own files of the site, the type by content
+  (`finfo`), count/size limits, a copy in the package's own storage so
+  removing a file from the letter never touches the user's upload, and the
+  same content is not added twice. Pictures in the text go the screen's way
+  (an upload token in the HTML → `cid:` part at send). The fingerprint takes
+  the files' content hashes, not one-time upload tokens.
+- An upload tool must never pass a caller's string to a storage that treats
+  relative strings as local paths: allow only public http(s) URLs, resolve
+  and pin every hop to public IPs, cap the size, refuse script extensions.
+- A test mode is a server list of exact record–address pairs in site
+  configuration (no tool edits it), for administrators only. It skips only
+  the repetition checks and keeps rights, address, purpose, files,
+  confirmation, fingerprint, idempotency, day limits and suppression; it is
+  shown in the check, part of the fingerprint and journaled. No `force`.
+
 ## Testing
 
 Run the tools through `McpComponent::executeTool()` with an unsaved token

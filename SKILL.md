@@ -263,7 +263,8 @@ Read the relevant reference completely before acting:
   launches; `confirm=true` with a dry run; per-row refusals; the server-set
   "Подготовлено ИИ" mark from the OAuth client; limits and journal; sending a
   checked own draft with a separate scope, a check fingerprint and an
-  idempotency key, honest send states), read
+  idempotency key, honest send states; an explicit letter purpose, files by
+  storage id, a server list for test sends), read
   [references/ai-actions.md](references/ai-actions.md).
 - For adding requisites (contractors) to a company, lead or other owner with
   INN deduplication and optional DaData, and for records owned by a lead
