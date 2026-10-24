@@ -186,3 +186,14 @@ Verified with `cms-communication` `tests/chat-mcp-stand.php` through
 - Grant model: preparing (`write`) never implies sending; sending to a
   messenger reuses the existing client-messaging scope instead of a new one,
   because a new scope means a `cms-mcp` release and re-authorizing clients.
+
+## Order of messages: time, not id
+
+An imported history gets ids in the order it was stored, and a messenger
+gives history pages from the newest back, so ids of imported messages are not
+in time order (verified 2026-10-24, `cms-communication` 1.16.2: a group read
+in pieces and scrolling up never reached its start). Show and page a chat by
+`message_at` with the id as a tie-break, take the "last message" of a chat by
+time, and poll for new messages from the largest id of the chat, not from the
+last one shown. An import collects all pages first and stores them oldest
+first, so new imports are numbered in time order too.
