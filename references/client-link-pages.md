@@ -15,6 +15,13 @@ in. Verified 2026-10-23 with `skeeks/cms-proposal` (`ProposalController`,
   completed (no message id).
 - A frontend controller of the package with a URL rule in the package web
   config (`'~kp/<code:[A-Za-z0-9_-]{16,64}>' => 'module/controller/view'`).
+  Rules from package configs come after the CMS tree rule
+  (`UrlRuleTree`), whose fallback resolves a multi-part path by the code of
+  its last part: a fixed last part that may equal a section code (`tools`,
+  `context`) is captured by that section. A random code is safe; fixed
+  endpoints (API paths) must be prepended in a bootstrap with
+  `urlManager->addRules($rules, false)`, as `skeeks/cms-mcp`
+  `McpBootstrap` does. A `~` prefix alone does not help.
 - Do not render it through the site's page events. Site packages hook
   `View::EVENT_BEGIN_PAGE/END_BODY` class-wide (theme scripts, cookie
   banner, generated keywords) and `cms-seo` appends `countersContent`
