@@ -129,3 +129,40 @@ production.
 also for every record `find()` instantiates: set a default only when the
 attribute exists and is still `null`, and read a single setting of another
 record with a scalar query instead of instantiating it.
+
+## Lists of recipients and the rules of every mailing
+
+Verified 2026-10-24 with `skeeks/cms-communication` stage 4D step 1 on the
+skeeks.com Windows stand (test `tests/lists.php`; lists filled by hand, by
+the bulk action of "Компании" and "Лиды", by an import; a campaign by two
+lists with an excluding list, light, dark and 375 px).
+
+- A member of a list is a CRM record (lead, company, client), never an
+  address: the channel picks the contact at sending, so one list serves
+  mail, SMS and bots, and consent stays with the contact — an opted-out
+  member stays in the list and the summary excludes it with the reason.
+- A member keeps who added it, when and from where (by hand, a CRM section,
+  an import, AI with its client); removing marks it, adding again brings the
+  same row back. One service operation serves the list card, CRM cards, the
+  bulk action, imports and MCP; records read through the section's own
+  scoped query are not checked for visibility a second time.
+- Campaign audiences read lists in a few queries: active members once each,
+  addresses and companies of many records batched per type, visibility by
+  one `forManager()` query per type (invisible members stay in the summary
+  as excluded).
+- An excluding list works for every audience; a company in it excludes its
+  people and its leads too.
+- Rules that protect every mailing are exclusions of the summary with their
+  own reasons, after the policy: the frequency per contact over all
+  campaigns of the site (a site setting; a letter sent in N days, being sent,
+  or waiting in a running campaign), "не мешать менеджеру" (a letter or a
+  message linked to the record or its company, a chat linked to them, a call
+  — never a mailing letter — in the campaign's N days) and one letter per
+  company (the recipient added one by one, then the company itself, then the
+  first of its people). Ask the frequency (letters that left or are leaving)
+  and the quiet days (since the launch) again before every letter.
+- A list may fill itself by rules: saved filters of CRM sections counted with
+  the section's own code (see "Counting a section's filter outside its page"
+  in [crm-card-blocks.md](crm-card-blocks.md)) hourly by a job and before
+  every campaign by the list; a rule adds only records that never were in the
+  list, so a member removed by hand stays removed.

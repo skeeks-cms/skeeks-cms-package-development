@@ -232,7 +232,8 @@ Read the relevant reference completely before acting:
   [references/record-sources.md](references/record-sources.md).
 - For a package's own block in lead, company and deal cards ("КП", later
   "Счета": `CrmCardBlocksWidget`, `EVENT_BLOCKS`), a package tab in a core
-  section (`actionsMap` through the DI container), quick sending of ready
+  section (`actionsMap` through the DI container), a bulk action of a
+  package there or a section filter counted outside its page, quick sending of ready
   shared documents from that block, and for client documents that keep
   every sent version unchanged (proposal versions), read
   [references/crm-card-blocks.md](references/crm-card-blocks.md).
@@ -255,7 +256,9 @@ Read the relevant reference completely before acting:
 - For mailing campaigns (an audience fixed at launch, a letter per recipient
   through the ordinary mail service, an offer document per recipient from a
   template, pluggable campaign channels, the pace of a manager's mailbox in
-  a long-waiting job, the report) and for personal links made in jobs, read
+  a long-waiting job, the report, lists of recipients and the rules of every
+  mailing: frequency per contact, "не мешать менеджеру", one letter per
+  company) and for personal links made in jobs, read
   [references/mailing-campaigns.md](references/mailing-campaigns.md).
 - For MCP/REST read tools of a package for AI clients (the client history
   as the card feed, the client overview, `params['cmsMcp']` extensions

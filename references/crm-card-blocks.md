@@ -174,3 +174,69 @@ and the list reloads when the window closes. Hide the package controller's
 own `index`/`create` tabs (`isVisible => false`) so the window has no tab
 bar. Prefer this to a separate menu item when the feature belongs to the
 section.
+
+## A bulk action of a package in a core section
+
+A package adds a bulk action to a core section ("В список рассылки" of
+"Компании", "Лиды", "Клиенты", `cms-communication`, verified 2026-10-24) the
+same way as a tab: an `actionsMap` entry in the container definition of the
+core controller with `BackendModelMultiWindowAction` (see "Bulk actions and
+iframe mass editing" in [backend-model-controller.md](backend-model-controller.md)).
+The marked rows and "для всех" (every row of the section's current filters,
+collected by the grid) come for free; give the action
+`modelsQueryCallback` with the section's own scope (`forManager()`,
+`cmsSite()`), a `permissionName` of the package and a small form model of
+the package (`formModel` may be a config array with the section name).
+
+- A section whose default columns have no `checkbox` gets it through the
+  same definition: `actionsMap['index']['grid']['visibleColumns'] = ['checkbox']`
+  is merged before the controller's own list, so it comes first. Saved user
+  column settings still win.
+- A static callback of the form for the action fields must not be called
+  `fields()`: it collides with `yii\base\Model::fields()` and the class fails
+  to load (a 500 in the window; `php -l` does not see it).
+- The built-in browser of the desktop app answers "no" to the native
+  `confirm()` that "для всех" and `data-confirm` use; test those with
+  `window.confirm` replaced.
+
+## Counting a section's filter outside its page
+
+A package that saves what an employee filtered in a core section (rules of
+mailing lists, `cms-communication` `ListRules`, verified 2026-10-24: the
+companies filter "category + Нет оплат" gave 1720 on the page, in a web
+request and in a console job) counts it with the section's own code instead
+of a filter builder of its own:
+
+- create the section controller (`Yii::createObject($class, [$id, $module])`,
+  also in a console application) and take `actions()['index']`;
+- run its `grid['on init']` with an event whose sender has the
+  `dataProvider` (a component with that property) — this is the section
+  scope (`forManager()`, `cmsSite()`);
+- build `DynamicConfigModel` from `filters['filtersModel']`, set the saved
+  values, keep only explicit fields with `on apply`, create the fields with
+  `skeeks\yii2\form\Builder` and trigger `apply` with a `QueryFiltersEvent`
+  on each — what `QueryFiltersWidget::run()` does without rendering;
+- filters with `HAVING` (`addSelect` of a count) keep their select: add the
+  id column under an alias instead of replacing the select.
+
+Read the values from the section page address: `f<widget id>[...]`
+(`findex`) over the saved view `sx-bs` (`BackendShowing::config_jsoned`,
+`FiltersWidget` → `filterValues`). Automatic column filters
+(`StringFilterField`, `NumberFilterField`) have no `on apply` in the action
+config: a field the section configures over a column without a class (lead
+status, stage, source with `defaultMode`) gets the class the page would give
+the column and applies itself (`FilterField`, value `{mode, value: [[...], end]}`);
+columns the section does not configure are refused as saved rules.
+
+Store the raw page values, never their meaning, so the section's current
+code counts them. Before every count check that each key is still a field of
+the section and each chosen option is still among its `items`: a section
+silently ignores an unknown key or option, and the saved filter would widen.
+Stop such a rule with the reason instead.
+
+`forManager()` without an argument reads `Yii::$app->user`. Count on behalf
+of the employee who saved the filter by setting a fresh
+`yii\web\User` component (`enableSession = false`, `setIdentity()`) for the
+duration and restoring the previous one — a fresh component has no access
+cache of another employee, and a console application gets a user only for
+that call.
