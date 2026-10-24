@@ -444,6 +444,20 @@ plugin from a compact shell, explicitly verify that long sidebars retain
 `overflow-y: auto` and horizontal model-action rows retain native
 `overflow-x: auto`.
 
+## Inner scroll areas
+
+Columns, panels and lists that scroll inside a section (mail folders, chat
+lists, drawers, grids) share the thin trackless scrollbar of the shell
+sidebar. `ui.css` sets it for every element under `html[data-sx-theme] body`
+with zero specificity (`:where`), from the `theme.css` tokens
+`--sx-scroll-width` (`thin`), `--sx-scroll-thumb`, `--sx-scroll-thumb-hover`
+and `--sx-scroll-track` (`transparent`). The page scrollbar keeps the html
+rule. Do not style `scrollbar-*` or `::-webkit-scrollbar` per section; tune
+an exceptional area only through those tokens. The opt-in `.sx-scroll`
+darkens the thumb while the pointer is over the area. Chrome ignores
+`::-webkit-scrollbar` once `scrollbar-color` applies, so check the computed
+`scrollbar-width`/`scrollbar-color` (headless screenshots hide scrollbars).
+
 ## Icon providers
 
 Do not keep an icon-font bundle globally for one or two legacy glyphs.
@@ -451,9 +465,10 @@ Do not keep an icon-font bundle globally for one or two legacy glyphs.
 Use `skeeks\cms\backend\helpers\BackendIcon` for new reusable backend controls.
 It renders small semantic inline SVG icons with `currentColor`, an accessible
 label when requested and no font or additional request. The shared registry
-currently covers search, settings, download, expand, plus, close and vertical
-movement. Extend the registry by semantic name instead of pasting view-local
-SVG markup.
+covers shell controls (search, settings, download, expand, plus, close,
+vertical movement), mail and the activity feed event types listed in
+`activity-feed.md`. Extend the registry by semantic name in the same 24px
+outline style instead of pasting view-local SVG markup.
 
 The saved-view tabs, filter search/settings controls and grid
 download/settings/fullscreen controls are verified consumers. The expanded

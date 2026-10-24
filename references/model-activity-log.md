@@ -49,7 +49,9 @@ lead) registers it in the `skeeks` component instead of editing
 `data` (store the id of the package's canonical record there, as calls do),
 and `activityLogTypes` to show it in the lead, company and client feeds
 (`CmsLogQuery::activity()`). Registrations merge; do not filter card feeds by
-a hard-coded type list.
+a hard-coded type list. The renderer gives only the entry content
+(`CmsLogEntryRenderer::entry()`); the shared frame is described in
+`activity-feed.md`.
 
 Verify real insert/update/deactivate/delete operations, readable old/new
 relations, excluded-only saves, and rollback of both owner and log. The

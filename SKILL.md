@@ -178,6 +178,10 @@ Read the relevant reference completely before acting:
   read [references/user-sessions-push.md](references/user-sessions-push.md).
 - For model activity logs, readable relation snapshots, behavior ordering and
   transaction rollback, read [references/model-activity-log.md](references/model-activity-log.md).
+- For how an entry of a CRM activity feed looks (the shared frame, the
+  content a package renderer gives through `CmsLogEntry`, event icons and
+  tones, pinning and actions on touch screens), read
+  [references/activity-feed.md](references/activity-feed.md).
 - For package migration registration, cms/migrate compatibility and migration
   history identity, read
   [references/package-migrations.md](references/package-migrations.md).
@@ -193,7 +197,8 @@ Read the relevant reference completely before acting:
   [references/backend-model-controller.md](references/backend-model-controller.md)
   and [references/customer-cabinets.md](references/customer-cabinets.md).
 - For backend/UPA CSS and JS ownership, AssetBundle dependencies, payload
-  budgets, icon providers and migration away from mandatory Unify assets, read
+  budgets, icon providers, the shared inner scrollbar and migration away from
+  mandatory Unify assets, read
   [references/backend-ui-assets.md](references/backend-ui-assets.md).
 - For any rich-text (HTML) field use the shared `RichTextInputWidget` with a
   preset and the same preset on the server (`RichTextBehavior`); read
