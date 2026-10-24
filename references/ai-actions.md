@@ -66,8 +66,17 @@ of the document package.
 
 ## Limits and journal
 
-Limits are component configuration (`perCall`, `perDay` per CRM user in the
-CRM time zone, `recentDays`). Count the day from the marks the action leaves
+Limits (`perCall`, `perDay` per CRM user in the CRM time zone, `recentDays`,
+`sendPerDay`) and a site-wide switch of API sending belong to whoever
+manages that area — a package permission of its own, given to the
+administrator role by default (RBAC in the package config), not a hard
+check of the administrator role: a settings page of the package on the site component
+settings ([component-settings.md](component-settings.md)) wins, the
+application configuration is the fallback for an empty field, then the
+defaults; one reader returns the value and its source, and the page shows
+both. Production configuration is not deployed, so a limit only in config
+cannot be changed there. A switched-off send refuses the check and the send
+with a reason that says where to turn it on; preparing still works. Count the day from the marks the action leaves
 (drafts, letters sent from them, campaign letters) instead of a new counter
 table. The journal is `ApiLogService`: `McpComponent::execute()` logs every
 call with `oauth_client_id` and the user; the action adds an entry with the
