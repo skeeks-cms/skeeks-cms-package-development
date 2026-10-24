@@ -261,7 +261,9 @@ Read the relevant reference completely before acting:
   links), read [references/ai-read-api.md](references/ai-read-api.md).
 - For MCP/REST action tools for AI clients (AI prepares, a person sends or
   launches; `confirm=true` with a dry run; per-row refusals; the server-set
-  "Подготовлено ИИ" mark from the OAuth client; limits and journal), read
+  "Подготовлено ИИ" mark from the OAuth client; limits and journal; sending a
+  checked own draft with a separate scope, a check fingerprint and an
+  idempotency key, honest send states), read
   [references/ai-actions.md](references/ai-actions.md).
 - For adding requisites (contractors) to a company, lead or other owner with
   INN deduplication and optional DaData, and for records owned by a lead
