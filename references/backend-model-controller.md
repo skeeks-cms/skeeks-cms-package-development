@@ -183,6 +183,31 @@ a record, so a forgotten guard turns a link to an inaccessible record into
 `cms/admin-company/manage` with the model); `AdminCmsLeadController` guards
 `delete` and removes `delete-multi`.
 
+A chat section can guard every model action at once: in `beforeAction()`,
+after the parent, throw `NotFoundHttpException` when the loaded model is not
+readable (`cms-communication` `AdminCmsCommChatController` with
+`ChatAccess::canRead()`, verified 2026-10-24), and remove `create`, `update`,
+`delete` and `index` from `actions()` when records come only from outside.
+
+### Models of a controller and `cmsSite()`
+
+`BackendModelController::getModel()` filters a model with a `cms_site_id`
+column by `->cmsSite()`, so the model's `find()` must return
+`skeeks\cms\query\CmsActiveQuery`. A plain `yii\db\ActiveQuery` fails with
+"Calling unknown method cmsSite()" on every model action (verified with
+`CmsCommConversation`, 2026-10-24).
+
+### Extending another section's controller
+
+A section built on another controller (bots on mail connections:
+`AdminCmsCommBotController extends AdminCmsCommConnectionController`) must
+not pass lists through `ArrayHelper::merge()` over the parent's `actions()`:
+numeric arrays are appended, so a callback `[$this, 'check']` becomes a
+four-element array (the action silently looks for a view file and fails) and
+`visibleColumns` doubles. Merge the maps, then assign callbacks and column
+lists explicitly. Override the parent's field hints in `updateFields()` when
+the meaning of a field changes (verified 2026-10-24).
+
 ## Presentation modes
 
 Use one of:

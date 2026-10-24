@@ -265,6 +265,11 @@ Read the relevant reference completely before acting:
   mailing: frequency per contact, "не мешать менеджеру", one letter per
   company) and for personal links made in jobs, read
   [references/mailing-campaigns.md](references/mailing-campaigns.md).
+- For messenger bots (Telegram, MAX): the driver boundary, a bot as an
+  account of its channel (`findMailboxes()` for mail code), durable receipt
+  by webhook or poll and ordered applying, sending through the CRM only, a
+  stand with production bots, read
+  [references/messenger-bots.md](references/messenger-bots.md).
 - For MCP/REST read tools of a package for AI clients (the client history
   as the card feed, the client overview, `params['cmsMcp']` extensions
   instead of a `cmsMcp` config block, masked contacts and hidden personal
