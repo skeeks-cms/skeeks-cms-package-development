@@ -139,6 +139,16 @@ Verified 24.10.2026 (`services\LetterPurpose`, `services\AiDraftFiles`,
   the repetition checks and keeps rights, address, purpose, files,
   confirmation, fingerprint, idempotency, day limits and suppression; it is
   shown in the check, part of the fingerprint and journaled. No `force`.
+- Whether a letter carries the opt-out line and List-Unsubscribe is decided
+  in one place of the letter form (`ComposeForm::withOptOut()`), not by "has
+  a topic": an individual offer keeps its topic for the opt-out checks
+  (stop list, topic opt-out, complaint, bounce, repetition) and shows no
+  opt-out; a campaign letter always carries it, so an individual offer is
+  refused there. Never relax a check because the visible link is absent.
+- What the sender adds by hand in the screen (the mailbox signature of the
+  employee) is added by the server to an AI draft the same way, once, inside
+  the text — the check preview then equals the letter and the fingerprint
+  covers it. AI never invents such parts.
 
 ## Testing
 
