@@ -34,7 +34,31 @@ title if the call fails. The API address and a proxy are bot settings: the
 documented MAX address uses a Russian Trusted Root CA certificate that PHP
 does not trust by default (verified 24.10.2026), so the driver defaults to
 the address that works and a site may switch. Tokens go only to the API host:
-file hosts (uploads, downloads) get no Authorization header.
+file hosts (uploads, downloads) get no Authorization header. Telegram puts the
+token into every address (`/bot<token>/…`, files `/file/bot<token>/…`): a
+Telegram driver never logs or throws an address and clears the token from API
+and transport errors.
+
+## A messenger the server cannot reach
+
+Verified with `cms-communication` 1.17.0 and `cms-communication-telegram`
+1.0.0 on skeeks.com, 25.10.2026 (Telegram from a server in Russia, both ways):
+
+- Outgoing: the bot setting "Прокси для запросов к API" (`proxy`, an encrypted
+  secret, may carry `user:pass@`) is the only channel of every driver request:
+  sends, polls, webhook calls, getMe and file downloads. Use a CONNECT proxy
+  restricted to the API host, so TLS stays end to end.
+- Incoming: the bot setting "Адрес приёма вебхука" (`webhookBaseUrl`, HTTPS)
+  makes `Bots::webhookUrl()` give `<relay>/~comm-bot/<id>`; the hourly
+  subscription check keeps it. The relay forwards the path, the body and the
+  secret header unchanged; the site checks the secret as usual, so a relay
+  holds no secret. The messenger must trust the relay certificate with its
+  full chain (Telegram reports `certificate verify failed` otherwise).
+- Without a relay the bot works in the poll mode through the same proxy.
+
+A new bot connection has no `cms_comm_account_access` rows: nobody, not even
+an administrator or an OAuth client of the CRM tools, sees its chats until
+rights are granted per employee (verified on skeeks.com, 25.10.2026).
 
 ## A bot is an account of its channel
 
