@@ -19,7 +19,20 @@ A messenger driver package (`cms-communication-telegram`, `-max`) extends
 - `send(BotOutgoing)` → the message id; one message (a text part within
   `textLimit()`, or one file);
 - `downloadFile()`, `setWebhook()/getWebhook()/deleteWebhook()`, `poll()`,
-  `chatInterval()`, `webhookSecretHeader()`, `getMe()`.
+  `chatInterval()`, `webhookSecretHeader()`, `getMe()`;
+- optional capabilities have a refusing default in `MessengerDriver`, so a
+  driver declares only what its API gives: `reactionChoices()` (empty — the
+  CRM shows no reaction picker) and `react()`; `webhookOutdated(getWebhook())`
+  — true when the subscription lacks update types the driver now asks for,
+  then `BotSubscriptions::ensure` sets the webhook again (a driver adding an
+  update type needs no manual resubscription on sites).
+
+A reaction event (`BotEvent::REACTION`) carries the person's whole current
+set of reactions on the message (`reactions`, empty = removed), not a
+delta: Telegram sends it so, and replacing is idempotent for repeats.
+Reactions are kept apart from messages (`chat\ChatReactions`) and are not
+client-history entries; they touch the message `updated_at` so an open chat
+redraws it.
 
 An API refusal (nothing was sent) is `bot\BotException` (`blocked`,
 `retryAfter`); any other exception means the outcome is unknown, and a send
