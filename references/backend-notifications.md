@@ -39,7 +39,14 @@ letters, created by the receive job in the queue/console):
   Refer to the record instead (`model_code` + `model_id`) and register the
   model in `Skeeks::$modelsConfig` with its `controller`: the header center
   renders `BackendEntityLink` at view time and opens the record's first
-  allowed action in the panel. The model needs `asText` for the link label.
+  allowed action in the panel. The model needs `asText` for the link label:
+  a plain `yii\db\ActiveRecord` without the CMS `TActiveRecord` trait must
+  also define `getAsText()` (a bare `asText()` method is not a property).
+- `CmsWebNotify::getHtml()` catches a failing item, logs it and renders it
+  without links, because the list endpoint renders all items in one response
+  and a single exception left the header panel empty (verified 2026-10-25,
+  `CmsCommConversation` without `getAsText()`). Keep new rendering code inside
+  that guard instead of calling model properties in the controller.
 - `modelsConfig` is a plain public array: a package config entry would
   replace the core list. Add the key at runtime instead
   (`$app->skeeks->modelsConfig[Model::class] = [...]` in the package
