@@ -345,6 +345,10 @@ For discounted storefront prices and totals for selected quantities, read
 For storefront profiling, HTML compression and product-list query batching, read
 [storefront-performance.md](references/storefront-performance.md).
 
+For merged css/js files of pages (assets-auto-compress): content names, usage
+marks, cleanup by retention and why deploys produced copies, read
+[compiled-assets.md](references/compiled-assets.md).
+
 For carrier callbacks, shared automatic delivery recalculation, server-owned
 quote freshness, checkout verification and cart totals, read
 [storefront-delivery.md](references/storefront-delivery.md).
