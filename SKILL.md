@@ -281,6 +281,11 @@ Read the relevant reference completely before acting:
   idempotency key, honest send states; an explicit letter purpose, files by
   storage id, a server list for test sends), read
   [references/ai-actions.md](references/ai-actions.md).
+- For what a person of the client may see and do in a deal (a service): access
+  areas and levels, roles, company-wide and deal grants, the owner of a
+  personal deal, the `dealAccess` service and RBAC rule, deal resources from
+  package providers, tasks of a deal and client task visibility, read
+  [references/deal-client-access.md](references/deal-client-access.md).
 - For adding requisites (contractors) to a company, lead or other owner with
   INN deduplication and optional DaData, and for records owned by a lead
   (phones, emails, addresses, links) and their transfer to a company, read
