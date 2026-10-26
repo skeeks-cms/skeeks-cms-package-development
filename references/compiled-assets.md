@@ -53,7 +53,11 @@ recreates it empty and later hits only check existence). So pages refresh the
 mark and store under a shared `flock` on `.index/.lock`, re-checking that both
 files exist, and cleanup re-stats and unlinks under an exclusive lock per file.
 An ordinary hit with a fresh mark takes no lock: a fresh mark is never old
-enough for cleanup.
+enough for cleanup. Serve without the lock only a mark read and known fresh: a
+vanished index entry (`filemtime` false) is a miss. A mark that could not be
+refreshed (no lock, refused `touch()`) is never treated as refreshed: the page
+falls back to a store, which rewrites the files (fresh marks) under the lock,
+or, without the lock, to its source files.
 
 A deleted compiled file is rebuilt by the next page that renders it; a direct
 request from older HTML gets a 404 from the web server. There is no server page
