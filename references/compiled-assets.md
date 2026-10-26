@@ -57,7 +57,10 @@ enough for cleanup. Serve without the lock only a mark read and known fresh: a
 vanished index entry (`filemtime` false) is a miss. A mark that could not be
 refreshed (no lock, refused `touch()`) is never treated as refreshed: the page
 falls back to a store, which rewrites the files (fresh marks) under the lock,
-or, without the lock, to its source files.
+or, without the lock, to its source files. Mark the compiled file before its
+index entry, so a fresh index always means a fresh file; and in cleanup an
+expired entry that the unlink kept (marked meanwhile, or unlink failed) still
+references its file.
 
 A deleted compiled file is rebuilt by the next page that renders it; a direct
 request from older HTML gets a 404 from the web server. There is no server page
