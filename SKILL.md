@@ -359,6 +359,10 @@ For canonical URLs, noindex of empty listings, stock-aware sitemap exclusion,
 the sitemap job and the shop 404 page, read
 [storefront-indexing.md](references/storefront-indexing.md).
 
+For the external links transition page `/~redirect` (signed links, allowed
+schemes, confirmation for unsigned links, noindex), read
+[external-links-redirect.md](references/external-links-redirect.md).
+
 ## Client-facing release notes
 
 Write release titles, descriptions and changelog entries in Russian, using
