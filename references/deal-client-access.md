@@ -144,4 +144,78 @@ custom, levels, comment) and removed only while it still matches — a change
 in the same second is caught too; changed ones are kept and reported; a
 reverted run is not undone twice.
 
-Test: `skeeks/cms/tests/deal-client-access.php` (Composer autoload, SQLite memory).
+## Managing access in CRM cards
+
+Managers set all of this in the cards (skeeks/cms, verified 2026-10-26 on the
+skeeks.com stand: promotion and hosting deals, light, dark, 375 px). Every
+screen reads the service; none counts rights by itself.
+
+- **Openness.** The deal type form has «Настроить, что можно открыть клиенту»
+  (`CmsDealType::$clientAreasCustom` / `$clientAreaLevels`, saved by
+  `DealAccess::saveTypeOpenLevels()`: null removes the settings; an array stores
+  every area, closed ones as 0, so a type can close everything). The deal card
+  window `admin-cms-deal/client-open` only narrows the type
+  (`saveDealOpenLevels()` stores rows below the type and writes the change into
+  the deal feed). `openInfo($deal)` answers per area: type level, deal level,
+  open level and what limits it (`type` / `deal`).
+- **Effective rights with their origin.** `DealAccess::explain($deal)` gives
+  every person of the deal (owner, deal and company-wide grants) the level per
+  area, the granted level, the source (`owner`, `company`, `deal`), the grant
+  and the limit that cut it — in PHP from `dealGrants()` and `openInfo()`, no
+  query per area and level. It must equal `levels()`; the test checks it for
+  every person and deal. A covering full access (owner, company-wide full
+  grant) is named as the origin; covered deal grants are shown as «не действует».
+- **Deal card «Доступ и уведомления»**: chips of what is open, a person × area
+  table with the origin under each level (on a phone a card per person), the
+  grants of each person (click edits the grant window), channels per person.
+  The «Состав» block (lines of `cms_deal_item`) is postponed: its interface
+  waits on branch `deal-composition` of `skeeks/cms` with
+  `docs/deal-composition.md`; the table and the model stay released.
+  Every window that takes its deal or company from the request
+  (`?CmsClientAccess[cms_deal_id]=`, `?CmsClientAccess[cms_company_id]=`,
+  `?deal=`) checks `forManager()` right
+  after loading it, before reading people or building the form,
+  and again before saving: the form itself would show a foreign client's data.
+  The link of a person to a company (`admin-cms-company2user`, its `is_root` is
+  full access) opens only for who may `cms/admin-company/manage` that company,
+  and its company and person are not changed by the form.
+  **«Ресурсы»**: «Перенести в
+  другую сделку» is `admin-cms-deal/move-resource?type=&id=` — deals of the same
+  client only, through `moveResource()`.
+- **Company card «Люди клиента и доступы»**: the role in the company per person
+  (full / company-wide role / chosen services); a click opens
+  `admin-cms-company/client-person?user=` (role in the company, every active
+  deal with what is given and «Выдать роль», channels). Adding a person asks
+  for access first and defaults to «Только выбранные услуги» with chosen deals
+  and a role: the database default `is_root = 1` must never decide it. The
+  person, the link and the grants are one transaction; when a chosen deal no
+  longer passes the filter (company, `forManager()`), nothing is saved and the
+  employee is told — never a person with less access than asked. Lists of
+  deals in these windows have no silent limit.
+- Presentation is `ClientAccessAsset` (`client-access.css`), registered only by
+  these views; semantic `--sx-color-*` tokens.
+
+## Channels of a client person and the place of subscriptions
+
+`ClientChannelsWidget` (core) shows «Каналы связи» in the client card (clients
+only) and as compact icons in the deal table and the person window. Core lists
+emails and phones (keys `email:<lower case>`, `phone:<digits>`, confirmed or
+not); packages add channels or notes through the class-level
+`ClientChannelsWidget::EVENT_CHANNELS` (`ClientChannelsEvent::$channels`: kind,
+icon, label, value, state ok/warning/danger/off, notes, priority) and never
+make the core know them. Verified providers: `cms-communication`
+`helpers\ClientChannels` (bounces, complaints, opt-out of advertising, a row
+per active bot channel of the site: `ok` only with a private chat of the
+person with an active bot — found by the person's messages in it, as
+`ChatIdentities::privateChats()`; a profile known only from a group is
+`warning`, the bot cannot write to it personally) and `cms-mobile` `MobilePush::channelRow()` (installed, notifications
+allowed). Guard the subscription with `defined(...::EVENT_CHANNELS)` for an
+older core.
+
+Client notification subscriptions live in `DealAccessNotifyEvent::EVENT_NOTIFY`
+(class-level, `collect($deal, explain())`): a notification package fills
+`cells` (user id => HTML of the «Уведомления» column) and `footer`; without a
+handler the block shows a quiet note. The core keeps no subscription data.
+
+Test: `skeeks/cms/tests/deal-client-access.php` (Composer autoload, SQLite memory);
+the channels and subscription places — `tests/crm-extension-points.php`.
