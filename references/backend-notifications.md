@@ -3,6 +3,74 @@
 Use the standard SkeekS in-cabinet notification mechanism for events that a
 signed-in user must see in the backend or customer cabinet.
 
+## Kinds of events and one notify call
+
+Verified 2026-10-27 (step У4a; `skeeks/cms` `notify\`, `skeeks/cms-communication`
+`notify\`, `tests/notify-stand.php`):
+
+- Create notifications through `Yii::$app->notifications->notify($userIds,
+  $kind, $data)`, not `new CmsWebNotify()`. A package registers its kinds in
+  its config (`components.notifications.kinds`: name, category, importance
+  0/1/2, audience worker/client/any, `mutable`, `dealArea` for client
+  notifications); categories are the core ones (tasks, clients, messages,
+  finance, system, other) unless a package adds one. A direct row still
+  works: it gets the category of its record (`modelCategories`) and stays in
+  the CRM only.
+- `eventKey` stores one event once per recipient (a repeat returns nothing);
+  with `collapse` an unread row of the same key takes the new text and
+  `count` + 1 (bursts: new letters, chat messages). A read burst row loses
+  its key and the next event starts a new row.
+- Related events are one entry: wrap the cause and what it triggers in
+  `notifications->group($key, fn)` (an opened proposal and the call task it
+  creates; a visit by a letter link and its task). Rows created inside — in
+  any package, the core task notification included — share `group_key`.
+  The bell shows the first as the main line, later ones under it; actions
+  apply to the whole group; messengers get one message.
+- `notify()` skips muted kinds ("не уведомлять о таком") except urgent ones,
+  and makes the row silent (read, not counted) when the person switched the
+  category off in the CRM. Do not check settings in the caller.
+- Settings are core (`cms_notify_setting`: category or kind × channel →
+  all / important / off, kind × `*` → mute; `cms_notify_profile`: ready
+  variant, quiet hours) and the page is the trait `UserNotifyActions`
+  (profile "Уведомления"), reusable in client cabinets.
+- Channels outside the CRM are `notify\NotifyChannel` objects registered in
+  `components.notifications.channels` (a channel hides itself with
+  `isAvailable()`); an entry implementing `NotifyChannelProviderInterface`
+  gives several at once — messengers come from the installed bot drivers,
+  coded by the driver channel, never a hand-written list. Ready variants of
+  a package's channels are its `notifications.presets`. Settings are read
+  anew on every `notify()`: queue workers live long. The delivering package listens to the component event
+  `created` through the component config (`'on created' => [...]`), not a
+  web bootstrap: notifications are created in console jobs too. The event
+  runs inside the caller's transaction, so the handler only queues jobs.
+- A link of a notification outside the CRM is `/~n/<id>` (built from
+  `communication->siteUrl()` in jobs): the web request signs in, marks the
+  group read and redirects to `CmsWebNotify::getOpenUrl()` with the right
+  backend prefix; a stored `url` is followed only within the site.
+- Bell actions that change rows (clear, read all, an entry action) accept
+  POST only, so the CSRF check applies. Pages of the bell go by entries
+  (groups), not rows: a row cursor repeats a group whose rows are far apart.
+- A burst row that is silent (read from the start, CRM off) keeps
+  collapsing; only a burst read by the person starts a new row. A conflict
+  of `eventKey` from a parallel process is a duplicate, not an error of the
+  caller.
+- Delivery rules of `cms-communication` (`NotifyDeliveries`): one journal row
+  per notification, channel and burst step; a short delay so a group goes as
+  one message; quiet hours requeue the job; read in the CRM meanwhile — not
+  sent (unless the row was silent from the start); a refusal starts the next
+  connected channel, an unknown outcome (a broken mail connection included)
+  never does. Jobs of a group may run in any order: a later event that runs
+  first waits in the journal and the earlier one takes it; a fallback after
+  a refused message carries every event of that message. The job checks the
+  settings and mute again before sending (they may change while it waits),
+  except for a fallback and the explicit channel check. A link check accepts
+  no backslash or control character: browsers read them differently from
+  `parse_url()`. Messenger
+  messages go through `BotSend::queue()` and get their outcome from the send
+  job (`NotifyDeliveries::onBotResult()`); one chat and one messenger person
+  serve one employee, and a person linked to a client is never taken over by
+  an employee's link.
+
 ## Standard contract
 
 - Store notifications in `skeeks\cms\models\CmsWebNotify`.

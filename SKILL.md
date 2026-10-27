@@ -213,6 +213,8 @@ Read the relevant reference completely before acting:
   `sx-block`/`sx-panel`, read
   [references/surfaces.md](references/surfaces.md).
 - For standard in-cabinet web notifications, the header notification center,
+  kinds of events (`notifications->notify()`, groups, bursts), personal
+  settings "что и куда", channels outside the CRM and their delivery,
   task notification rules and recipient selection, read
   [references/backend-notifications.md](references/backend-notifications.md).
 - For live telephony widgets, employee call isolation, polling, status and
