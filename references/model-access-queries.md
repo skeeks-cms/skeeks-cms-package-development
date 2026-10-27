@@ -51,3 +51,30 @@ another employee silently used the current viewer. Verified consumer:
 `cms-communication` `CrmRecords::visibleQuery()` (letter visibility through a
 linked task or deal, choosing a responsible person among employees who may
 read a letter).
+
+## Employee hierarchy (department heads)
+
+"Subordinates" of an employee have one rule in the core:
+`CmsDepartment::subordinateIds($leaderId)` (skeeks/cms 6.4.9.73). For every
+department the employee heads it walks all nested departments (`pid` tree) and
+returns their workers (`cms_department2worker`) plus the heads of the nested
+departments, without the employee. Sibling and parent branches are never
+included. `User::getSubordinates()` is built on it, so every `forManager()`
+scope that merges `$user->subordinates` (companies, clients, projects, calls,
+leads, tasks, proposals) and the worker card rules follow the same tree. Do not
+query `cms_department`/`cms_department2worker` for hierarchy elsewhere.
+
+What a head may do with records of subordinates is decided by the existing
+checks, not by a second hierarchy rule:
+
+- tasks: `CmsTaskQuery::forManager()` includes tasks whose executor or creator
+  is the viewer or a subordinate; `CmsTaskRule` reuses that scope, so a head
+  opens and edits them;
+- leads: `CmsLeadQuery::forManager()` shows leads executed by subordinates,
+  but working actions stay with `CmsLead::isManagedBy()` (the executor) and
+  administrators: a head only views them.
+
+Employee pickers that filter by an executor use `CmsUserQuery::managedBy()`:
+all workers for an administrator, otherwise the viewer and subordinates. Pickers
+that assign an executor keep all workers. Coverage:
+`cms/tests/cms-department-subordinates.php`.
