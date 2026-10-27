@@ -265,7 +265,9 @@ Read the relevant reference completely before acting:
   template, pluggable campaign channels, the pace of a manager's mailbox in
   a long-waiting job, the report, lists of recipients and the rules of every
   mailing: frequency per contact, "не мешать менеджеру", one letter per
-  company) and for personal links made in jobs, read
+  company), for mailing services (a send-only driver behind an ordinary
+  mailbox, delivery events by webhook, the stop list) and for personal
+  links made in jobs, read
   [references/mailing-campaigns.md](references/mailing-campaigns.md).
 - For messenger bots (Telegram, MAX): the driver boundary, a bot as an
   account of its channel (`findMailboxes()` for mail code), durable receipt
@@ -286,8 +288,15 @@ Read the relevant reference completely before acting:
 - For what a person of the client may see and do in a deal (a service): access
   areas and levels, roles, company-wide and deal grants, the owner of a
   personal deal, the `dealAccess` service and RBAC rule, deal resources from
-  package providers, tasks of a deal and client task visibility, read
+  package providers, tasks of a deal and client task visibility, managing it
+  in the deal, company and client cards (openness, effective rights with
+  their origin, composition, moving a resource), the «Каналы связи» extension
+  point and the place of client subscriptions, read
   [references/deal-client-access.md](references/deal-client-access.md).
+- For CRM entity words in the interface («Сделки» = `CmsLead`, «Услуги» =
+  `CmsDeal`), what may and may not be renamed, and the shared «Услуги» admin
+  menu group, read
+  [references/crm-entity-names.md](references/crm-entity-names.md).
 - For adding requisites (contractors) to a company, lead or other owner with
   INN deduplication and optional DaData, and for records owned by a lead
   (phones, emails, addresses, links) and their transfer to a company, read
