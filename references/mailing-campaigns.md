@@ -176,7 +176,7 @@ a real view of the presentation link making the company warm with a call
 task). Words: «сделка» = `CmsLead` ([crm-entity-names.md](crm-entity-names.md)).
 
 - A cold base is an audience of companies and contacts in a list, never deals:
-  a deal comes from interest (a reply, a request; `CampaignTasks::onReply()`)
+  a deal comes from interest (a reply, a request; `CampaignTasks`)
   or from the manager. An import has an explicit mode chosen before the
   columns: a base into a list, or real requests into deals (a found client
   with an open deal the importing employee sees gets a feed entry of the
@@ -196,8 +196,10 @@ task). Words: «сделка» = `CmsLead` ([crm-entity-names.md](crm-entity-nam
   opted out or on the stop list. The preview and the run use the same
   outcomes; the preview writes nothing.
 - A new card: a company when the row names one, a contact linked to it
-  (contacts go to the person, else to the company), the importing manager
-  responsible, no password or invitation, the mailing source and the cold
+  (contacts go to the person, else to the company), the responsible chosen
+  in the import — none by default for a base (the common pool of the CRM: the
+  first manager takes the company), «Я» or another employee — no password or
+  invitation, the mailing source and the cold
   state in the package's own table (the core card has no source field), the
   topic with the cold basis on its contacts. A contact without a name gets its
   main email/phone through the core setter (`User::$email`), so its card is
@@ -207,7 +209,21 @@ task). Words: «сделка» = `CmsLead` ([crm-entity-names.md](crm-entity-nam
   first counted view of a presentation or an offer) marks the recipient's
   company or contact warm once, with the campaign and the letter, and the
   campaign report counts it; the call task stays the campaign setting. A
-  signal never creates a deal; an opening of a letter is only a report mark.
+  signal creates no deal unless the campaign says so («Создавать сделку при
+  просмотре», off by default); an opening of a letter is only a report mark.
+- A reply, a request from the letter (a question or an acceptance on the
+  page of its offer) and a view with that setting are one rule
+  (`CampaignTasks`): the client's only open deal continues (a task in it, a
+  view — a feed entry); otherwise a new deal, once per recipient and kind by
+  its source reference. Its responsible is the one the letter went from only
+  when it went from his own mailbox (nobody else may send from it) and the
+  client has a main responsible; a shared mailbox or a client of the common
+  pool — «Неразобранное». The offer package reaches the rule through
+  `Campaigns::onOfferView()` / `onOfferRequest()` by the letter of its send.
+- The defaults of a new campaign (the call task and the deal on a view) are
+  the core CRM settings, set «Исходящие продажи» (`CrmSettings`); the campaign
+  copies them when created and may change them. A package reads such a core
+  setting with `property_exists()` and a fallback for an older core.
 - Old deal members of lists move to the deal's company, its contact, one
   card found by its contacts, or a new contact — repeatable, the deal member
   marked removed with its origin copied, the deal untouched.
