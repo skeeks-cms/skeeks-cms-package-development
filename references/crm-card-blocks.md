@@ -130,20 +130,49 @@ plain link to `MailUi::sendUrl('<type>:<id>', $record)` inside the same
 window, so "Отправить клиенту" opens with this client's contacts: two
 clicks from the card. Without documents the picker links to creating one.
 
-## Actions of the next step
+## The block of actions over the feed (`CrmCardActionsWidget`)
 
-The "Следующий шаг" block of the lead card has one menu "Действие": the core
-"Поставить задачу" first, then actions of packages from the class-level
-`CrmCardBlocksWidget::EVENT_ACTIONS` (`CrmCardBlocksEvent::$actions`:
-id => `label`, `url` of a backend window, optional `icon` of `BackendIcon`;
-`$priority` orders them; entries without a label or a URL are dropped;
-`CrmCardBlocksWidget::actions($record)`). With no package actions the menu
-stays the single "Поставить задачу" button. The menu is a native `<details>`
-closed by an outside click or Escape, with the semantic menu tokens of the
-lead kanban settings. Verified 2026-10-23 with `cms-proposal` ("Отправить
-презентацию", "Отправить КП": pickers of ready documents with "+ Создать новое"). A
-package checks `defined(CrmCardBlocksWidget::class.'::EVENT_ACTIONS')` so it
-still works with an older core.
+Lead (deal), company and client cards have one block of actions over the
+feed, as "Дело / Комментарий / Задача / Ещё" of Bitrix24:
+`skeeks\cms\widgets\admin\CrmCardActionsWidget` (`skeeks/cms`, verified
+2026-10-28 on the skeeks.com stand: deals 880, 795, 670, company 3074,
+client 1801, an administrator and a manager, light, dark, 375 px). A row of
+action tabs, under it "Примечание": a one-line field that opens into
+`CmsCommentWidget` with "Отправить" and "Отмена" (`isShowCancel`,
+`data-sx-comment-cancel`). Do not add separate button rows or a separate
+comment surface to a card.
+
+- A card connects it with one call inside the pjax container of its feed (a
+  sent note reloads the container and the block folds back):
+  `CrmCardActionsWidget::widget(['model' => $model, 'commentUrl' => [...add-comment route...], 'actions' => $cardActions])`.
+  `commentUrl => null` drops the note tab (no rights to write).
+- The card's own tabs come first, in the order given (`actions`: id =>
+  `label`, `icon` of `BackendIcon`, and either `url` of a backend window
+  opened by `sx.classes.backend.widgets.Action` with extra `window` options,
+  or `options` of a button — `onclick`, `data-*`, a delegated class such as
+  `sx-telephony-btn`; `more => true` puts a tab into "Ещё"). The deal card
+  gives "Задача", "Позвонить", "Письмо", "Не дозвонились"; company and client
+  give "Задача" with the record preselected (`CmsTask[cms_company_id]` /
+  `CmsTask[cms_user_id]`, not for an employee).
+- A package adds its tab through the class-level
+  `CrmCardBlocksWidget::EVENT_ACTIONS` (`CrmCardBlocksEvent::$actions`:
+  id => `label`, `url` of a backend window, optional `icon`, optional
+  `more => true`; `$priority` orders them, entries without a label or URL
+  are dropped; `CrmCardBlocksWidget::actions($record)`). `$event->owner` is
+  the card record (`CmsLead`, `CmsCompany`, `CmsUser` — check `is_worker`);
+  the handler checks its own permissions and returns nothing otherwise
+  (`packageActions => false` hides package tabs, e.g. for a read-only deal).
+  A package checks `defined(CrmCardBlocksWidget::class.'::EVENT_ACTIONS')` so
+  it still works with an older core. References: `cms-proposal`
+  ("Отправить презентацию", "Отправить КП"), `cms-communication`
+  ("Добавить в список рассылки").
+- The row stays one line at any width: every row tab has a hidden copy in
+  "Ещё", and `crm-card-actions.js` (`CrmCardActionsAsset`) moves the tabs
+  that do not fit into the menu on load, resize and `pjax:end`; `rowLimit`
+  (6) caps the row before measuring. "Ещё" is a native `<details>` closed by
+  an outside click, a chosen item or Escape, with the semantic menu tokens.
+  Tabs only open their action: the server side of each action does not
+  change when it moves between the row and the menu.
 
 ## A create window that goes on to the next step
 
