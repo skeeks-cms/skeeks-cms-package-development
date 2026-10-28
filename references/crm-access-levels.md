@@ -144,8 +144,38 @@ and a client):
   the link; the level is raised in «Доступ». A `work` request remains only for
   a client «по согласованию» (below) and for an incoming request of such a
   client.
-- «Доступ только по согласованию» (`cms_company.crm_access_by_approval`,
-  `cms_user.crm_access_by_approval`, `approvalRequired()`, shown in a match
+- The protection of the client (П2д, `crm\CrmProtection`, migration
+  `m261028_170000`) replaces the hand flag: `cms_company`/`cms_user`
+  `crm_protection` (`free` | `protected` | `always`), `crm_protected_until`,
+  `crm_protection_reason`.
+  - `protected` — an incoming payment (`shop_payment.is_debit = 1`,
+    `COALESCE(operation_at, created_at)`) within `crmSettings::$protectionMonths`
+    (12) or an active `CmsDeal` (`is_active`, `end_at` empty or ahead);
+    `always` — by hand, never expires; else `free`. An open deal of another
+    employee never protects.
+  - Recalculated on `ShopPayment` and `CmsDeal` saves (events in
+    `Skeeks::bootstrap()`, no cms-shop change) and daily by the agent
+    `cms/crm/protection` (`recalcMany()`; `--all` for every client with
+    payments or services). The migration made the old flag `always` and
+    calculated the rest.
+  - The first incoming payment of a client without a main responsible makes
+    the creator of its bill (else who registered the payment) the main one
+    (`onPayment()`): a paying client always has one.
+  - `approvalRequired()` = not `free`; `setApprovalRequired()` is the
+    «Авто / Всегда по согласованию» switch (`setAlways()`; the old column
+    follows for a rollback). `describe()` — «Под защитой до …: последний
+    платёж …», «…: действующая услуга №…».
+  - The general pool: a `free` client without a main responsible (no links).
+    `canTakeIntoWork()`, a match shows `canTake` → «Взять в работу» (the deal
+    form, the duplicate search, sorting): `applyIdentity()` makes the actor
+    the main responsible (`setMain()`, `full`), no request, no notification;
+    the next one gets «Работать с этим клиентом». «Вернуть в общий пул»
+    (`returnToPool()`, `canManageAccess()`, refused for a protected client)
+    removes every link.
+  - «Доступ» shows the state, the switch and «Вернуть в общий пул»; the
+    company and client lists filter «Защита: …» (`responsibleFilterItems()`).
+- A protected client (formerly «Доступ только по согласованию»;
+  `approvalRequired()`, shown in a match
   as `byApproval`) — a deal by hand is refused (`checkIdentity()`,
   `applyIdentity()`); the button sends only the request
   (`workWithClient()`, actions `admin-cms-lead/work-request` and
