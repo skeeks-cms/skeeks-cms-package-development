@@ -139,7 +139,10 @@ The lead (deal) card has one block of actions over the feed, as
 and a manager, light, dark, 375 px). A row of action tabs, under it
 "Примечание": a one-line field that opens into `CmsCommentWidget` with
 "Отправить", "Отмена" (`isShowCancel`, `data-sx-comment-cancel`) and
-"Закрепить". Pinned comments go right under the block. Do not add separate
+"Закрепить". Pinned entries are shown once, right under the block, with the
+feed's pinned marking and no surface title (`getLogs()->activity()->pinned()`);
+the feed below skips them (`CmsLogQuery::notPinned()`), so unpinning moves
+an entry back into the feed. Do not add separate
 button rows or a separate comment surface to a card; company and client
 cards are to connect the same widget.
 
