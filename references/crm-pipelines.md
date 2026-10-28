@@ -80,6 +80,37 @@ the reliability boundary. Never invent historical dates from old data.
   successful deal; no client — unknown); one deal amount per deal, never bills
   or payments. Show these rules to people next to the numbers.
 
+## Outbound sales and the personal offer (П2д)
+
+`crm\OutboundSales`, migration `m261029_100000__alter_table__cms_lead_outbound`.
+
+- Default chain of an outbound pipeline: «Первый контакт», «КП отправлено»,
+  «Смотрел», «Думает» (`DEFAULT_STAGES`; «Успешно» / «Отказ» are statuses).
+  `ensureStages($pipeline)` gives a pipeline without stages the whole chain,
+  a pipeline with stages only the missing «КП отправлено» (after the first)
+  and «Смотрел» (right after it); it never renames, moves or deletes. Called by
+  the migration for every `outbound` pipeline and by `LeadPipelineMigration`
+  when it creates one.
+- A presentation or a КП sent from a deal moves it to «КП отправлено», the
+  first counted view to «Смотрел» (`advance()`): only a deal `in_work` of the
+  outbound pipeline, only forward by the board order; «Неразобранное», closed
+  deals and other pipelines stay. The core does not depend on cms-proposal: it
+  listens to `CmsLog` inserts of type `proposal` (`data.event` `sent` /
+  `opened`; a link check is `checked`) written into the deal card by
+  `ProposalFeed` (`OutboundSales::subscribe()` in `Skeeks::bootstrap()`); an
+  error is logged, never thrown to the sending or the client page.
+- Settings of the site CRM, set «Исходящие продажи» (`CrmSettings`):
+  `outboundPipelineId`, `proposalSentStageId`, `proposalViewedStageId`; empty —
+  the pipeline with the code `outbound` and the stages by name. The call task
+  on the first view is cms-proposal's (`ProposalTasks`, its own setting); a
+  reply lands in the same deal through the conversation links of
+  cms-communication (`MessageLinker::inheritFromConversation()`).
+- The deal form: «Услуга» (`cms_lead.cms_deal_type_id` → `CmsDealType`,
+  `CmsLead::dealTypeReady()`, shown in «О сделке»); an empty name becomes
+  «Услуга — Компания» (`LeadTriage::suggestName()`); a new company in «Клиент»
+  has «Сайт» (`LeadIdentityForm::$company_site`, `siteUrl()`), saved as its
+  `CmsCompanyLink`.
+
 ## Moving existing data
 
 `php yii cms/lead-pipeline/init` (`crm\LeadPipelineMigration`): a report by
