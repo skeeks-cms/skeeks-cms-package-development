@@ -27,6 +27,33 @@ short name, a link to the person), the records the entry belongs to
 pinned mark, attached files and the actions. Do not print the time, author,
 type label, pin or menu inside package content.
 
+## The card feed of a company or a client
+
+The feed of a company or a client person (`CmsCompany::getCardLogs()`,
+`User::getCardLogs()`) is the record's own entries plus the entries of its
+deals (`CmsLead`), as in Bitrix24:
+- `CmsLogQuery::clientDealsCondition($record)` takes the deals of the client
+  as an explicit id list, so the `(model_code, model_id)` index
+  (`cms_log__model_code_id`) is used, not a scan of all deal entries;
+- an event written to the client and to its deal is shown once: a deal entry
+  is skipped when the client has a twin of the same type — the same `data`,
+  or the same `data.id` for letters and calls (the company copy of a call
+  keeps more fields). Only `phone_call`, `message`, `proposal` and
+  `comm_visit` are compared: comments and changes are never twins, their
+  `data` is often `[]`;
+- the level of the employee decides through `crm\CrmAccess::feedCondition()`
+  (see `crm-access-levels.md`);
+- pinned: `notPinnedOf($record)` leaves out only the card's own pinned
+  entries (they are shown above the feed); a deal entry pinned in its deal
+  stays in the feed as a normal entry;
+- `CmsLogListWidget::$ownModel` = the card record: with
+  `is_show_model = false` only its own link is hidden; a deal entry keeps a
+  visible link signed «Сделка №927 Ромашка» (`name_one` of `modelsConfig`, the
+  number, `asText`), which opens the deal in the backend window.
+
+The «Активность» tab (`getLogs()`) has the deals' entries too, with the same
+condition.
+
 A package log type registers its renderer in `Skeeks::$logRenderers` (see
 `model-activity-log.md`) and extends `skeeks\cms\log\CmsLogEntryRenderer`,
 implementing only `entry(CmsLog $log)`. Its `render()` returns the same
