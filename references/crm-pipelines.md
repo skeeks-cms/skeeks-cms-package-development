@@ -65,6 +65,13 @@ the reliability boundary. Never invent historical dates from old data.
   column of the default pipeline, of another one only while it has deals;
   column `amount` sums open «Сумма» (`amount`) and, for success, `deal_amount`
   over a subquery (a search groups rows). Filters: `source_type`, `no_task`.
+- The kanban (`admin-cms-lead/kanban`, the default action of the section)
+  opens on «Мои сделки»: no `executor` is the viewer, «Все сделки» is the
+  explicit `executor=all` (the empty dropdown choice too), an id — that
+  employee within `kanbanManagers()` (`AdminCmsLeadController::boardExecutor()`).
+  Toolbar links and the search form carry `executor=all` on, so switching the
+  pipeline keeps the choice; nothing is stored between visits. The funnel
+  report keeps «Все сотрудники» by default.
 - `CmsLeadFunnelReportService`: a cohort of deals that *entered* the pipeline
   in the period (creation or the move); the furthest step reached by the
   history; conversion from «взято в работу»; sorting results and non-target
