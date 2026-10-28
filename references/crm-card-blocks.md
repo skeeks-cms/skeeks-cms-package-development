@@ -68,9 +68,22 @@ Verified 2026-10-28 (П2г-1) on the skeeks.com stand: deals 670 (company),
   company or client phone/email controller, so the model checks repeats
   (`CrmDuplicateGuard`); «Добавить человека» is the company card's partial
   `views/admin-cms-company/_add-person.php`. The buttons need
-  `CrmAccess::canEditClientData()` ([crm-access-levels.md](crm-access-levels.md)).
-- The deal's own phones, emails and addresses are «…из обращения»: shown
-  only while the deal has neither a company nor a person.
+  `CrmAccess::canEditClientData()`; a new phone or email of «Свои сделки» —
+  `canAddClientContact(..., $leadId)` with `?lead_id=`
+  ([crm-access-levels.md](crm-access-levels.md)).
+- Requisites and links of a deal with a company or a person are those of the
+  client (`views/admin-cms-lead/view.php`): the company's `contractors` and
+  `links` (a person — `cmsContractors`, no links), their «⋮» and «Добавить …»
+  go to the company or client controllers by `canEditClientRecord()` (from
+  `edit`; «Свои сделки» reads them). The deal has no «Добавить реквизиты /
+  ссылку» of its own then.
+- The deal's own phones, emails, addresses, requisites and links are «…из
+  обращения»: shown only while the deal has neither a company nor a person;
+  sorting moves them to the company created or found. Bills, payments and
+  documents have no `cms_lead_id`: their payer never came from the deal's
+  requisites. Old deals of a client may still keep own requisites
+  (`cms_lead2contractor`) or links (`cms_lead_link`) — moving them to the
+  client is П2г-2.
 
 ## Record source type of a package
 
