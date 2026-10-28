@@ -173,7 +173,24 @@ and a client):
     (`returnToPool()`, `canManageAccess()`, refused for a protected client)
     removes every link.
   - «Доступ» shows the state, the switch and «Вернуть в общий пул»; the
-    company and client lists filter «Защита: …» (`responsibleFilterItems()`).
+    company and client lists filter «Защита: …» and «Общий пул»
+    (`responsibleFilterItems()`).
+  - The pool is seen by every CRM employee (owner's decision 28.10.2026):
+    `CrmAccess::inPool()` (no links), `canSeePool()` (the right to the
+    companies or clients section). One visibility of the lists, the card search
+    and the API — `CrmAccess::applyClientVisibility()` →
+    `CmsCompanyQuery::forManagerOrPool()` / `CmsUserQuery::forManagerOrPool()`
+    (a client person of the pool is a non-employee without links). Never use it
+    for deals, services, bills, payments, documents or projects: they keep
+    `forManager()`, so a pool company shows none of them. The card `view`
+    action allows `canSeePool()`; the other tabs keep the manage right and are
+    hidden; the data is read only (`canEditClientRecord()` is false), the feed is
+    the client's own records (`feedCondition()`), `views/crm/_pool-banner.php`
+    at the top offers «Взять в работу» (action `crm-take`,
+    `ClientTransferActions::clientTake()` → `setMain()`), then the card opens
+    in full. A protected client without employees shows the state; a leader
+    or an administrator assigns it. The match search keeps the old visibility
+    (a pool company is `visible: false`, `canTake: true`).
 - A protected client (formerly «Доступ только по согласованию»;
   `approvalRequired()`, shown in a match
   as `byApproval`) — a deal by hand is refused (`checkIdentity()`,
