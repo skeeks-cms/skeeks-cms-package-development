@@ -349,3 +349,13 @@ Deciders (`deciderIds()`): the main responsible and his leaders, else the
 confirmation a button inside a form submits that form. A button that sends its
 own AJAX inside a create form (here — it created empty deals) must use another
 attribute (`data-sx-confirm`) and confirm itself.
+- Leaks closed after the audit (`tests/crm-leak-audit.php`): «Доступ» of a
+  card opens only to who sees the client (`canSeeCompany()` /
+  `canSeeClient()` in `clientAccessAction()`), not merely because the client
+  has links; the protection reason (it names payments and services,
+  `CrmProtection::describe(..., $withReason)`) is shown only to who manages
+  the access or has "edit"/"full". `AjaxSelectModel` names a selected value
+  only within its `searchQuery` (the default `valueCallback` reuses it), so
+  a field whose search is limited by `forManager()` never names a hidden
+  record put into the form address — give every CRM select a limited
+  `searchQuery`, not a bare `find()`.
