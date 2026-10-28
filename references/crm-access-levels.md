@@ -44,7 +44,8 @@ The level comes from `CrmAccess::clientDataLevel($user, $code, $id)`:
 | The client feed: the client's own records (calls, letters, chats, comments), his deals' records and their tasks | yes | yes | yes |
 | The feed records of other deals, services, projects, bills, payments, tasks not tied to his deals | no | yes | yes |
 | Pin a comment of the company or the person | no | yes | yes |
-| Own deals: bills, payments, documents, proposals, the deal's own requisites and links (`cms_lead_*`) | yes | yes | yes |
+| Own deals: proposals, tasks, the deal's own requisites and links (`cms_lead_*`) | yes | yes | yes |
+| Services, bills, payments, documents, tasks, proposals of the client: «своё» only (below) | own | all | all |
 | Other deals of the company and their proposals | no | yes | yes |
 | Add a new phone or email: from his own deal only for `deal` (the deal contact block, contacts copied from a deal, API create with `cms_lead_id`) | own deal | yes | yes |
 | Change the company/person data: name, form, requisites, existing phones and emails, addresses, links, people | no | yes | yes |
@@ -67,8 +68,10 @@ One place decides, everything uses it:
   evidence from them (only own deals by the executor), so `canSeeLead()`, the
   «Сделки» tab and every list follow; `CmsProposalQuery::forManager()`
   (`cms-proposal`) opens a proposal of a company or a person only when its
-  `cms_lead_id` is empty or visible. Bills, payments and documents carry no
-  `cms_lead_id` and are not hidden;
+  `cms_lead_id` is empty or visible;
+- `clientRecordCondition($user, $table, $own)` — one visibility of the client
+  records that are not deals (below, «Своё»); `ownerIds($user)` — he and his
+  subordinates, the "himself" of «своё»;
 - `feedCondition($user, $record)` — one condition for the feeds of a company
   or a person (`getCardLogs()` of the card, `getCompanyLogs()`/`getUserLogs()`,
   `getLogs()` of «Активность» add it for the current employee): for `deal` the
@@ -76,7 +79,13 @@ One place decides, everything uses it:
   incoming calls, letters, chat messages, comments are written there), of his
   own deals and of the tasks with `cms_lead_id` of his deals; null — no limit
   (`edit`, `full`, the main responsible, a leader see the entries of all the
-  client's deals in the card feed — `activity-feed.md`);
+  client's deals in the card feed — `activity-feed.md`). The client's own
+  records exclude entries another record wrote there (a proposal of the
+  company — `ProposalFeed`) unless the employee sees that record: a log type
+  whose renderer implements `log\CmsLogFeedVisibilityInterface`
+  (`feedVisibleCondition($user, $logTable)`, `ProposalLogRenderer` — the
+  proposal id in `data` among `CmsProposalQuery::forManager()`) adds the
+  condition for `deal` and the pool;
 - `canPinLog($user, $log)` (`AdminCmsLogController::togglePin()`): a deal
   comment — `CmsLead::canBeWorkedBy()`, a company or person comment —
   `canEditClientRecord()`, other records keep their rules;
@@ -118,8 +127,53 @@ duplicates, the employee's settings of the kind decide the channels):
   `crm.client_call` («Клиенты и предложения»), the company (else the person) as
   the link; never breaks the call save.
 
-Not covered yet: tasks and calls of other employees' deals in the company
-tabs; `cms_user_update` and `cms_contractor_*` of the API.
+### «Своё»: services, bills, payments, documents, tasks, proposals
+
+Owner's decision 28.10.2026. Bills, payments and documents are not tied to a
+deal (`CmsLead`): they link only to services (`cms_deal2bill`,
+`cms_deal2payment`, `shop_document2deal`), and no flow issues a bill from a
+deal — a bill keeps only `created_by` (Blameable). So `forManager()` of
+`CmsDealQuery`, `CmsTaskQuery` (`skeeks/cms`), `ShopBillQuery`,
+`ShopPaymentQuery`, `ShopDocumentQuery` (`cms-shop`, through
+`ShopBillQuery::clientCondition()` with a fallback for an older cms) and
+`CmsProposalQuery` (`cms-proposal`) call
+`CrmAccess::clientRecordCondition($user, $table, $own)`:
+- the record of a company or a person is seen when the client is seen with
+  `edit` or above: the company is in `CmsCompany::forManager()` and not in
+  `dealOnlyCompanyIds()`; the person has a link `edit`/`full` of him or a
+  subordinate, or he has no own link and the person belongs to such a
+  company (`clientDataLevel()` in SQL);
+- or it is «своё» (`$own`, OR):
+  - a service — `created_by` of him or a subordinate (`ownerIds()`);
+  - a bill — `created_by`;
+  - a payment — `created_by`, or a payment of his bill (`shop_bill2payment`);
+  - a document — `created_by`, or a document of his bill (`shop_document2bill`);
+  - a task — the executor or the author, `cms_lead_id` of a visible deal, a
+    visible project or service;
+  - a proposal — `responsible_id` or `created_by`, a visible deal or service;
+    a client proposal without a deal only with the client seen in full.
+- Administrators: the scopes return before; levels off (`dealOnlyCompanyIds()`
+  null) — the former rule "every visible client".
+
+Everything follows the scopes: the sections and their CSV, the card tabs
+(«Услуги», «Счета», «Документы», «Платежи», «Задачи» — the related grids apply
+`forManager()`; the client tab «Счета» of `/shop/admin-bill` chains it in
+`AdminUserController`), the mail linked to a service
+(`CmsCommMessageQuery::linkedToVisibleCondition`), the «Услуга» select of the
+task and proposal forms, the task RBAC rule (`CmsTaskRule`).
+
+The cards: `controllers\traits\ManagerScopedModel` — `getModel()` loads `pk`
+through `forManager()` of the model query and throws 404 otherwise; used by
+`AdminCmsBillController`, `AdminCmsDocumentController`,
+`AdminCmsDealController` (`skeeks/cms`) and `AdminPaymentController`
+(`cms-shop`), so every model action (view, update, tabs, delete) of a hidden
+record is 404, as for a hidden deal or proposal. A controller as a related
+grid of another card keeps the default lookup (`pk` is the parent's).
+Verified by `skeeks/cms/tests/crm-leak-audit.php` (all UI places green).
+
+Not covered yet: calls of other employees' deals in the company tabs;
+`cms_user_update` and `cms_contractor_*` of the API; the REST/MCP history and
+overview tools (`cms-mcp`).
 
 ## Keeping one main
 
