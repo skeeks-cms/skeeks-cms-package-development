@@ -303,5 +303,43 @@ companies or managers):
 - `LeadImport` assigns through `save()` with `CmsLead::$suppressNotifications`
   (one notification per import), not `updateAttributes()`.
 
+## Deals through REST/MCP (`cms_lead_*`)
+
+Verified 2026-10-28 (`skeeks/cms-mcp` `services\CmsLeadService`,
+`tests/crm-leads.php`). The API is one more entry of the same screen: it
+calls the services above and never decides rights of its own.
+
+- Tools: `cms_lead_list`, `cms_lead_get`, `cms_lead_stage_list`,
+  `cms_lead_reject_reason_list` (scope `cms.company.read`); `cms_lead_create`,
+  `cms_lead_update`, `cms_lead_move`, `cms_lead_close`, `cms_lead_triage`
+  (`cms.company.write`); no delete. Deals are CRM clients' data, so they share
+  the scopes of companies: existing tokens need no new grant.
+- Visibility is `CmsLead::find()->forManager()`; a deal outside it is "not
+  found". Rights are `CrmAccess` (`canWorkLead`, `canTriage`,
+  `canAssignLead`) and the model (`canBeReopenedBy`, status transitions,
+  required fields). A company the caller does not see comes as
+  `companyBrief()`: name and responsible, `id: null`.
+- Create = `LeadTriage::checkIdentity()` + `createLead()` with a
+  `LeadIdentityForm` built from the arguments: an own record by id; a hidden
+  one by the opaque `ref` of the duplicate check («Работать с этим
+  клиентом»; a protected client goes through `workWithClient()`, which only
+  sends the request); a new one from fields or a pasted line
+  (`CrmContactParser`). Before a new client the server runs the duplicate
+  check itself: a strong match returns `requires_confirmation` with the
+  masked matches (choose the own record, the `ref`, or «Это другая
+  компания» = `duplicate_of_ref` + `duplicate_reason`); open deals of the
+  client need `confirm=true`. The duplicate checks return `ref` for every
+  company and person match and accept `line`.
+- A repeated event is `source_type + source_ref` (`CmsLeadQuery::fromSource()`
+  + `resolveMerged()`), an `idempotency_key` without a source becomes
+  `source_ref = api:<key>`; the unique index settles a parallel repeat.
+- Stage and pipeline go through `CmsLeadBoardService::move()` and
+  `LeadPipelines::move()`; the model writes `CmsLeadStageHistory`. An unsorted
+  deal is sorted first (`cms_lead_triage`), as the kanban opens «Разобрать»
+  for a known client. Closing sets the same fields as the «Обработка» form;
+  success requires an explicit `deal_amount` (never filled from `amount`
+  silently).
+
 Tests: `cms/tests/crm-lead-triage-stand.php` (stand database, rolled back),
-`cms-communication/tests/triage-stand.php`, `tests/mailing.php`.
+`cms-communication/tests/triage-stand.php`, `tests/mailing.php`,
+`cms-mcp/tests/crm-leads.php`.
