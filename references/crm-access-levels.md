@@ -172,13 +172,32 @@ Deciders (`deciderIds()`): the main responsible and his leaders, else the
 
 ## Pages
 
-- «Доступ к клиенту» in the company and client cards
-  (`ClientTransferActions::clientAccess()`, `views/crm/access.php`): the main
-  responsible first, levels, «Убрать», the flag. Changed by the main
-  responsible, his leaders and administrators (`canManageAccess()`).
-- «Передать клиента» — `setMain($new, LEVEL_EDIT)`: the former main stays with
-  `edit` and may be removed; other links stay; open deals and tasks move
-  except the kept ones.
+- Access management lives in one tab «Доступ» of the company and client
+  cards (`ClientTransferActions::clientAccess()`, `views/crm/access.php`,
+  action `crm-access`):
+  - the main responsible with the leaders who see the client, and the
+    «Передать клиента» block — `setMain($new, LEVEL_EDIT)`: the former main
+    stays with `edit` and may be removed; other links stay; open deals and
+    tasks move except the kept ones. The `transfer` action is hidden
+    (`isVisible = false`): a GET of its old address redirects to
+    `crm-access`, the POST of the block goes to it;
+  - who works with the client: the level in words and where the access comes
+    from («по своей сделке» — `deal` of an executor of a client's deal,
+    «выдан вручную»); the level select and «Убрать»;
+  - «Добавить сотрудника» with a level (op `add`, `grantLink()`; an existing
+    link is changed in the list);
+  - pending `work` requests about the client, links to their cards;
+  - «Доступ только по согласованию».
+  Changed by the main responsible, his leaders and administrators
+  (`canManageAccess()`); others see it read only with their own level
+  («Ваш доступ к клиенту: …»). The tab shows where the client has employees or
+  to who may transfer it.
+- The company and client forms have no employees, people or requisites fields
+  (people and contacts — «Профиль», employees — «Доступ», requisites — their
+  tab): a form that does not post a relation never rewrites it
+  (`RelationalBehavior` saves only populated relations; `keepLinks()` guards
+  the rest). A new company or client gets the author as the responsible in
+  `updateFields()`; imports and the API write the links directly.
 - «Запросы доступа» — a section of its own in «Клиенты и сделки», after
   «Клиенты» (`AdminCmsCrmAccessRequestController`, the deals right
   `cms/admin-lead`): the menu item for administrators, main responsible
