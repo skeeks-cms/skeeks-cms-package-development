@@ -233,6 +233,14 @@ Read the relevant reference completely before acting:
 - For shared lead ingestion, source adapters, idempotency, source payloads and
   source-submission links, read
   [references/lead-ingestion.md](references/lead-ingestion.md).
+- For the one duplicate check of companies, people and deals (`CrmMatcher`,
+  hidden matches as "уже есть, ответственный …"), employee rights in the CRM
+  (`CrmAccess`), sorting «Неразобранное», the deal form "найти или создать",
+  assigning a deal without its company and access requests, read
+  [references/crm-duplicates-and-triage.md](references/crm-duplicates-and-triage.md);
+  for the main responsible, the levels `deal`/`edit`/`full`, «Работать с этим
+  клиентом» and «Доступ только по согласованию» —
+  [references/crm-access-levels.md](references/crm-access-levels.md).
 - For deal pipelines (воронки) and their stages, the implicit pipeline of a
   site without them, the history of stage transitions, moving a deal between
   pipelines, the success criterion that only suggests closing, the kanban of a

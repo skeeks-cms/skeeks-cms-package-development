@@ -150,6 +150,14 @@ Inherited backend-action settings include `name`, `icon`, `priority`,
 `isOpenNewWindow`, `isDisplayBackendShowings`, `backendShowingKey`,
 `backendShowingParam`, `configKey`, `callback`, `defaultView` and `size`.
 
+A menu item (`BackendMenuItem`, an entry of `config/admin/menu.php` or a
+package `backendAdmin.menu.data`) shows a counter next to its label with
+`badge` — an int or a callable returning one, computed only when the item is
+rendered (0 shows nothing, more than 99 shows «99+»). Pair it with
+`accessCallback` for who sees the item; the core «Запросы доступа» counts the
+pending requests the user decides (`crm-access-levels.md`). Verified
+2026-10-28.
+
 ### A section open to every employee
 
 `permissionName = null` does not open a controller: `BackendController::init()`

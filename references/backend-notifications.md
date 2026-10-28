@@ -16,6 +16,16 @@ Verified 2026-10-27 (step У4a; `skeeks/cms` `notify\`, `skeeks/cms-communicatio
   finance, system, other) unless a package adds one. A direct row still
   works: it gets the category of its record (`modelCategories`) and stays in
   the CRM only.
+- Format of a row (verified 2026-10-28, П2а): `name` is the event as plain
+  text (grey line: «Фирстова Елизавета просит сделку по клиенту»), `model` is
+  the record it concerns — shown as the bold link line by its `asText`, also
+  the label in messengers and mail. `model` must be a record registered in
+  `skeeks->modelsConfig` (lead, company, client, task…): a service row such
+  as an access request has no config, `getModel()` returns null, and the
+  text itself turns into the link. `url` only redirects the link (a list of
+  requests). Keep the client's name out of `name` when it is the `model`;
+  name a hidden client in the text only masked. Do not guess the gender of
+  the actor («просит … ему»).
 - `eventKey` stores one event once per recipient (a repeat returns nothing);
   with `collapse` an unread row of the same key takes the new text and
   `count` + 1 (bursts: new letters, chat messages). A read burst row loses

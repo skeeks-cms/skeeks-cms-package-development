@@ -1,0 +1,106 @@
+# CRM: the main responsible, three levels and «Работать с этим клиентом»
+
+Owner's decision 28.10.2026 (cms-communication `ARCHITECTURE.md`, П1/П2
+пп. 10–11). Code: `skeeks\cms\crm\CrmAccess`, `CrmAccessRequests`,
+`CrmClientTransfer`, `LeadTriage::workWithClient()`; migration
+`m261028_140000__alter_table__crm_main_responsible`.
+
+## The link of an employee to a company or a client
+
+`cms_company2manager` / `cms_user2manager` (`CrmAccess::linkTable()`):
+
+- `access_level` — `deal` «Свои сделки» (the card and everything of his deals
+  in it), `edit` «Свои сделки и данные компании» (plus phones, emails, contact
+  persons, addresses, requisites), `full` «Полный». The former `sales` became
+  `edit`. Not safe for forms (`levelRules()`, "!"); `grantLink()` only raises
+  (`levelRank()`), the access page sets (`setLevel()`).
+- `is_main` — exactly one link is the **main responsible**, always `full`:
+  approves requests, gets the notifications about the client, is listed first
+  (`companyResponsibleIds()` / `clientResponsibleIds()` order by it,
+  `mainResponsibleId()`).
+- Until П2а+ (after П2б) hiding by the levels does not exist: `forManager()`
+  reads the link without its level, so `deal` and `edit` work as `full` and
+  are only shown («Ваш доступ: … (пока как полный)» in the deal card).
+- Checks by the level are written now and switched by
+  `CrmAccess::$enforceLevels` (false until П2а+). `canEditClientData($user,
+  $recordCode, $recordId)` — phones, emails, people, addresses of a company or
+  a person: visible and (an administrator, a link `edit`/`full`, or no own link
+  — a leader through a subordinate). Hide the «Добавить …» buttons by it.
+
+Keeping one main (`ensureMain()`): a new or deleted link model
+(`afterSave`/`afterDelete`) gives a record without a main the author's link
+(`created_by`), else the earliest one. The managers field of the company and
+client forms rewrites the links (`RelationalBehavior` deletes and inserts):
+`CrmAccess::keepLinks()` (attached in `CmsCompany::init()` and `User::init()`,
+skipped for employees) snapshots the levels and the main before the update and
+restores them after, then calls `ensureMain()`. `setMain()` grants the link
+first and only then moves the mark — a grant of a link triggers `ensureMain()`,
+which would otherwise pick the former main again.
+
+## A client of another main responsible
+
+A client is "foreign" when `forManager()` hides it (no link, not a client of a
+subordinate). Matches show «Работать с этим клиентом» and, for a strong match,
+«Это другая компания» (`views/admin-cms-lead/_identity-foreign-actions.php`,
+shared by the deal form dropdown, its check and the create forms of a company
+and a client):
+
+- default — the deal is the employee's at once (`LeadTriage::applyIdentity()`:
+  executor = actor), linked to the client, the employee gets `deal`
+  (`grantLink()` in `afterIdentity()`), a `work` request with the deal goes to
+  the main responsible and his leaders. They raise the level or decline; a
+  decline keeps the deal and the level (`CrmAccessRequests::decline()`).
+- «Доступ только по согласованию» (`cms_company.crm_access_by_approval`,
+  `cms_user.crm_access_by_approval`, `approvalRequired()`, shown in a match
+  as `byApproval`) — a deal by hand is refused (`checkIdentity()`,
+  `applyIdentity()`); the button sends only the request
+  (`workWithClient()`, actions `admin-cms-lead/work-request` and
+  `duplicate-request` of the create forms); the approval creates the deal for
+  the employee (`CrmAccessRequests::createLead()`). An incoming request of the
+  client does not wait: sorting (`accept()`, `$incoming`) gives the deal to the
+  main responsible and sends the request; the approval hands the deal over.
+- `delegate` / `access` requests are kept only for rows made before the
+  decision.
+
+Deciders (`deciderIds()`): the main responsible and his leaders, else the
+`full` employees, else administrators.
+
+## Pages
+
+- «Доступ к клиенту» in the company and client cards
+  (`ClientTransferActions::clientAccess()`, `views/crm/access.php`): the main
+  responsible first, levels, «Убрать», the flag. Changed by the main
+  responsible, his leaders and administrators (`canManageAccess()`).
+- «Передать клиента» — `setMain($new, LEVEL_EDIT)`: the former main stays with
+  `edit` and may be removed; other links stay; open deals and tasks move
+  except the kept ones.
+- «Запросы доступа» — a section of its own in «Клиенты и сделки», after
+  «Клиенты» (`AdminCmsCrmAccessRequestController`, the deals right
+  `cms/admin-lead`): the menu item for administrators, main responsible
+  employees, leaders and senders (`canUseRequests()`) with the counter of
+  pending requests the user decides (`pendingRequestsCount()`, the menu
+  `badge`); the list «Ждут моего решения» (default) / «Мои запросы» / «Все»
+  (leaders, administrators) by `requestsCondition()` — the same rule as
+  `isRequestDecider()` in SQL (the main link of the record belongs to the user
+  or his subordinate, or `owner_id`); the card (`view`) in the backend window:
+  who asks and the level, «Одобрить» with `deal`/`edit`/`full» or «Отказать»,
+  the client with its employees and open deals, the deal, the decision. Seen by
+  the deciders and the sender only (`canSeeRequest()`, otherwise 403); no
+  create/delete; `update` only redirects to the card (a record link opened in a
+  new tab falls back to it). The old `admin-cms-lead/requests` redirects here.
+- A request notification: the client in the text, the request itself as the
+  bold link (`model` = `CmsCrmAccessRequest`, registered in `modelsConfig`), so
+  the bell opens its card in the window and the short link of mail and MAX
+  (`CmsWebNotify::getOpenUrl()`) leads to `view`. Companies, contacts,
+  employees and deals in the list and the card are `BackendEntityLink`s (an
+  employee — `admin-worker` when the user may open it, else `admin-user`).
+- Lists: «Мои клиенты (основной)» and «Без ответственного»
+  (`responsibleFilterItems()`, `applyResponsibleFilter()`), the main
+  responsible first in the «Сотрудники» column of companies.
+
+## Pitfall: `data-confirm` on a button inside a form
+
+`yii.js` handles any clickable element with `data-confirm`: after the
+confirmation a button inside a form submits that form. A button that sends its
+own AJAX inside a create form (here — it created empty deals) must use another
+attribute (`data-sx-confirm`) and confirm itself.

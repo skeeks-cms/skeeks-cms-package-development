@@ -99,6 +99,10 @@ of the partner-success event writes its entry after the reward row and its
 bonus transaction are saved, never before, and formats the amount as
 `rtrim(rtrim(number_format((float)$value, 2, '.', ' '), '0'), '.')`.
 
+A request added to another deal while sorting keeps its own row and
+`source_ref`; the lookup follows `merged_into_id` (`CmsLead::resolveMerged()`)
+and returns the deal where the work goes on (`crm-duplicates-and-triage.md`).
+
 ## Existing CRM identity matching
 
 The candidate surface must use the same link-eligibility predicate as the

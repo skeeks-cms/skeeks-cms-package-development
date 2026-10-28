@@ -74,6 +74,11 @@ checks, not by a second hierarchy rule:
   but working actions stay with `CmsLead::isManagedBy()` (the executor) and
   administrators: a head only views them.
 
+Leaders of an employee (whom to ask: access requests of П2а) are
+`CmsDepartment::leaderIdsOf($workerId)`, the exact inverse of
+`subordinateIds()` on the same tree (skeeks/cms 6.4.9.75); do not walk
+departments upward elsewhere.
+
 Employee pickers that filter by an executor use `CmsUserQuery::managedBy()`:
 all workers for an administrator, otherwise the viewer and subordinates. Pickers
 that assign an executor keep all workers. Coverage:
