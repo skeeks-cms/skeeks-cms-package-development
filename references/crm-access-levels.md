@@ -130,7 +130,12 @@ One place decides, everything uses it:
   links, people of a company) use the trait
   `controllers\traits\ClientDataGuard`: `guardClientData($actions)` adds the
   check to `create`/`update`/`delete`/`delete-multi`. For `create` it checks
-  both the owner column in the query and in the posted form;
+  both the owner column in the query and in the posted form; `update` of
+  an existing row refuses (403) a POST whose `cms_company_id`/`cms_user_id`
+  differs from the stored owner (`clientDataOwnerChanged()`, release audit
+  F03: a hidden field moved a phone to a foreign company). A row never moves
+  between clients through a form; `tests/crm-client-data-owner-stand.php`
+  checks it with a real GET + POST and CSRF;
 - `AdminCmsCompanyController` and `AdminUserController`:
   - `update`, `update-eav`, `add-user`, `add-contractor`, `client-person`,
     activate/deactivate by `canEditClientRecord()`;
