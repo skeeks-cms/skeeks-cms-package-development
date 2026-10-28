@@ -285,13 +285,21 @@ Deciders (`deciderIds()`): the main responsible and his leaders, else the
   `crm_access`, `log\AccessLogRenderer`). Who sees:
   `CrmAccessLog::visibleCondition()` — an administrator all; else the events
   where he or his subordinate is the actor or the employee, or the main
-  responsible of the client. The tab «Доступы» of «Компании»
-  (`crm-access-log`, `ClientTransferActions::clientAccessLog()`): «Ждут моего
-  решения» by default when there are such (`waitingCondition()`), «Все», the
-  event, the employee, the company, the dates (`DaterangeInputWidget`); the
-  history of a client at the bottom of its «Доступ». The menu item
-  «Запросы доступа» is gone: its counter is on «Компании»; the old list
-  address redirects to the tab, the card of a request stays.
+  responsible of the client. The list is the section «Доступы» of «Клиенты и
+  сделки» (`AdminCmsCrmAccessLogController`, a `BackendModelStandartController`
+  on `CmsCrmAccessLog`: standard columns, filters, sorting, export) — not a
+  hand-made page or a tab of «Компании» (the owner rejected that). Its saved
+  public tabs «Ждут моего решения» (`is_default`, filter `scope=waiting` →
+  `waitingCondition()`) and «Все» are `backend_showing` rows made by migration
+  `m261029_150000` for every site; filters event, employee, client, dates. The
+  menu item carries the counter of requests waiting for my decision and opens
+  the default tab; `pageHeader.description` says how many wait. A pending
+  request is decided in its row («Одобрить» / «Отказать» post
+  `admin-cms-crm-access-request/decide`, `lead-identity.js`), never one's own
+  request; an event opens the request card (`view` in the window), else the
+  client. The history of a client is at the bottom of its «Доступ». Old
+  addresses (`admin-cms-company/crm-access-log`,
+  `admin-cms-crm-access-request/index`) redirect to the section.
 - The company list filters and bulk actions of the access (owner's decision
   29.10.2026, `AdminCmsCompanyController`): filters `crm_responsible`
   (`my_main`, `no_main`, `no_responsible`, `pool` of
