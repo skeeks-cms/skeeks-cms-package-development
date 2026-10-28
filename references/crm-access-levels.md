@@ -184,14 +184,26 @@ Deciders (`deciderIds()`): the main responsible and his leaders, else the
   - who works with the client: the level in words and where the access comes
     from («по своей сделке» — `deal` of an executor of a client's deal,
     «выдан вручную»); the level select and «Убрать»;
-  - «Добавить сотрудника» with a level (op `add`, `grantLink()`; an existing
-    link is changed in the list);
+  - «+ Добавить сотрудника» — the `crm-access-add` action in the standard
+    backend window (small, `enableNoModelActions()`): the employee, the level
+    as three cards with `CrmAccess::levelHints()` («Свои сделки» by default),
+    «Добавить» / «Отмена»; on success the window closes and the card reloads.
+    An existing link is changed in the list;
   - pending `work` requests about the client, links to their cards;
   - «Доступ только по согласованию».
   Changed by the main responsible, his leaders and administrators
   (`canManageAccess()`); others see it read only with their own level
   («Ваш доступ к клиенту: …»). The tab shows where the client has employees or
   to who may transfer it.
+- One row and one add button for the tab and the card: `views/crm/_access-row.php`
+  (mode `tab` — the level select and «Убрать»; mode `card` — a cross on hover)
+  and `views/crm/_access-add-button.php`; the rows come from
+  `CrmAccess::accessRows()` (`accessList()` + where the access comes from).
+- The profile block «Работают с компанией» / «Работают с клиентом»
+  (`views/crm/_access-block.php`): the main responsible first («Основной»),
+  each employee with the level in words; who manages the access adds and
+  removes (the main responsible is never removed, only transferred); others
+  read only; «Настроить доступ →» opens «Доступ».
 - The company and client forms have no employees, people or requisites fields
   (people and contacts — «Профиль», employees — «Доступ», requisites — their
   tab): a form that does not post a relation never rewrites it
