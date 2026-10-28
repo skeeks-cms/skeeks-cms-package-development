@@ -233,6 +233,11 @@ Read the relevant reference completely before acting:
 - For shared lead ingestion, source adapters, idempotency, source payloads and
   source-submission links, read
   [references/lead-ingestion.md](references/lead-ingestion.md).
+- For deal pipelines (воронки) and their stages, the implicit pipeline of a
+  site without them, the history of stage transitions, moving a deal between
+  pipelines, the success criterion that only suggests closing, the kanban of a
+  pipeline and the funnel report by the history, read
+  [references/crm-pipelines.md](references/crm-pipelines.md).
 - For creating a task, lead, deal or other CRM record from a source (a
   letter, a call) in the standard create window (`?source=<type>:<id>`,
   `Skeeks::$recordSources`), read

@@ -45,6 +45,33 @@ add a package block to a core view.
 - Test: `skeeks/cms/tests/crm-extension-points.php` (order, priority,
   position, empty blocks, the three views render the place).
 
+## Phone and email rows, and the client's contacts in a deal card
+
+Verified 2026-10-28 (П2г-1) on the skeeks.com stand: deals 670 (company),
+481 (a person), 64 (no client); an administrator and an employee with
+«Свои сделки и данные компании».
+
+- A phone or email row of a company, a client or a deal is built by
+  `CrmContactBlockWidget::phoneItems($phones, $controllerId, $owner, $options)`
+  / `emailItems()`: the "⋮" menu of the row controller (`editable`), SMS
+  and «Позвонить» (`call` adds attributes such as `data-lead-id`), «Письмо»
+  (`mailto`, replaced by the mail package) and package actions through
+  `contactActions()`. Company, client and deal cards use the same rows; do
+  not rebuild them in a view.
+- `limit` + `moreUrl` of the block show the first N rows and «ещё N» to the
+  card that has them all.
+- Contacts live in the company or the person (cms-communication
+  `ARCHITECTURE.md`, п. 12). The deal card (`views/admin-cms-lead/_client.php`)
+  shows the people (first 3), the phones and the emails (first 5) of the
+  company, else of the person, with the deal as the `$owner` (the context of
+  calls and letters). «Добавить телефон/email» opens the create window of the
+  company or client phone/email controller, so the model checks repeats
+  (`CrmDuplicateGuard`); «Добавить человека» is the company card's partial
+  `views/admin-cms-company/_add-person.php`. The buttons need
+  `CrmAccess::canEditClientData()` ([crm-access-levels.md](crm-access-levels.md)).
+- The deal's own phones, emails and addresses are «…из обращения»: shown
+  only while the deal has neither a company nor a person.
+
 ## Record source type of a package
 
 `Skeeks::$recordSources` keeps one provider per source type. A package whose
