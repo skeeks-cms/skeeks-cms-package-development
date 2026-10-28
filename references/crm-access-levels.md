@@ -54,7 +54,11 @@ The level comes from `CrmAccess::clientDataLevel($user, $code, $id)`:
   his personal services and payments (`CrmProtection::compute()`): a payment
   of his company never protects him. A person without a company has the
   pool, «Взять в работу», «Доступ» and the journal like a company (record
-  code `client`).
+  code `client`). A person is in the general pool only with no employee of his own
+  and no company that has employees (`CrmAccess::inPool()`,
+  `personCompanyLinks()`, `CmsUserQuery::forManagerOrPool()`); a person of an
+  owned company is its data — seen through the company, taken into work
+  through it.
 
 | | `deal` «Свои сделки» | `edit` | `full`, main, leader, admin |
 | --- | --- | --- | --- |
