@@ -21,7 +21,9 @@ Owner's decision 28.10.2026 (cms-communication `ARCHITECTURE.md`, П1/П2
 - The levels are enforced (П2а+, `CrmAccess::$enforceLevels = true`;
   `false` only gives a site the old "every level is full" back).
   `forManager()` still decides visibility; the level decides what may be
-  changed.
+  changed and how much of the client is seen: only `full` sees the whole
+  client (`CrmAccess::seesWholeClient()`, owner's decision 29.10.2026) —
+  `edit` is «Свои сделки» plus changing the client data, nothing more.
 
 ## What each level may do (П2а+)
 
@@ -42,11 +44,11 @@ The level comes from `CrmAccess::clientDataLevel($user, $code, $id)`:
 | --- | --- | --- | --- |
 | The card: data, people, phones, emails; call, write | yes | yes | yes |
 | The client feed: the client's own records (calls, letters, chats, comments), his deals' records and their tasks | yes | yes | yes |
-| The feed records of other deals, services, projects, bills, payments, tasks not tied to his deals | no | yes | yes |
+| The feed records of other deals, services, projects, bills, payments, tasks not tied to his deals | no | no | yes |
 | Pin a comment of the company or the person | no | yes | yes |
 | Own deals: proposals, tasks, the deal's own requisites and links (`cms_lead_*`) | yes | yes | yes |
-| Services, bills, payments, documents, tasks, proposals of the client: «своё» only (below) | own | all | all |
-| Other deals of the company and their proposals | no | yes | yes |
+| Services, bills, payments, documents, tasks, proposals of the client: «своё» only (below) | own | own | all |
+| Other deals of the company and their proposals | no | no | yes |
 | Add a new phone or email: from his own deal only for `deal` (the deal contact block, contacts copied from a deal, API create with `cms_lead_id`) | own deal | yes | yes |
 | Change the company/person data: name, form, requisites, existing phones and emails, addresses, links, people | no | yes | yes |
 | Responsible employees and levels (the `managers` form field, «Доступ к клиенту») | no | no | main, leader, admin (`canManageAccess()`) |
@@ -63,8 +65,11 @@ One place decides, everything uses it:
   `cms_lead_id` of the API). The company card never offers it to `deal`, a
   post from the card without the deal is 403. The phone and email controllers
   say so by `clientDataAddable()` of `ClientDataGuard` (create only);
+- `seesWholeClient($level)` — the whole client (other deals, services,
+  finances, tasks, proposals, the whole feed): `full` only. Every visibility
+  decision uses it; `canEditClientData()` (≥ `edit`) decides changing data only;
 - `dealOnlyCompanyIds($user)` — companies where the best link of the user and
-  his subordinates is `deal` (no `edit`/`full` link among them): `CmsLeadQuery::forManager()` takes no company
+  his subordinates is `deal` or `edit` (no `full` link among them): `CmsLeadQuery::forManager()` takes no company
   evidence from them (only own deals by the executor), so `canSeeLead()`, the
   «Сделки» tab and every list follow; `CmsProposalQuery::forManager()`
   (`cms-proposal`) opens a proposal of a company or a person only when its
@@ -77,8 +82,9 @@ One place decides, everything uses it:
   `getLogs()` of «Активность» add it for the current employee): for `deal` the
   records of the client itself (`model_code` of the company or the person —
   incoming calls, letters, chat messages, comments are written there), of his
-  own deals and of the tasks with `cms_lead_id` of his deals; null — no limit
-  (`edit`, `full`, the main responsible, a leader see the entries of all the
+  own deals and of the tasks with `cms_lead_id` of his deals — the same for
+  `edit`; null — no limit (`full`, the main responsible, a leader through a
+  `full` subordinate see the entries of all the
   client's deals in the card feed — `activity-feed.md`). The client's own
   records exclude entries another record wrote there (a proposal of the
   company — `ProposalFeed`) unless the employee sees that record: a log type
@@ -138,9 +144,9 @@ deal — a bill keeps only `created_by` (Blameable). So `forManager()` of
 `ShopBillQuery::clientCondition()` with a fallback for an older cms) and
 `CmsProposalQuery` (`cms-proposal`) call
 `CrmAccess::clientRecordCondition($user, $table, $own)`:
-- the record of a company or a person is seen when the client is seen with
-  `edit` or above: the company is in `CmsCompany::forManager()` and not in
-  `dealOnlyCompanyIds()`; the person has a link `edit`/`full` of him or a
+- the record of a company or a person is seen when the client is seen in
+  full (`full`): the company is in `CmsCompany::forManager()` and not in
+  `dealOnlyCompanyIds()`; the person has a link `full` of him or a
   subordinate, or he has no own link and the person belongs to such a
   company (`clientDataLevel()` in SQL);
 - or it is «своё» (`$own`, OR):
@@ -169,7 +175,10 @@ through `forManager()` of the model query and throws 404 otherwise; used by
 (`cms-shop`), so every model action (view, update, tabs, delete) of a hidden
 record is 404, as for a hidden deal or proposal. A controller as a related
 grid of another card keeps the default lookup (`pk` is the parent's).
-Verified by `skeeks/cms/tests/crm-leak-audit.php` (all UI places green).
+Verified by `skeeks/cms/tests/crm-leak-audit.php`: two runs, the employee with
+`deal` and with `edit` — the same places hidden, `edit` may open the company
+edit form, `deal` may not. The reason of the protection (it names payments and
+services) is shown in «Доступ» only to `full` and who manages the access.
 
 Not covered yet: calls of other employees' deals in the company tabs;
 `cms_user_update` and `cms_contractor_*` of the API; the REST/MCP history and
