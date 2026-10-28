@@ -110,6 +110,14 @@ core never names a package:
 personal deal) and refuses a deal of another company; the resource must belong
 to the deal. Projects stay for internal work.
 
+
+The REST/MCP `cms_task_create` and `cms_task_update` tools accept `cms_deal_id`
+(top-level or in `attributes`); task lists and statistics may filter by it.
+`CmsTaskService` resolves a newly assigned service through `findAllowed()` /
+`forManager()` before saving; the core `CmsTask::validateDeal` still enforces
+that its client matches the task. Child tasks inherit the parent's service.
+`cms-mcp/tests/task-deals.php` verifies these paths in a rolled-back transaction.
+
 `CmsTaskQuery::forClient($user, $level)`: an internal task is never shown,
 its author included. A task **with** a deal is decided only by the rights in
 that deal (`tasks` open and granted at `$level`) — authorship or project
