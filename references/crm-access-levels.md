@@ -18,14 +18,59 @@ Owner's decision 28.10.2026 (cms-communication `ARCHITECTURE.md`, П1/П2
   approves requests, gets the notifications about the client, is listed first
   (`companyResponsibleIds()` / `clientResponsibleIds()` order by it,
   `mainResponsibleId()`).
-- Until П2а+ (after П2б) hiding by the levels does not exist: `forManager()`
-  reads the link without its level, so `deal` and `edit` work as `full` and
-  are only shown («Ваш доступ: … (пока как полный)» in the deal card).
-- Checks by the level are written now and switched by
-  `CrmAccess::$enforceLevels` (false until П2а+). `canEditClientData($user,
-  $recordCode, $recordId)` — phones, emails, people, addresses of a company or
-  a person: visible and (an administrator, a link `edit`/`full`, or no own link
-  — a leader through a subordinate). Hide the «Добавить …» buttons by it.
+- The levels are enforced (П2а+, `CrmAccess::$enforceLevels = true`;
+  `false` only gives a site the old "every level is full" back).
+  `forManager()` still decides visibility; the level decides what may be
+  changed.
+
+## What each level may do (П2а+)
+
+The level comes from `CrmAccess::clientDataLevel($user, $code, $id)`:
+- null — the client is not visible;
+- `full` — an administrator, or a leader who sees the client through a
+  subordinate's link;
+- otherwise the employee's own link. A person without an own link takes the
+  best level of the employee's links to the person's companies (people of a
+  company are its data).
+
+| | `deal` «Свои сделки» | `edit` | `full`, main, leader, admin |
+| --- | --- | --- | --- |
+| The card: data, people, phones, emails; call, write | yes | yes | yes |
+| Own deals: bills, payments, documents, proposals, the deal's own requisites and links (`cms_lead_*`) | yes | yes | yes |
+| The company/person data: name, form, requisites, phones, emails, addresses, links, people, contacts copied from a deal | no | yes | yes |
+| Responsible employees and levels (the `managers` form field, «Доступ к клиенту») | no | no | main, leader, admin (`canManageAccess()`) |
+| Deleting the company or the person | no | no | yes |
+
+One place decides, everything uses it:
+- `canEditClientData($user, $code, $id)` (level ≥ `edit`);
+- `canEditClientRecord($user, $model)` takes a company, a person or a row with
+  `cms_company_id` / `cms_user_id` (`clientRecordOf()`). It is true for
+  employees and the user himself: they are not client data;
+- controllers of the rows (company and person phones, emails, addresses,
+  links, people of a company) use the trait
+  `controllers\traits\ClientDataGuard`: `guardClientData($actions)` adds the
+  check to `create`/`update`/`delete`/`delete-multi`. For `create` it checks
+  both the owner column in the query and in the posted form;
+- `AdminCmsCompanyController` and `AdminUserController`:
+  - `update`, `update-eav`, `add-user`, `add-contractor`, `client-person`,
+    activate/deactivate by `canEditClientRecord()`;
+  - `delete` by the level `full`;
+  - the `managers` field is unset and its POST refused without
+    `canManageAccess()`;
+- requisites attach (`Admin*ContractorController::canAttach()`);
+- `LeadTriage::mayCopyTo()` (contacts of a deal to the card) and linking a
+  person to an existing company;
+- cards: `$canEditData` hides the «⋮» menus and the «Добавить …» buttons; the
+  deal contact block (`_client.php`) hides them by `canEditClientData()`.
+
+Not covered yet:
+- the REST API (`cms-mcp` `CmsCompanyService`: update, phones, emails,
+  addresses, links) checks only visibility;
+- the client feed for `deal` and the notifications of client events to the
+  main responsible: feed entries (`cms_log`) carry no deal, and mail and chat
+  recipients are decided in cms-communication.
+
+## Keeping one main
 
 Keeping one main (`ensureMain()`): a new or deleted link model
 (`afterSave`/`afterDelete`) gives a record without a main the author's link
