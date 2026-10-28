@@ -161,6 +161,14 @@ and a client):
   - The first incoming payment of a client without a main responsible makes
     the creator of its bill (else who registered the payment) the main one
     (`onPayment()`): a paying client always has one.
+  - Nobody but an explicit choice makes a main responsible: `ensureMain()`
+    promotes only a link that already is `full` (never raises `deal`/`edit`);
+    approving a request about a client without a main makes the approver the
+    main one (`CrmAccessRequests::apply()`), the requester gets exactly the
+    level chosen. Protected clients without a main: `php yii
+    cms/crm/assign-main` (the plan; `--apply` writes) — the creator of the
+    bill of the last payment, who registered it, the creator of the active
+    service, else the first administrator (`CrmProtection::mainPlan()`).
   - `approvalRequired()` = not `free`; `setApprovalRequired()` is the
     «Авто / Всегда по согласованию» switch (`setAlways()`; the old column
     follows for a rollback). `describe()` — «Под защитой до …: последний
