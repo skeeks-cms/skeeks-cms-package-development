@@ -271,7 +271,28 @@ Deciders (`deciderIds()`): the main responsible and his leaders, else the
   (`RelationalBehavior` saves only populated relations; `keepLinks()` guards
   the rest). A new company or client gets the author as the responsible in
   `updateFields()`; imports and the API write the links directly.
-- «Запросы доступа» — a section of its own in «Клиенты и сделки», after
+- The journal of the access to clients (owner's decision 29.10.2026,
+  `crm\CrmAccessLog`, table `cms_crm_access_log`, migration `m261029_130000`
+  copied the old requests in): every event is written where it happens —
+  `request`, `request_approved/declined/cancelled/obsolete`
+  (`CrmAccessRequests`), `work` and `take` (`LeadTriage::applyIdentity()`,
+  `clientTake()`), `grant`/`level`/`remove` («Доступ», the add window),
+  `transfer` (`CrmClientTransfer`), `main_auto` (the first payment,
+  `assign-main`, the approver of a client without a main), `pool`
+  (`returnToPool()`): who, to whom, the client, the level before → after, the
+  ground (deal, payment, request), a comment. `CrmAccessLog::write()` never
+  breaks the action and also writes a client feed record (log type
+  `crm_access`, `log\AccessLogRenderer`). Who sees:
+  `CrmAccessLog::visibleCondition()` — an administrator all; else the events
+  where he or his subordinate is the actor or the employee, or the main
+  responsible of the client. The tab «Доступы» of «Компании»
+  (`crm-access-log`, `ClientTransferActions::clientAccessLog()`): «Ждут моего
+  решения» by default when there are such (`waitingCondition()`), «Все», the
+  event, the employee, the company, the dates (`DaterangeInputWidget`); the
+  history of a client at the bottom of its «Доступ». The menu item
+  «Запросы доступа» is gone: its counter is on «Компании»; the old list
+  address redirects to the tab, the card of a request stays.
+- (Before the journal) «Запросы доступа» — a section of its own in «Клиенты и сделки», after
   «Клиенты» (`AdminCmsCrmAccessRequestController`, the deals right
   `cms/admin-lead`): the menu item for administrators, main responsible
   employees, leaders and senders (`canUseRequests()`) with the counter of
