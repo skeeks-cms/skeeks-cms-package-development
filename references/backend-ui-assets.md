@@ -1496,7 +1496,10 @@ New shared backend chrome must render icons through
 `currentColor`; do not add another icon font dependency. Controller action
 descriptors can opt into this contract with `icon => 'svg:<name>'`.
 `ControllerActionsWidget` keeps ordinary CSS class strings as the legacy
-fallback.
+fallback. `BackendIcon::render()` throws on an unknown name, so another
+package that names an icon added to the registry later (a tab of a core
+section through `actionsMap`) checks `BackendIcon::supports('<name>')` and
+keeps a CSS class for an older `cms-backend`.
 
 The compact admin shell header, notifications, schedule controls, theme
 switcher, breadcrumbs and menu chevrons use this SVG contract. CSS-only
