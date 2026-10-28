@@ -388,6 +388,14 @@ Deciders (`deciderIds()`): the main responsible and his leaders, else the
   client. The history of a client is at the bottom of its «Доступ». Old
   addresses (`admin-cms-company/crm-access-log`,
   `admin-cms-crm-access-request/index`) redirect to the section.
+- Who decides a request (`deciderIds()`, `requestsCondition(REQUESTS_TO_ME)`,
+  the counter and the notification): the current main responsible of the
+  client — without one, its `full` employees — their leaders and an
+  administrator. Never the requester's leader: the request's `owner_id` (the
+  main one when it was sent, possibly the requester himself) does not count.
+  The requester's leader reads the subordinate's events in «Все» only, with
+  no buttons, and a client he does not see is «клиент из базы»
+  (`AdminCmsCrmAccessLogController::clientLink()`).
 - The company list filters and bulk actions of the access (owner's decision
   29.10.2026, `AdminCmsCompanyController`): filters `crm_responsible`
   (`my_main`, `no_main`, `no_responsible`, `pool` of
