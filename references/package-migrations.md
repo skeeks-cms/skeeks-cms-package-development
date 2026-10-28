@@ -84,6 +84,23 @@ Verified consumers: `CmsContractor.registration_date` and
 `CmsContractor.delivery_address` (skeeks/cms 6.4.9.48), read by
 `skeeks/cms-shop` `ShopDocument::createFromBill()` (3.2.7.36).
 
+## Repeatable up, honest down
+
+MySQL DDL is not transactional: a run may stop between statements and be run
+again by hand. A `safeUp` adds only what is missing (`getColumn()` on a fresh
+schema) and never rewrites data by an unconditional `UPDATE`: a repeated or
+completed run must not reset settings users made meanwhile. When existing
+rows need another value than new ones, let the DDL fill them — add the
+column with the value for existing rows as its default, then change the
+default for new rows — instead of a backfill after it (verified with
+`skeeks/cms-communication` `m261109_110000`, campaign `lead_to`: existing
+«Неразобранное», new «отправитель»). A `safeDown` that would drop columns or
+tables holding data users set returns false with a message while such data
+exists (the site restores its backup instead); it never erases it silently.
+Check every case on a separate database: the old schema with rows, a second
+run, an interrupted run, down with and without own data
+(`cms-communication/tests/flow-migration-db.php`).
+
 ## Verification
 
 When a migration checks columns added by an earlier migration, request a fresh

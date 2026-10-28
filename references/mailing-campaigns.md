@@ -226,6 +226,12 @@ task). Words: «сделка» = `CmsLead` ([crm-entity-names.md](crm-entity-nam
   main responsible at launch and gives such a client's deal to its main
   responsible; the receiver of a deal of a client without a main
   responsible becomes its main one («Взять в работу», `CrmAccess::setMain`).
+  Whether the client is of the pool is read BEFORE its deal is made — the new
+  deal is itself a history and the client is never «free» after it — and
+  the event runs in one transaction under `SELECT … FOR UPDATE` of the
+  client row: two events at once make one deal and one main responsible, a
+  main responsible or a history owner is never replaced
+  (`tests/flow-race-stand.php` — parallel processes).
 - Entry points of the rule live in the packages that record the event and
   call it by the letter: the offer package (`Campaigns::onOfferView()`,
   `onOfferRequest()`), link visits (`onLinkVisit()`), the mail receive
