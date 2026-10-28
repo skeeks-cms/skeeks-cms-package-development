@@ -132,19 +132,19 @@ clicks from the card. Without documents the picker links to creating one.
 
 ## The block of actions over the feed (`CrmCardActionsWidget`)
 
-The lead (deal) card has one block of actions over the feed, as
-"Дело / Комментарий / Задача / Ещё" of Bitrix24:
+Lead (deal), company and client cards have one block of actions over the
+feed, as "Дело / Комментарий / Задача / Ещё" of Bitrix24:
 `skeeks\cms\widgets\admin\CrmCardActionsWidget` (`skeeks/cms`, verified
-2026-10-28 on the skeeks.com stand: deals 880, 795, 670, an administrator
-and a manager, light, dark, 375 px). A row of action tabs, under it
+2026-10-28 on the skeeks.com stand: deals 880, 795, 670, companies 2910,
+2787, 2903, 3112, client 1722, an administrator and a manager, light, dark,
+375 px). A row of action tabs, under it
 "Примечание": a one-line field that opens into `CmsCommentWidget` with
 "Отправить", "Отмена" (`isShowCancel`, `data-sx-comment-cancel`) and
 "Закрепить". Pinned entries are shown once, right under the block, with the
 feed's pinned marking and no surface title (`getLogs()->activity()->pinned()`);
 the feed below skips them (`CmsLogQuery::notPinned()`), so unpinning moves
 an entry back into the feed. Do not add separate
-button rows or a separate comment surface to a card; company and client
-cards are to connect the same widget.
+button rows or a separate comment surface to a card.
 
 - A card connects it with one call inside the pjax container of its feed (a
   sent note reloads the container and the block folds back):
@@ -154,10 +154,20 @@ cards are to connect the same widget.
   `label`, `icon` of `BackendIcon`, and either `url` of a backend window
   opened by `sx.classes.backend.widgets.Action` with extra `window` options,
   or `options` of a button — `onclick`, `data-*`, a delegated class such as
-  `sx-telephony-btn`; `more => true` puts a tab into "Ещё"). The deal card
-  gives "Задача", "Позвонить", "Письмо", "Не дозвонились". The task window
-  preselects a company or a client from `CmsTask[cms_company_id]` /
-  `CmsTask[cms_user_id]` as it does a deal from `CmsTask[cms_lead_id]`.
+  `sx-telephony-btn`; or `items` — a choice under the tab, id => `label`
+  with `url` or `options`, one item makes a plain tab; `more => true` puts a
+  tab into "Ещё", where a choice is listed as "Позвонить: Рабочий, +7 …").
+  The deal card gives "Задача", "Позвонить", "Письмо", "Не дозвонились";
+  company and client give "Задача" (`CmsTask[cms_company_id]` /
+  `CmsTask[cms_user_id]` preselect the record; nothing for an employee) and
+  `CrmCardActionsWidget::contactTabs($owner, $phones, $emails)`: "Позвонить"
+  with the call button of the phone rows (`sx-telephony-btn`, `data-value`)
+  and "Письмо" with the onclick a package gives the email row
+  (`EVENT_CONTACT_ACTIONS` `mailto`: the "Написать" window of the mail
+  package when the employee has a mailbox that may send), else `mailto:`;
+  several phones or emails make a choice. The block holds only contact and
+  record actions: adding people or client data stays with the contact blocks
+  and their access level ([crm-access-levels.md](crm-access-levels.md)).
 - A package adds its tab through the class-level
   `CrmCardBlocksWidget::EVENT_ACTIONS` (`CrmCardBlocksEvent::$actions`:
   id => `label`, `url` of a backend window, optional `icon`, optional
