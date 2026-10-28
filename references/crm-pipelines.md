@@ -85,12 +85,20 @@ the reliability boundary. Never invent historical dates from old data.
 `crm\OutboundSales`, migration `m261029_100000__alter_table__cms_lead_outbound`.
 
 - Default chain of an outbound pipeline: «Первый контакт», «КП отправлено»,
-  «Смотрел», «Думает» (`DEFAULT_STAGES`; «Успешно» / «Отказ» are statuses).
-  `ensureStages($pipeline)` gives a pipeline without stages the whole chain,
-  a pipeline with stages only the missing «КП отправлено» (after the first)
-  and «Смотрел» (right after it); it never renames, moves or deletes. Called by
-  the migration for every `outbound` pipeline and by `LeadPipelineMigration`
-  when it creates one.
+  «Смотрел», «Ответил», «Думает» (`DEFAULT_STAGES`; «Успешно» / «Отказ» are
+  statuses). `ensureStages($pipeline)` gives a pipeline without stages the
+  whole chain, a pipeline with stages only the missing «КП отправлено» (after
+  the first), «Смотрел» and «Ответил» (each right after the previous); it
+  never renames, moves or deletes. Called by migrations `m261029_100000` and
+  `m261029_110000` for every `outbound` pipeline and by
+  `LeadPipelineMigration` when it creates one.
+- Manual offer and the flow (owner's rule): a manager's sending from a deal
+  moves it; a sending of a campaign (bot through MCP/API, mailing) never does
+  (`isCampaignSend()`: the letter of the sending has `cms_comm_campaign_id`).
+  The campaign makes or completes deals itself and takes the stages by role:
+  `OutboundSales::pipeline($siteId)` and `stage($pipeline, ROLE_VIEWED |
+  ROLE_REPLIED)` (by name «Смотрел» / «Ответил», the viewed one may be chosen
+  in the settings).
 - A presentation or a КП sent from a deal moves it to «КП отправлено», the
   first counted view to «Смотрел» (`advance()`): only a deal `in_work` of the
   outbound pipeline, only forward by the board order; «Неразобранное», closed
