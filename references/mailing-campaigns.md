@@ -166,3 +166,55 @@ lists with an excluding list, light, dark and 375 px).
   in [crm-card-blocks.md](crm-card-blocks.md)) hourly by a job and before
   every campaign by the list; a rule adds only records that never were in the
   list, so a member removed by hand stays removed.
+
+## The audience of the new CRM model: cards, not deals
+
+Verified 2026-10-28 with `skeeks/cms-communication` П5 on the skeeks.com
+Windows stand (test `tests/audience-stand.php`; a base of 14 rows and pasted
+addresses imported into a list, a campaign by the list with a presentation,
+a real view of the presentation link making the company warm with a call
+task). Words: «сделка» = `CmsLead` ([crm-entity-names.md](crm-entity-names.md)).
+
+- A cold base is an audience of companies and contacts in a list, never deals:
+  a deal comes from interest (a reply, a request; `CampaignTasks::onReply()`)
+  or from the manager. An import has an explicit mode chosen before the
+  columns: a base into a list, or real requests into deals (a found client
+  with an open deal the importing employee sees gets a feed entry of the
+  repeated request; an open deal hidden from him is never written to — the
+  row becomes a new unsorted deal without the import executor; otherwise a
+  new deal, unsorted unless a responsible is chosen).
+- Every row of a base goes through the one core duplicate check
+  (`CrmMatcher::findMany()`, [crm-duplicates-and-triage.md](crm-duplicates-and-triage.md)).
+  Only one strong match (email, phone, INN) links; several matches, or a name
+  only, leave the row out for a person — never a new duplicate. A found card is
+  added to the list as it is: the import never changes its responsible,
+  contacts or details.
+- Rows left out keep their reason, counted in the preview by reason: a
+  client of another manager (shown as name and responsible only, no id), a
+  current client (an active service or a recent payment), a recent refusal
+  (a pause after a rejected deal, not a sorted-out request), every email
+  opted out or on the stop list. The preview and the run use the same
+  outcomes; the preview writes nothing.
+- A new card: a company when the row names one, a contact linked to it
+  (contacts go to the person, else to the company), the importing manager
+  responsible, no password or invitation, the mailing source and the cold
+  state in the package's own table (the core card has no source field), the
+  topic with the cold basis on its contacts. A contact without a name gets its
+  main email/phone through the core setter (`User::$email`), so its card is
+  named by them. Pasted addresses become the same import of lines split by
+  `CrmContactParser`: a list never holds a bare address.
+- A signal of interest (the first counted visit by a link of a letter, the
+  first counted view of a presentation or an offer) marks the recipient's
+  company or contact warm once, with the campaign and the letter, and the
+  campaign report counts it; the call task stays the campaign setting. A
+  signal never creates a deal; an opening of a letter is only a report mark.
+- Old deal members of lists move to the deal's company, its contact, one
+  card found by its contacts, or a new contact — repeatable, the deal member
+  marked removed with its origin copied, the deal untouched.
+- The core never references the audience: the import of a base is a package
+  feature added to core sections through `actionsMap` (a tab of "Компании"),
+  and signals are wired inside the packages that record them.
+- Code that reads a new column or table of the audience asks one schema
+  check first (`CmsCommImport::audienceReady()`): the code may reach a site
+  before its migrations, then imports stay requests and the audience actions
+  (the tab, pasted addresses, warm signals) are off instead of failing.
