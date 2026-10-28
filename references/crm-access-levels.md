@@ -292,6 +292,25 @@ Deciders (`deciderIds()`): the main responsible and his leaders, else the
   history of a client at the bottom of its «Доступ». The menu item
   «Запросы доступа» is gone: its counter is on «Компании»; the old list
   address redirects to the tab, the card of a request stays.
+- The company list filters and bulk actions of the access (owner's decision
+  29.10.2026, `AdminCmsCompanyController`): filters `crm_responsible`
+  (`my_main`, `no_main`, `no_responsible`, `pool` of
+  `CrmAccess::responsibleFilterItems()`), `crm_protection`, `crm_main_user`
+  and `crm_employee` (`CrmAccess::applyEmployeeFilter()`, main only or any
+  link), `crm_created` (`DaterangeInputWidget::parseRange()`); a protection
+  badge after the name. A saved view keeps its own `visibleFilters`, so new
+  filters need a migration appending them to `backend_showing`
+  (`m261029_140000`). Bulk actions `crm-bulk-main/grant/protection` are
+  `crm\CrmBulkAccessAction` (a `BackendModelMultiWindowAction`) with
+  `crm\CrmBulkAccessForm`: the window shows «Будет изменено компаний: N»
+  (`selectedCount()`); `accessCallback` — an administrator or a leader;
+  `eachAccessCallback` — `canManageAccess()` per company (a foreign one
+  refuses the whole selection); the selection query is narrowed by
+  `applyClientVisibility()`. Every change is journaled (`main_auto`/`transfer`,
+  `grant`/`level`, `protection`; the card's protection switch writes
+  `protection` too). The grid lists only multi actions whose `isAllow` is
+  true (cms-backend `BackendGridModelAction::_initMultiActions()`), so a
+  forbidden bulk button is not shown at all.
 - (Before the journal) «Запросы доступа» — a section of its own in «Клиенты и сделки», after
   «Клиенты» (`AdminCmsCrmAccessRequestController`, the deals right
   `cms/admin-lead`): the menu item for administrators, main responsible
