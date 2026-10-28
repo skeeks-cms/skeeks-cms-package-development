@@ -36,9 +36,25 @@ The level comes from `CrmAccess::clientDataLevel($user, $code, $id)`:
   subordinate is the main one, `canManageAccess()`), `edit` — `edit`, `deal`
   — `deal`, and his «своё» is then the work of the department (deals,
   bills… of him and his subordinates). A subordinate who came to a foreign
-  client with his own deal never opens that client in full to the leader. A person without an own link takes the
-  best level of the employee's links to the person's companies (people of a
-  company are its data).
+  client with his own deal never opens that client in full to the leader.
+- A client person is equal to a company (owner's decision 29.10.2026), with
+  two levels. His data (name, phones, emails, editing them) —
+  `clientDataLevel('client', …)`: the best of the links of the employee and
+  his subordinates to the person and to all the person's companies (people
+  of a company are its data). His personal orders — services, deals, bills,
+  payments, documents, proposals without a company (`cms_company_id` null) —
+  `personalLevel()`: only the links to the person himself; a company link,
+  even `full`, never opens them. `wholeClientLevel()` picks the right one for
+  `seesWholeClient()` (feed, protection reason, MCP `cms_user_get`). In SQL:
+  `clientRecordCondition()` opens a record without a company by a `full`
+  person link only; `CmsLeadQuery::forManager()` opens a personal deal by the
+  executor or a `full` person link, and takes the evidence of the person's
+  companies (his contacts, submitter, partner) only for an incoming deal
+  without an executor (the sorting). The protection of a person counts only
+  his personal services and payments (`CrmProtection::compute()`): a payment
+  of his company never protects him. A person without a company has the
+  pool, «Взять в работу», «Доступ» and the journal like a company (record
+  code `client`).
 
 | | `deal` «Свои сделки» | `edit` | `full`, main, leader, admin |
 | --- | --- | --- | --- |
