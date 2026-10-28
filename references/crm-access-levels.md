@@ -59,6 +59,17 @@ The level comes from `CrmAccess::clientDataLevel($user, $code, $id)`:
   `personCompanyLinks()`, `CmsUserQuery::forManagerOrPool()`); a person of an
   owned company is its data — seen through the company, taken into work
   through it.
+- The general pool holds only clients without a history (owner's decision
+  29.10.2026): `CrmAccess::historyCondition()` / `hasHistory()` — a payment,
+  a bill, a service or a deal ever, not an unsorted incoming deal
+  (`STATUS_NEW`); of a person, his personal ones. `inPool()`,
+  `canTakeIntoWork()`, the filter «Общий пул» and both `forManagerOrPool()`
+  check it. A client with a history always has a main responsible:
+  `CrmProtection::mainCandidate()` (the bill or the registration of the last
+  payment, else the last service, else `HISTORY_FALLBACK_USER_ID`),
+  `historyMainPlan()` / `cms/crm/assign-history-main`; «Работать с этим
+  клиентом» assigns it first when missing (`assignHistoryMain()`, the deal
+  being created is not counted as history), then the actor gets `deal`.
 
 | | `deal` «Свои сделки» | `edit` | `full`, main, leader, admin |
 | --- | --- | --- | --- |
