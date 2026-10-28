@@ -208,22 +208,39 @@ task). Words: «сделка» = `CmsLead` ([crm-entity-names.md](crm-entity-nam
 - A signal of interest (the first counted visit by a link of a letter, the
   first counted view of a presentation or an offer) marks the recipient's
   company or contact warm once, with the campaign and the letter, and the
-  campaign report counts it; the call task stays the campaign setting. A
-  signal creates no deal unless the campaign says so («Создавать сделку при
-  просмотре», off by default); an opening of a letter is only a report mark.
-- A reply, a request from the letter (a question or an acceptance on the
-  page of its offer) and a view with that setting are one rule
-  (`CampaignTasks`): the client's only open deal continues (a task in it, a
-  view — a feed entry); otherwise a new deal, once per recipient and kind by
-  its source reference. Its responsible is the one the letter went from only
-  when it went from his own mailbox (nobody else may send from it) and the
-  client has a main responsible; a shared mailbox or a client of the common
-  pool — «Неразобранное». The offer package reaches the rule through
-  `Campaigns::onOfferView()` / `onOfferRequest()` by the letter of its send.
-- The defaults of a new campaign (the call task and the deal on a view) are
-  the core CRM settings, set «Исходящие продажи» (`CrmSettings`); the campaign
-  copies them when created and may change them. A package reads such a core
-  setting with `property_exists()` and a fallback for an older core.
+  campaign report counts it. An opening of a letter is only a report mark.
+- The flow is always a campaign (a bot through MCP/API, a mailing, a
+  mailing service; a bot names the campaign on every send): a deal is made
+  by a person by hand, and by the flow only by the campaign's rules. The
+  campaign holds the responsible of NEW companies (none — the common pool,
+  the sender, an employee), what makes a deal (a reply and a request from
+  the letter always; a view of the presentation or offer and a visit by a
+  link by checkboxes), who gets the deal («Неразобранное», the sender, an
+  employee), its pipeline, and the call task on an event that makes no
+  deal. One rule (`CampaignTasks`) for every event: the client's only open
+  deal continues (a task in it, a view or a visit — a feed entry) and moves
+  forward to the stage of the event; otherwise a new deal, once per
+  recipient and kind by its source reference, at the stage «Ответил» /
+  «Смотрел» of the pipeline (the core `OutboundSales` names them). The flow
+  takes an existing company as it is, skips a protected client of another
+  main responsible at launch and gives such a client's deal to its main
+  responsible; the receiver of a deal of a client without a main
+  responsible becomes its main one («Взять в работу», `CrmAccess::setMain`).
+- Entry points of the rule live in the packages that record the event and
+  call it by the letter: the offer package (`Campaigns::onOfferView()`,
+  `onOfferRequest()`), link visits (`onLinkVisit()`), the mail receive
+  (replies), the API send of a draft with `cms_comm_campaign_id` (the letter
+  and its recipient row join the campaign). A company a bot creates without
+  explicit managers gets the campaign's responsible of new companies
+  (`Campaigns::newCardOwnerId()`), a company its creator may not open is
+  reported created with `visible: false`, not as an error.
+- «My defaults» of the flow are the core CRM settings, set «Исходящие
+  продажи» (`CrmSettings::$outgoing*`, beside the pipeline and stages of
+  personal offers): a new campaign copies them and may change them, a bot
+  without a campaign works by them. A package reads such a core setting
+  with `property_exists()` and a fallback for an older core; a conditional
+  `required` of such a form needs `whenClient` too, or the browser demands
+  the field always.
 - Old deal members of lists move to the deal's company, its contact, one
   card found by its contacts, or a new contact — repeatable, the deal member
   marked removed with its origin copied, the deal untouched.
