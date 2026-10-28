@@ -41,7 +41,7 @@ The level comes from `CrmAccess::clientDataLevel($user, $code, $id)`:
 | Pin a comment of the company or the person | no | yes | yes |
 | Own deals: bills, payments, documents, proposals, the deal's own requisites and links (`cms_lead_*`) | yes | yes | yes |
 | Other deals of the company and their proposals | no | yes | yes |
-| Add a new phone or email (the deal contact block, contacts copied from a deal, API create) | yes | yes | yes |
+| Add a new phone or email: from his own deal only for `deal` (the deal contact block, contacts copied from a deal, API create with `cms_lead_id`) | own deal | yes | yes |
 | Change the company/person data: name, form, requisites, existing phones and emails, addresses, links, people | no | yes | yes |
 | Responsible employees and levels (the `managers` form field, «Доступ к клиенту») | no | no | main, leader, admin (`canManageAccess()`) |
 | Deleting the company or the person | no | no | yes |
@@ -51,9 +51,12 @@ One place decides, everything uses it:
 - `canEditClientRecord($user, $model)` takes a company, a person or a row with
   `cms_company_id` / `cms_user_id` (`clientRecordOf()`). It is true for
   employees and the user himself: they are not client data;
-- `canAddClientContact($user, $model)` — a new phone or email on every level
-  that sees the client; the phone and email controllers say so by
-  `clientDataAddable()` of `ClientDataGuard` (create only);
+- `canAddClientContact($user, $model, $leadId)` — a new phone or email:
+  `edit` and above anywhere; `deal` only from a deal of this client he works on
+  (`$leadId`: `?lead_id=` of the deal contact block, `LeadTriage::mayCopyTo()`,
+  `cms_lead_id` of the API). The company card never offers it to `deal`, a
+  post from the card without the deal is 403. The phone and email controllers
+  say so by `clientDataAddable()` of `ClientDataGuard` (create only);
 - `dealOnlyCompanyIds($user)` — companies where the user's link is `deal` and
   no subordinate works on them: `CmsLeadQuery::forManager()` takes no company
   evidence from them (only own deals by the executor), so `canSeeLead()`, the
@@ -135,9 +138,12 @@ and a client):
 
 - default — the deal is the employee's at once (`LeadTriage::applyIdentity()`:
   executor = actor), linked to the client, the employee gets `deal`
-  (`grantLink()` in `afterIdentity()`), a `work` request with the deal goes to
-  the main responsible and his leaders. They raise the level or decline; a
-  decline keeps the deal and the level (`CrmAccessRequests::decline()`).
+  (`grantLink()` in `applyIdentity()`). No request (owner's decision
+  28.10.2026): the main responsible and his leaders get the notification
+  `lead.delegated` «Имя: работа с клиентом «…» по своей сделке» with the deal as
+  the link; the level is raised in «Доступ». A `work` request remains only for
+  a client «по согласованию» (below) and for an incoming request of such a
+  client.
 - «Доступ только по согласованию» (`cms_company.crm_access_by_approval`,
   `cms_user.crm_access_by_approval`, `approvalRequired()`, shown in a match
   as `byApproval`) — a deal by hand is refused (`checkIdentity()`,
