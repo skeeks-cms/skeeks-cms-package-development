@@ -27,9 +27,14 @@ Owner's decision 28.10.2026 (cms-communication `ARCHITECTURE.md`, П1/П2
 
 The level comes from `CrmAccess::clientDataLevel($user, $code, $id)`:
 - null — the client is not visible;
-- `full` — an administrator, or a leader who sees the client through a
-  subordinate's link;
-- otherwise the employee's own link. A person without an own link takes the
+- `full` — an administrator;
+- otherwise the best of the employee's own link and his subordinates' links,
+  never above it (owner's decision 29.10.2026): a leader whose subordinate is
+  the main one or `full` gets `full` (and manages the access only when the
+  subordinate is the main one, `canManageAccess()`), `edit` — `edit`, `deal`
+  — `deal`, and his «своё» is then the work of the department (deals,
+  bills… of him and his subordinates). A subordinate who came to a foreign
+  client with his own deal never opens that client in full to the leader. A person without an own link takes the
   best level of the employee's links to the person's companies (people of a
   company are its data).
 
@@ -57,8 +62,8 @@ One place decides, everything uses it:
   `cms_lead_id` of the API). The company card never offers it to `deal`, a
   post from the card without the deal is 403. The phone and email controllers
   say so by `clientDataAddable()` of `ClientDataGuard` (create only);
-- `dealOnlyCompanyIds($user)` — companies where the user's link is `deal` and
-  no subordinate works on them: `CmsLeadQuery::forManager()` takes no company
+- `dealOnlyCompanyIds($user)` — companies where the best link of the user and
+  his subordinates is `deal` (no `edit`/`full` link among them): `CmsLeadQuery::forManager()` takes no company
   evidence from them (only own deals by the executor), so `canSeeLead()`, the
   «Сделки» tab and every list follow; `CmsProposalQuery::forManager()`
   (`cms-proposal`) opens a proposal of a company or a person only when its
