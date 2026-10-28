@@ -132,15 +132,16 @@ clicks from the card. Without documents the picker links to creating one.
 
 ## The block of actions over the feed (`CrmCardActionsWidget`)
 
-Lead (deal), company and client cards have one block of actions over the
-feed, as "Дело / Комментарий / Задача / Ещё" of Bitrix24:
+The lead (deal) card has one block of actions over the feed, as
+"Дело / Комментарий / Задача / Ещё" of Bitrix24:
 `skeeks\cms\widgets\admin\CrmCardActionsWidget` (`skeeks/cms`, verified
-2026-10-28 on the skeeks.com stand: deals 880, 795, 670, company 3074,
-client 1801, an administrator and a manager, light, dark, 375 px). A row of
-action tabs, under it "Примечание": a one-line field that opens into
-`CmsCommentWidget` with "Отправить" and "Отмена" (`isShowCancel`,
-`data-sx-comment-cancel`). Do not add separate button rows or a separate
-comment surface to a card.
+2026-10-28 on the skeeks.com stand: deals 880, 795, 670, an administrator
+and a manager, light, dark, 375 px). A row of action tabs, under it
+"Примечание": a one-line field that opens into `CmsCommentWidget` with
+"Отправить", "Отмена" (`isShowCancel`, `data-sx-comment-cancel`) and
+"Закрепить". Pinned comments go right under the block. Do not add separate
+button rows or a separate comment surface to a card; company and client
+cards are to connect the same widget.
 
 - A card connects it with one call inside the pjax container of its feed (a
   sent note reloads the container and the block folds back):
@@ -151,9 +152,9 @@ comment surface to a card.
   opened by `sx.classes.backend.widgets.Action` with extra `window` options,
   or `options` of a button — `onclick`, `data-*`, a delegated class such as
   `sx-telephony-btn`; `more => true` puts a tab into "Ещё"). The deal card
-  gives "Задача", "Позвонить", "Письмо", "Не дозвонились"; company and client
-  give "Задача" with the record preselected (`CmsTask[cms_company_id]` /
-  `CmsTask[cms_user_id]`, not for an employee).
+  gives "Задача", "Позвонить", "Письмо", "Не дозвонились". The task window
+  preselects a company or a client from `CmsTask[cms_company_id]` /
+  `CmsTask[cms_user_id]` as it does a deal from `CmsTask[cms_lead_id]`.
 - A package adds its tab through the class-level
   `CrmCardBlocksWidget::EVENT_ACTIONS` (`CrmCardBlocksEvent::$actions`:
   id => `label`, `url` of a backend window, optional `icon`, optional
