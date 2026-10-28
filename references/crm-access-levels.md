@@ -59,8 +59,25 @@ and a client):
   the employee (`CrmAccessRequests::createLead()`). An incoming request of the
   client does not wait: sorting (`accept()`, `$incoming`) gives the deal to the
   main responsible and sends the request; the approval hands the deal over.
-- `delegate` / `access` requests are kept only for rows made before the
-  decision.
+- One kind of request: `work` («Работать с этим клиентом»).
+  `CrmAccessRequests::request()` refuses any other kind. The old kinds
+  `delegate` («Сделка себе») and `access` («Доступ к клиенту») are history
+  only (`CmsCrmAccessRequest::getIsLegacy()`):
+  - they are never decided (`canDecideRequest()`, `decide()`);
+  - they are not counted or listed in «Ждут моего решения»
+    (`requestsCondition()` takes `kind = work`);
+  - their cards are read only.
+- Migration `m261028_150000` (`CrmAccessRequests::closeLegacy()`, also on
+  production) closed the pending ones as `obsolete` («Устарел»):
+  - each sender was notified how access is given now. The client is the
+    link only when the sender sees it; otherwise it is named in the text.
+    Visibility is checked by the links of the client, not `forManager()`,
+    which needs the web user in the console;
+  - the deciders' bell notifications about them were marked read.
+  `safeDown` does nothing.
+- Request and notification texts carry no grammatical gender: «Имя: запрос на
+  работу с клиентом «…»», «Имя: работа с клиентом «…» по своей сделке, запрос
+  уровня доступа» — no «ему/ей», «просил/просила».
 
 Deciders (`deciderIds()`): the main responsible and his leaders, else the
 `full` employees, else administrators.
