@@ -35,7 +35,10 @@ The level comes from `CrmAccess::clientDataLevel($user, $code, $id)`:
 
 | | `deal` «Свои сделки» | `edit` | `full`, main, leader, admin |
 | --- | --- | --- | --- |
-| The card: data, people, phones, emails; call, write; the client feed (whole) | yes | yes | yes |
+| The card: data, people, phones, emails; call, write | yes | yes | yes |
+| The client feed: the client's own records (calls, letters, chats, comments), his deals' records and their tasks | yes | yes | yes |
+| The feed records of other deals, services, projects, bills, payments, tasks not tied to his deals | no | yes | yes |
+| Pin a comment of the company or the person | no | yes | yes |
 | Own deals: bills, payments, documents, proposals, the deal's own requisites and links (`cms_lead_*`) | yes | yes | yes |
 | Other deals of the company and their proposals | no | yes | yes |
 | Add a new phone or email (the deal contact block, contacts copied from a deal, API create) | yes | yes | yes |
@@ -57,8 +60,17 @@ One place decides, everything uses it:
   «Сделки» tab and every list follow; `CmsProposalQuery::forManager()`
   (`cms-proposal`) opens a proposal of a company or a person only when its
   `cms_lead_id` is empty or visible. Bills, payments and documents carry no
-  `cms_lead_id` and are not hidden; the company feed has no deal entries (a
-  deal has its own feed) and is shown whole;
+  `cms_lead_id` and are not hidden;
+- `feedCondition($user, $record)` — one condition for the feeds of a company
+  or a person (`CmsCompany::getCompanyLogs()`/`getLogs()`,
+  `User::getUserLogs()`/`getLogs()` add it for the current employee): for
+  `deal` the records of the client itself (`model_code` of the company or the
+  person — incoming calls, letters, chat messages, comments are written there),
+  of his own deals and of the tasks with `cms_lead_id` of his deals; null — no
+  limit;
+- `canPinLog($user, $log)` (`AdminCmsLogController::togglePin()`): a deal
+  comment — `CmsLead::canBeWorkedBy()`, a company or person comment —
+  `canEditClientRecord()`, other records keep their rules;
 - controllers of the rows (company and person phones, emails, addresses,
   links, people of a company) use the trait
   `controllers\traits\ClientDataGuard`: `guardClientData($actions)` adds the
