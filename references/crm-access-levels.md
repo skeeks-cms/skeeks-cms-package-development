@@ -35,9 +35,11 @@ The level comes from `CrmAccess::clientDataLevel($user, $code, $id)`:
 
 | | `deal` «Свои сделки» | `edit` | `full`, main, leader, admin |
 | --- | --- | --- | --- |
-| The card: data, people, phones, emails; call, write | yes | yes | yes |
+| The card: data, people, phones, emails; call, write; the client feed (whole) | yes | yes | yes |
 | Own deals: bills, payments, documents, proposals, the deal's own requisites and links (`cms_lead_*`) | yes | yes | yes |
-| The company/person data: name, form, requisites, phones, emails, addresses, links, people, contacts copied from a deal | no | yes | yes |
+| Other deals of the company and their proposals | no | yes | yes |
+| Add a new phone or email (the deal contact block, contacts copied from a deal, API create) | yes | yes | yes |
+| Change the company/person data: name, form, requisites, existing phones and emails, addresses, links, people | no | yes | yes |
 | Responsible employees and levels (the `managers` form field, «Доступ к клиенту») | no | no | main, leader, admin (`canManageAccess()`) |
 | Deleting the company or the person | no | no | yes |
 
@@ -46,6 +48,17 @@ One place decides, everything uses it:
 - `canEditClientRecord($user, $model)` takes a company, a person or a row with
   `cms_company_id` / `cms_user_id` (`clientRecordOf()`). It is true for
   employees and the user himself: they are not client data;
+- `canAddClientContact($user, $model)` — a new phone or email on every level
+  that sees the client; the phone and email controllers say so by
+  `clientDataAddable()` of `ClientDataGuard` (create only);
+- `dealOnlyCompanyIds($user)` — companies where the user's link is `deal` and
+  no subordinate works on them: `CmsLeadQuery::forManager()` takes no company
+  evidence from them (only own deals by the executor), so `canSeeLead()`, the
+  «Сделки» tab and every list follow; `CmsProposalQuery::forManager()`
+  (`cms-proposal`) opens a proposal of a company or a person only when its
+  `cms_lead_id` is empty or visible. Bills, payments and documents carry no
+  `cms_lead_id` and are not hidden; the company feed has no deal entries (a
+  deal has its own feed) and is shown whole;
 - controllers of the rows (company and person phones, emails, addresses,
   links, people of a company) use the trait
   `controllers\traits\ClientDataGuard`: `guardClientData($actions)` adds the
@@ -57,18 +70,35 @@ One place decides, everything uses it:
   - `delete` by the level `full`;
   - the `managers` field is unset and its POST refused without
     `canManageAccess()`;
-- requisites attach (`Admin*ContractorController::canAttach()`);
+- requisites attach (`Admin*ContractorController::canAttach()`) and their
+  `update`/`delete` in `AdminCmsContractorController::canEditContractor()`:
+  refused when the user works on one of the owners with `deal` only (owners he
+  does not see do not block);
+- REST/MCP (`cms-mcp` `CmsCompanyService`): `assertCanEditClient()` for
+  `cms_company_update`, `cms_company_category_replace`, phone/email update,
+  address and link create/update; `assertCanAddContact()` for phone/email
+  create; `manager_ids` needs `canManageAccess()`. The refusal names the level
+  and what it allows;
 - `LeadTriage::mayCopyTo()` (contacts of a deal to the card) and linking a
   person to an existing company;
 - cards: `$canEditData` hides the «⋮» menus and the «Добавить …» buttons; the
   deal contact block (`_client.php`) hides them by `canEditClientData()`.
 
-Not covered yet:
-- the REST API (`cms-mcp` `CmsCompanyService`: update, phones, emails,
-  addresses, links) checks only visibility;
-- the client feed for `deal` and the notifications of client events to the
-  main responsible: feed entries (`cms_log`) carry no deal, and mail and chat
-  recipients are decided in cms-communication.
+Notifications of client events reach the main responsible as well (no
+duplicates, the employee's settings of the kind decide the channels):
+- a letter linked to the client (`cms_comm_link`) — `MailNotifier::mainResponsibleOf()`
+  adds him as a "linked" candidate (only when he can open the letter, no
+  mailbox access needed), kind `mail.new`;
+- a chat message — `ChatNotifier`: an assigned chat notifies the assignee and
+  the main responsible of the linked client (if he can read it); an unassigned
+  one already notified all responsible employees, kind `chat.message`;
+- a finished incoming call (answered by another employee or missed) —
+  `crm\CrmClientCallNotifier` from `CmsTelephonyCall::afterSave()`, kind
+  `crm.client_call` («Клиенты и предложения»), the company (else the person) as
+  the link; never breaks the call save.
+
+Not covered yet: tasks and calls of other employees' deals in the company
+tabs; `cms_user_update` and `cms_contractor_*` of the API.
 
 ## Keeping one main
 
