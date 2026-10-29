@@ -188,15 +188,20 @@ button rows or a separate comment surface to a card.
   `CrmCardActionsWidget::client($model, $phones, $emails)`. An employee who
   works with the client only through his deals ("Свои сделки" and "Свои
   сделки и данные компании": the client is seen, `CrmAccess::seesWholeClient()`
-  is false — `ownDeals()`) gets no note to the client's feed; every action
-  belongs to his open deal (`CmsLead::find()->forManager()` of the client,
-  as `CrmAccess::feedCondition()`): one deal is taken and named "по сделке
-  №…", several are chosen in a select first, none gives "Создать сделку"
-  (the create window with the client preset; the deal card opens after the
-  save). The tabs of a deal are those of the deal card: the note to the
-  deal, "Задача" with `cms_lead_id`, calls with `data-lead-id`, letters with
-  the deal as context, package tabs with the deal as the owner. Server
-  checks of the levels stay in `CrmAccess`, not in the block.
+  is false — `ownDeals()`) sees the same block and tabs (owner's decision
+  29.10.2026: nothing is hidden), but every action belongs to his open deal
+  (`CmsLead::find()->forManager()` of the client, as
+  `CrmAccess::feedCondition()`) and the deal is chosen at the moment of the
+  action: one deal acts at once with the line "Действия — по сделке №…";
+  several make each tab a choice "Выберите сделку" (`items` with
+  `choiceTitle`); none make each tab offer "Создать сделку" (`choice => true`
+  keeps a choice of one; the create window has the client preset and opens
+  the deal card after the save). The note goes to the feed of the chosen
+  deal (`noteDeals`: a select over the editor). The actions of a deal are
+  those of the deal card: "Задача" with `cms_lead_id`, calls with
+  `data-lead-id`, letters with the deal as context, package tabs with the
+  deal as the owner. Server checks of the levels stay in `CrmAccess`, not in
+  the block.
 - A package adds its tab through the class-level
   `CrmCardBlocksWidget::EVENT_ACTIONS` (`CrmCardBlocksEvent::$actions`:
   id => `label`, `url` of a backend window, optional `icon`, optional
