@@ -82,6 +82,29 @@ The level comes from `CrmAccess::clientDataLevel($user, $code, $id)`:
 | Responsible employees and levels (the `managers` form field, «Доступ к клиенту») | no | no | main, leader, admin (`canManageAccess()`) |
 | Deleting the company or the person | no | no | yes |
 
+### Who works on a deal
+
+`CrmAccess::isLeadWorker($user, $lead)` (owner's decision 29.10.2026) is the
+only rule of working actions on a deal (`CmsLead`): an administrator, the
+responsible (`executor_id`), his leaders (`CmsDepartment::leaderIdsOf()`), an
+employee who sees the client of the deal in full (`seesWholeClient()` of
+`wholeClientLevel()` for its company or person: his or a subordinate's `full`
+link, the main responsible). `deal` and `edit` work only on their own deals; a
+leader of a `deal` subordinate works on that subordinate's deals, not on other
+deals of the company. Derived, never re-implemented:
+- `canWorkLead()` (open deal) — `CmsLead::canBeWorkedBy()` delegates to it;
+  the card actions (`canWorkWithModel()`), the stage bar and the board
+  (`CmsLeadBoardService::denyReason()`, `LeadPipelines`), «Не дозвонились»,
+  the client of the deal, lead contacts and requisites, SMS, pinning a deal
+  comment, MCP `cms_lead_*`;
+- `canReopenLead()` (closed deal) — `CmsLead::canBeReopenedBy()`;
+- `canAssignLead()` — the same people (an unsorted deal — `canTriage()`); the
+  «Ответственный» field of the edit form follows it, not the administrator role;
+- a letter or a send in the context of a deal (`cms-communication`
+  `ComposeForm::validateContext()`, `SendService::send()`) — `isLeadWorker()`.
+`CmsLead::isManagedBy()` only says "he is the executor". The refusal text is
+`CrmAccess::LEAD_WORK_DENIED`. Stand test: `cms/tests/crm-lead-worker-stand.php`.
+
 One place decides, everything uses it:
 - `canEditClientData($user, $code, $id)` (level ≥ `edit`);
 - `canEditClientRecord($user, $model)` takes a company, a person or a row with

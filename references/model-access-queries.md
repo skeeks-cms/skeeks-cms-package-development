@@ -71,8 +71,8 @@ checks, not by a second hierarchy rule:
   is the viewer or a subordinate; `CmsTaskRule` reuses that scope, so a head
   opens and edits them;
 - leads: `CmsLeadQuery::forManager()` shows leads executed by subordinates,
-  but working actions stay with `CmsLead::isManagedBy()` (the executor) and
-  administrators: a head only views them.
+  and a head works on them (`CrmAccess::isLeadWorker()`, see
+  crm-access-levels.md, owner's decision 29.10.2026).
 
 Leaders of an employee (whom to ask: access requests of П2а) are
 `CmsDepartment::leaderIdsOf($workerId)`, the exact inverse of

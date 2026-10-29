@@ -60,8 +60,8 @@ pointer devices (`@media (hover: hover)`); touch screens keep it visible.
 ## Records that belong to a lead
 
 Phones, emails, addresses and links of a lead use
-`controllers\traits\LeadContactActions`: create/update/delete only for the
-lead's responsible manager or an administrator (`canBeWorkedBy`), the lead id
+`controllers\traits\LeadContactActions`: create/update/delete only for who
+works on the lead (`canBeWorkedBy`, `CrmAccess::isLeadWorker()`), the lead id
 of a new record comes from `<FormName>[cms_lead_id]` in the request and of an
 existing one from its saved value, and the flat cross-lead `index` list is for
 administrators only. New lead-owned record types reuse the trait instead of

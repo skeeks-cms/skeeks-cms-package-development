@@ -124,8 +124,8 @@ repeating checks:
 - `canTriage($user, $lead)` — an unsorted deal (status `new`) is sorted by an
   employee who sees it (the evidence rule of `CmsLeadQuery::forManager()`),
   otherwise by an administrator; no separate permission.
-- `canWorkLead`, `canAssignLead` (administrator, the responsible, his leaders,
-  a responsible of the deal's company; for an unsorted deal — whoever sorts it),
+- `canWorkLead`, `canAssignLead` (who works on a deal, `isLeadWorker()` in
+  crm-access-levels.md; for an unsorted deal — whoever sorts it),
   `canSeeCompany`, `canSeeClient`, `canSeeLead`.
 - `defaultExecutorId($companyId, $clientId, $actorId)` — the responsible of
   the client (the actor when he is one of them, else the first by
