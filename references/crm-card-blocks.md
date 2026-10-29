@@ -176,9 +176,12 @@ button rows or a separate comment surface to a card.
   `CrmCardActionsWidget::contactTabs($owner, $phones, $emails)`: "Позвонить"
   with the call button of the phone rows (`sx-telephony-btn`, `data-value`)
   and "Письмо" with the onclick a package gives the email row
-  (`EVENT_CONTACT_ACTIONS` `mailto`: the "Написать" window of the mail
-  package when the employee has a mailbox that may send), else `mailto:`;
-  several phones or emails make a choice. The block holds only contact and
+  (`EVENT_CONTACT_ACTIONS` `mailto`: with `cms-communication` always its
+  "Написать" window; an employee without a mailbox that may send — own or
+  shared, `CmsCommAccountAccess::send_level` — gets the window with the
+  reason and, for an administrator, a link to the mailboxes; no `mailto:`),
+  `mailto:` only on a site without the mail package; several phones or
+  emails make a choice. The block holds only contact and
   record actions: adding people or client data stays with the contact blocks
   and their access level ([crm-access-levels.md](crm-access-levels.md)).
 - A package adds its tab through the class-level
