@@ -242,7 +242,11 @@ Owner's decision 29.10.2026 (cms-communication `ARCHITECTURE.md` п. 13б; as
     `route()` inside its transaction before the save; `next()` takes the turn
     from `cms_crm_inbound_rotation` (one row per site and queue,
     `INSERT IGNORE` + `SELECT … FOR UPDATE`; the queue key is `default` or
-    `pipeline:<id>`), so two requests at one moment go
+    `pipeline:<id>`; the row is created beforehand by its own short
+    connection — `ensureRow()`, a clone of `db` in autocommit — so the
+    deal's transaction takes only the exclusive lock of an existing row: an
+    `INSERT IGNORE` inside it upgraded a shared lock and deadlocked 12
+    parallel requests, release audit F3), so two requests at one moment go
     to two employees; the deal stays `new` with its executor (only he and his
     leaders see and sort it);
   - `$inboundToMain` «если клиент найден — сразу его основному»: `mainOf()`
@@ -261,8 +265,17 @@ Owner's decision 29.10.2026 (cms-communication `ARCHITECTURE.md` п. 13б; as
   - A console process may keep an old copy of the CRM settings in its own
     file cache (a key without the site); after changing them in a test,
     invalidate the tag `CrmSettings::class` (`TagDependency::invalidate()`).
+- `CmsLeadService::createFromSource()` repeats the whole creation (the
+  repeat check, the route, the deal, the notifications) up to
+  `LOCK_ATTEMPTS` times when MySQL rolls it back for 1213/1205/40001
+  (`isLockConflict()`); inside a caller's transaction it never repeats. The
+  notifications are queued inside the transaction (cms-communication
+  `NotifyDeliveries`), so a repeat sends nothing twice.
 - Tests: `cms/tests/inbound-queue-stand.php` (rolled back),
-  `cms/tests/inbound-queue-race.php` (two processes, a separate test queue).
+  `cms/tests/inbound-queue-race.php` (two processes, a separate test queue),
+  `cms/tests/inbound-queue-load.php` (12+ processes through the whole
+  `createFromSource()`, a new and an existing queue, a rolled back
+  participant, one event twice, the delivery detached).
 
 ## Search fields and a pasted line (as in amoCRM and Bitrix24)
 
