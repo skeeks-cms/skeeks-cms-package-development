@@ -79,9 +79,10 @@ Verified 2026-10-28 (П2г-1) on the skeeks.com stand: deals 670 (company),
   ссылку» of its own then.
 - The deal's own phones, emails, addresses, requisites and links are «…из
   обращения»: shown only while the deal has neither a company nor a person;
-  sorting moves them to the company created or found. Bills, payments and
-  documents have no `cms_lead_id`: their payer never came from the deal's
-  requisites. Old deals of a client may still keep own requisites
+  sorting moves them to the company created or found. A service, a bill and a
+  document are tied to the deal by `cms_lead_id` (a payment — through its
+  bill), but their payer is the client's requisites, never the deal's own.
+  Old deals of a client may still keep own requisites
   (`cms_lead2contractor`) or links (`cms_lead_link`) — moving them to the
   client is П2г-2.
 
@@ -235,7 +236,12 @@ button rows or a separate comment surface to a card.
   (`.sx-model-header__toolbar`), the status beside them is centred: a card
   never sizes its header buttons itself.
 - A mouse click leaves no focus frame (`:focus:not(:focus-visible)` in
-  cms-backend `ui.css`); keyboard focus styles go on `:focus-visible`.
+  cms-backend `ui.css`: no outline, no Bootstrap focus shadow of `.btn` and
+  `.sx-button`, a primary button keeps its own shadow); keyboard focus styles
+  go on `:focus-visible`.
+- A person client card has the same list tabs as a company: Услуги,
+  Документы, Звонки (the standard sections with `cms_user_id`, their own
+  `forManager()` scopes), and its bills are the CRM bills.
 - The tabs of the three CRM cards keep one order, set only by the `priority`
   of their backend actions from `crm\CrmCardTabs::PRIORITY_*` (no per-card
   numbers; a tab hidden from an employee does not shift the others):

@@ -945,8 +945,11 @@ Render a related or primary entity with `BackendEntityLink`. It keeps a normal
 backend action URL for keyboard and no-JavaScript fallback while progressively
 enhancing the same link into the shared drawer. With no explicit `action`, load
 the target controller's available model actions, preserve their sorted
-`priority` order and open the first action. Pass `action` only for an
-intentional override. A controller-owned `view` may therefore lead for that
+`priority` order and open the first action. The href without an `action` is
+the controller's `model-actions`: a plain request (a new tab, no script)
+redirects to the same first action, skipping one with a confirmation or a
+POST, so a user who may only view never lands on a forbidden `update`. Pass
+`action` only for an intentional override. A controller-owned `view` may therefore lead for that
 entity without adding `view` globally to `BackendModelStandartController`.
 Pass encoded text via `label`; use `content` only for deliberately trusted
 composed markup.
