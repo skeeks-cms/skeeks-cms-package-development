@@ -122,7 +122,8 @@ Component `crmAccess`; controllers, views and packages ask it instead of
 repeating checks:
 
 - `canTriage($user, $lead)` — an unsorted deal (status `new`) is sorted by an
-  employee who sees it (the evidence rule of `CmsLeadQuery::forManager()`),
+  employee who sees it (the evidence rule of `CmsLeadQuery::forManager()`, the
+  queue of «Входящие заявки» below), its given employee when it has one,
   otherwise by an administrator; no separate permission.
 - `canWorkLead`, `canAssignLead` (who works on a deal, `isLeadWorker()` in
   crm-access-levels.md; for an unsorted deal — whoever sorts it),
@@ -182,6 +183,65 @@ task, actorId). Packages bind the application event in their config
 (`'on crm.leadTriaged' => [...]`), so it works without a web bootstrap;
 `cms-communication` `TriageLinks` links letters and chats of the request to
 the target deal or service.
+
+## «Неразобранное»: two buttons and «Входящие заявки»
+
+Owner's decision 29.10.2026 (cms-communication `ARCHITECTURE.md` п. 13б; as
+«Принять / Отклонить» of amoCRM plus the queue of Bitrix24).
+
+- The header of an unsorted deal (`views/admin-cms-lead/_model_header.php`)
+  has two buttons: «Взять в работу» (primary) and «Не продажа ▾» (a `details`
+  menu: «Спам» posts `op=spam`, «Уже есть сделка» and «Поддержка» open the
+  window in `mode=merge|support`). No «Разобрать», and no status badge for
+  `new` — the stage bar shows «Неразобранное».
+- «Взять в работу» is the one window of `LeadTriageActions::triage()`
+  (`views/admin-cms-lead/triage.php`, `mode=take`): the client
+  (`_identity` with the found candidates; a single strong visible company or
+  contact is already chosen — `preselectCandidate()`; another company; a new
+  client), the responsible is the actor (`LeadIdentityForm::$executor_id`),
+  the stage is the first one (`CmsLead` gives a deal in work without a stage
+  its first stage), one save = `LeadTriage::accept()`. Opened from the card
+  (`from=card`) the window closes and the card reloads; from elsewhere the
+  window goes on to the card (`data-sx-lead-open-card`, `lead-identity.js`).
+- «Найдены совпадения» of the card (`_matches.php`, `canTake` =
+  `canTriage()`): «Это он» at every match posts a plain form to `triage`
+  (`triagePlain()`): the same `accept()` with that record, the responsible is
+  the actor, then the card (or the kanban when the actor no longer sees it).
+  A match shows `№id` and its main responsible: two records with one name are
+  duplicates of the base, not a doubled output.
+- «Входящие заявки» — `crm\InboundQueue` with the settings of the site CRM
+  (`CrmSettings::$inboundWorkerIds`, `$inboundDepartmentIds`, `$inboundMode`,
+  `$inboundToMain`; also «Входящие заявки» in the kanban settings menu):
+  - no employee and no department — nothing changes (the base site);
+  - members are active employees with `cms/admin-lead` (`memberIds()`,
+    departments through `CmsDepartment2worker`, the turn by id);
+  - `MODE_ALL` «видят все из списка»: `CmsLeadQuery::forManager()` adds every
+    unsorted deal nobody was given for a member (`seesAllUnsorted()`), so
+    `canTriage()` follows; an employee outside the queue keeps only the
+    evidence rule;
+  - `MODE_ROUND` «по кругу»: `CmsLeadService::createFromSource()` calls
+    `route()` inside its transaction before the save; `next()` takes the turn
+    from `cms_crm_inbound_rotation` (one row per site and queue,
+    `INSERT IGNORE` + `SELECT … FOR UPDATE`), so two requests at one moment go
+    to two employees; the deal stays `new` with its executor (only he and his
+    leaders see and sort it);
+  - `$inboundToMain` «если клиент найден — сразу его основному»: `mainOf()`
+    over the strong `CrmMatcher` candidates (a person of a company counts by
+    the company's main one); one main responsible with the deals right → the
+    deal is `in_work` with him, the single found company and person are
+    linked, `afterRoute()` grants the level by `grantLeadExecutorLevel()`
+    (journal) and writes the feed; several main responsibles → stays
+    unsorted;
+  - «Новая сделка в Неразобранном» (kind `lead.new`): with a queue —
+    `InboundQueue::notifyIds()`: the queue (`MODE_ALL`), the given employee,
+    the administrators with the deals right (their notification settings
+    decide); without — the old `CmsLead::availableManagerIds()`. A deal given
+    by turns tells its employee «Новая сделка в Неразобранном», not «Вам
+    назначена».
+  - The queue of a pipeline (each its own, the request by its source) is the
+    next step of п. 13б; the settings of the CRM are its default.
+- Tests: `cms/tests/inbound-queue-stand.php` (rolled back),
+  `cms/tests/inbound-queue-race.php` (two processes, a separate test queue).
 
 ## Search fields and a pasted line (as in amoCRM and Bitrix24)
 
@@ -278,9 +338,10 @@ data (verified on the skeeks-platform.ru stand: form2, no communications, no
 companies or managers):
 
 - a form request comes as before: status `new`, the administrators with the
-  deals right are notified, «Взять в работу» takes it in one click (shown
-  beside «Разобрать»), dropping it on a kanban stage takes it without a window
-  unless the CRM knows its client (a strong match or a linked client);
+  deals right are notified (no «Входящие заявки» set), «Взять в работу» opens
+  the one window (the client may stay empty), dropping it on a kanban stage
+  takes it without a window unless the CRM knows its client (a strong match or
+  a linked client);
 - no new menu items; tabs that make sense only with CRM data hide themselves
   («Запросы доступа» without requests, «Передать клиента» without a responsible);
 - the core never references package classes: packages join through events
@@ -335,8 +396,8 @@ calls the services above and never decides rights of its own.
   `source_ref = api:<key>`; the unique index settles a parallel repeat.
 - Stage and pipeline go through `CmsLeadBoardService::move()` and
   `LeadPipelines::move()`; the model writes `CmsLeadStageHistory`. An unsorted
-  deal is sorted first (`cms_lead_triage`), as the kanban opens «Разобрать»
-  for a known client. Closing sets the same fields as the «Обработка» form;
+  deal is sorted first (`cms_lead_triage`), as the kanban opens «Взять в
+  работу» for a known client. Closing sets the same fields as the «Обработка» form;
   success requires an explicit `deal_amount` (never filled from `amount`
   silently).
 
