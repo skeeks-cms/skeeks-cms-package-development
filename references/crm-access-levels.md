@@ -555,14 +555,28 @@ emails, people, addresses, site, requisites).
     sees only by his deals is called only with `lead_id` of his open deal; the
     call attaches to that deal also by a phone of its client.
   The API goes through the same models and services.
-- Incoming: a letter is linked to an open deal by the deal's own e-mail
-  (`AddressBook::findRecords()`, only when exactly one such deal) and, in the
-  same conversation, by the links of the earlier letters
-  (`MessageLinker::inheritFromConversation()`): a reply to a letter sent from
-  his deal lands in the deal. A call — by the deal's own phone, only one open
-  deal (`CmsLeadTelephonyService::findUnambiguousActiveLead()`). A letter or a
-  call matched only by the company's contacts stays on the client: `deal` and
-  `edit` do not see it (`full` and the main one do).
+- Incoming (owner's decision 29.10.2026) — `crm\CrmInbound` (component
+  `crmInbound`), one rule for letters, site messages, private chat messages
+  and calls. The usual linking runs first: the deal's own e-mail or phone
+  (one such open deal), the records of the page, and a reply in a
+  conversation keeps the links of the earlier letters
+  (`MessageLinker::inheritFromConversation()`, it wins). A record still
+  without a deal goes by the clients it was matched to by their card
+  contacts (`route()`): one open deal of these clients — the record lies in
+  it too (a copy on the client and one on the deal); several — no guess, the
+  executors are notified once per event (kind `crm.inbound_unlinked`,
+  category «Клиенты», `eventKey` per record, per conversation for a chat,
+  `collapse`) with the page `admin-cms-lead/attach-inbound?type=&id=`
+  («Привязать к сделке №…», only his and his subordinates' open deals of the
+  client, `leadsFor()`/`attach()`); none — the client only (the main one and
+  `full` see it). Kinds of records are attachers
+  (`CrmInboundAttacherInterface`: find, clients, isLinked, attach, describe)
+  in `crmInbound.attachers`: `call` in the core (`CrmInboundCallAttacher`,
+  from `CmsLeadTelephonyService::attachToLead()`, incoming calls), `message`
+  in cms-communication (`services\InboundLeads`, from `MailIngestService`,
+  `SiteMessages::receive()`, `ChatFeed::onMessage()` of a private dialog; a
+  chat is attached whole by `ChatLinks::attach()`). A record older than a day
+  (a history import) only goes to the one deal, nobody is notified.
 
 ## Participants only with the main responsible
 
