@@ -204,25 +204,45 @@ Owner's decision 29.10.2026 (cms-communication `ARCHITECTURE.md` п. 13б; as
   (`from=card`) the window closes and the card reloads; from elsewhere the
   window goes on to the card (`data-sx-lead-open-card`, `lead-identity.js`).
 - «Найдены совпадения» of the card (`_matches.php`, `canTake` =
-  `canTriage()`): «Это он» at every match posts a plain form to `triage`
-  (`triagePlain()`): the same `accept()` with that record, the responsible is
-  the actor, then the card (or the kanban when the actor no longer sees it).
-  A match shows `№id` and its main responsible: two records with one name are
-  duplicates of the base, not a doubled output.
-- «Входящие заявки» — `crm\InboundQueue` with the settings of the site CRM
-  (`CrmSettings::$inboundWorkerIds`, `$inboundDepartmentIds`, `$inboundMode`,
-  `$inboundToMain`; also «Входящие заявки» in the kanban settings menu):
-  - no employee and no department — nothing changes (the base site);
+  `canTriage()`): one line per match on the shared rows of the CRM matches
+  (`sx-lead-hints`/`sx-lead-hint` of `lead-identity.css`, registered by the
+  card header for every status since the block comes by AJAX): an icon of the
+  kind, the name, `№id`, the main responsible, what matched, «возможный дубль»
+  when an open `cms_crm_duplicate_mark` joins two found records, and «Это он»
+  (an unsorted deal: a plain form to `triage` → `triagePlain()`, the same
+  `accept()`, the responsible is the actor) or «Привязать» (a deal in work:
+  `link-identity`); three lines, the rest under «ещё N». Two records with one
+  name are duplicates of the base, not a doubled output; nothing merges them
+  here.
+- «Входящие заявки» — `crm\InboundQueue`. The queue belongs to the pipeline
+  the deal is in (`CmsLeadPipeline`, its form: «Заявки из источников»
+  `inbound_source_types`, «Кто разбирает» `inbound_worker_ids` /
+  `inbound_department_ids`, «Как распределять» `inbound_mode`; JSON columns
+  behind `inboundSourceTypes`, `inboundWorkerIds`, `inboundDepartmentIds`,
+  `inboundReady()`, migration `m261029_220000`); a pipeline without its own
+  employees takes the CRM settings (`CrmSettings::$inboundWorkerIds`,
+  `$inboundDepartmentIds`, `$inboundMode`; «Входящие заявки» also in the
+  kanban settings menu), its own mode still applies. `queueOf($pipeline)` /
+  `queueOfLead($lead)` give `key` (the turn), `members`, `mode`; the
+  visibility, the notifications and the turn read the pipeline the deal is in
+  now, so a moved deal belongs to the queue of the new pipeline. A new
+  request without a chosen pipeline lands in the first pipeline whose sources
+  include its `source_type` (`CmsLeadPipeline::forSource()`, used by
+  `CmsLead::preparePipeline()` and `InboundQueue::route()`), else in the
+  default one. `CrmSettings::$inboundToMain` stays a CRM-wide switch.
+  - no employee and no department anywhere — nothing changes (the base site);
   - members are active employees with `cms/admin-lead` (`memberIds()`,
     departments through `CmsDepartment2worker`, the turn by id);
-  - `MODE_ALL` «видят все из списка»: `CmsLeadQuery::forManager()` adds every
-    unsorted deal nobody was given for a member (`seesAllUnsorted()`), so
+  - `MODE_ALL` «видят все из списка»: `CmsLeadQuery::forManager()` adds the
+    unsorted deals nobody was given of the pipelines whose queue the employee
+    is in (`unsortedCondition()`, `CmsLeadPipeline::leadCondition()`), so
     `canTriage()` follows; an employee outside the queue keeps only the
     evidence rule;
   - `MODE_ROUND` «по кругу»: `CmsLeadService::createFromSource()` calls
     `route()` inside its transaction before the save; `next()` takes the turn
     from `cms_crm_inbound_rotation` (one row per site and queue,
-    `INSERT IGNORE` + `SELECT … FOR UPDATE`), so two requests at one moment go
+    `INSERT IGNORE` + `SELECT … FOR UPDATE`; the queue key is `default` or
+    `pipeline:<id>`), so two requests at one moment go
     to two employees; the deal stays `new` with its executor (only he and his
     leaders see and sort it);
   - `$inboundToMain` «если клиент найден — сразу его основному»: `mainOf()`
@@ -238,8 +258,9 @@ Owner's decision 29.10.2026 (cms-communication `ARCHITECTURE.md` п. 13б; as
     decide); without — the old `CmsLead::availableManagerIds()`. A deal given
     by turns tells its employee «Новая сделка в Неразобранном», not «Вам
     назначена».
-  - The queue of a pipeline (each its own, the request by its source) is the
-    next step of п. 13б; the settings of the CRM are its default.
+  - A console process may keep an old copy of the CRM settings in its own
+    file cache (a key without the site); after changing them in a test,
+    invalidate the tag `CrmSettings::class` (`TagDependency::invalidate()`).
 - Tests: `cms/tests/inbound-queue-stand.php` (rolled back),
   `cms/tests/inbound-queue-race.php` (two processes, a separate test queue).
 
