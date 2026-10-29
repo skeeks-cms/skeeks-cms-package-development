@@ -224,8 +224,9 @@ button rows or a separate comment surface to a card.
   in «⋯»). No SMS or `tel:`/`mailto:` icons outside the block actions.
   The actions of the deal itself — «Редактировать» (the `edit` action is not
   a tab: `isVisible => false`, its URL works), «Клиент сделки», «Сменить
-  ответственного» — go first in «⋯» over a line (`headerTools(...,
-  $recordItems)`), with their windows and rights; the company and the client
+  ответственного» — are actions of `leadConfig()` marked `record`: in «Ещё»
+  of the block and first in «⋯» over a line, one list for both menus («Удалить»
+  only in «⋯»), with their windows and rights; the company and the client
   keep their «Редактировать» tab. A deal without a client shows one inactive
   item «Услуга, счёт, платёж, документ — сначала укажите клиента сделки».
   An open menu is moved inside the screen by the block script.
