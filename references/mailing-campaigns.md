@@ -197,8 +197,8 @@ task). Words: «сделка» = `CmsLead` ([crm-entity-names.md](crm-entity-nam
   outcomes; the preview writes nothing.
 - A new card: a company when the row names one, a contact linked to it
   (contacts go to the person, else to the company), the responsible chosen
-  in the import — none by default for a base (the common pool of the CRM: the
-  first manager takes the company), «Я» or another employee — no password or
+  in the import — «Я» by default or another employee, never none (a CRM
+  client always has a main responsible) — no password or
   invitation, the mailing source and the cold
   state in the package's own table (the core card has no source field), the
   topic with the cold basis on its contacts. A contact without a name gets its
@@ -212,8 +212,8 @@ task). Words: «сделка» = `CmsLead` ([crm-entity-names.md](crm-entity-nam
 - The flow is always a campaign (a bot through MCP/API, a mailing, a
   mailing service; a bot names the campaign on every send): a deal is made
   by a person by hand, and by the flow only by the campaign's rules. The
-  campaign holds the responsible of NEW companies (none — the common pool,
-  the sender, an employee), what makes a deal (a reply and a request from
+  campaign holds the responsible of NEW companies (the sender — by default,
+  for a bot the user of its authorization — or an employee; never none), what makes a deal (a reply and a request from
   the letter always; a view of the presentation or offer and a visit by a
   link by checkboxes), who gets the deal («Неразобранное», the sender, an
   employee), its pipeline, and the call task on an event that makes no
@@ -224,13 +224,9 @@ task). Words: «сделка» = `CmsLead` ([crm-entity-names.md](crm-entity-nam
   «Смотрел» of the pipeline (the core `OutboundSales` names them). The flow
   takes an existing company as it is, skips a protected client of another
   main responsible at launch and gives such a client's deal to its main
-  responsible; the receiver of a deal of a client without a main
-  responsible becomes its main one («Взять в работу», `CrmAccess::setMain`).
-  Whether the client is of the pool is read BEFORE its deal is made — the new
-  deal is itself a history and the client is never «free» after it — and
-  the event runs in one transaction under `SELECT … FOR UPDATE` of the
-  client row: two events at once make one deal and one main responsible, a
-  main responsible or a history owner is never replaced
+  responsible; a deal of the flow never changes the main responsible of the
+  client. The event runs in one transaction under `SELECT … FOR UPDATE` of
+  the client row: two events at once make one deal
   (`tests/flow-race-stand.php` — parallel processes).
 - Entry points of the rule live in the packages that record the event and
   call it by the letter: the offer package (`Campaigns::onOfferView()`,
