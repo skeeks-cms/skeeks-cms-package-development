@@ -143,7 +143,8 @@ One place decides, everything uses it:
   whose renderer implements `log\CmsLogFeedVisibilityInterface`
   (`feedVisibleCondition($user, $logTable)`, `ProposalLogRenderer` — the
   proposal id in `data` among `CmsProposalQuery::forManager()`) adds the
-  condition for `deal` and the pool;
+  condition for `deal`/`edit` and for a client without the main one seen by a
+  head;
 - `canPinLog($user, $log)` (`AdminCmsLogController::togglePin()`): a deal
   comment — `CmsLead::canBeWorkedBy()`, a company or person comment —
   `canEditClientRecord()`, other records keep their rules;
@@ -524,8 +525,9 @@ emails, people, addresses, site, requisites).
   deals and of the tasks of those deals — nothing of the client itself. A
   person of a company the employee has in `full` also shows the person's own
   records (the person is the company's data); his personal orders stay by
-  `personalLevel()`. The pool shows the client's own communications without
-  comments of employees (`clientOwnFeedCondition()`). The card feed drops the
+  `personalLevel()`. A client without the main one (old data, seen by a head
+  of a department) shows the client's own communications without comments of
+  employees (`clientOwnFeedCondition()`). The card feed drops the
   deal copy of a letter or a call that also lies on the client ("twin",
   `CmsLogQuery::clientDealsCondition()`) only for a whole-client viewer: in a
   limited feed the client copy is hidden, so the deal copy must stay.
