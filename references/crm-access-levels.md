@@ -74,8 +74,9 @@ The level comes from `CrmAccess::clientDataLevel($user, $code, $id)`:
 | | `deal` «Свои сделки» | `edit` | `full`, main, leader, admin |
 | --- | --- | --- | --- |
 | The card: data, people, phones, emails; call, write | yes | yes | yes |
-| The client feed: the client's own communications (calls, letters, chats), his deals' records and their tasks | yes | yes | yes |
-| Comments and files of employees about the company or the person (`log_type = comment`) | no | no | yes |
+| The client feed: the records of his deals (their letters, calls, chats, notes) and their tasks | yes | yes | yes |
+| The records of the client itself: its letters, calls, chats not linked to his deal, comments and files of employees | no | no | yes |
+| Act on the client itself (a note, a task, a proposal, a presentation, a letter, a call, a message without a deal) | no | no | yes |
 | The feed records of other deals, services, projects, bills, payments, tasks not tied to his deals | no | no | yes |
 | Pin a comment of the company or the person | no | yes | yes |
 | Own deals: proposals, tasks, the deal's own requisites and links (`cms_lead_*`) | yes | yes | yes |
@@ -225,8 +226,8 @@ overview tools (`cms-mcp`).
 ## Keeping one main
 
 Keeping one main (`ensureMain()`): a new or deleted link model
-(`afterSave`/`afterDelete`) gives a record without a main the author's link
-(`created_by`), else the earliest one. The managers field of the company and
+(`afterSave`/`afterDelete`) gives a record without a main one by the rule of
+«Participants only with the main responsible» (below). The managers field of the company and
 client forms rewrites the links (`RelationalBehavior` deletes and inserts):
 `CrmAccess::keepLinks()` (attached in `CmsCompany::init()` and `User::init()`,
 skipped for employees) snapshots the levels and the main before the update and
@@ -267,9 +268,9 @@ and a client):
   - The first incoming payment of a client without a main responsible makes
     the creator of its bill (else who registered the payment) the main one
     (`onPayment()`): a paying client always has one.
-  - Nobody but an explicit choice makes a main responsible: `ensureMain()`
-    promotes only a link that already is `full` (never raises `deal`/`edit`);
-    approving a request about a client without a main makes the approver the
+  - A client with participants always has a main one (`ensureMain()`, section
+    «Participants only with the main responsible» below; it never raises the
+    level of a `deal`/`edit` participant); approving a request about a client without a main makes the approver the
     main one (`CrmAccessRequests::apply()`), the requester gets exactly the
     level chosen. Protected clients without a main: `php yii
     cms/crm/assign-main` (the plan; `--apply` writes) — the creator of the
@@ -516,14 +517,74 @@ Owner's decision 29.10.2026:
   forms, the deal form, an import, REST and MCP all follow. Journal
   `protection`.
 
-## The feed of «Свои сделки»: no comments of employees
+## «Свои сделки» and "edit" work only through their deals
 
-Owner's decision 29.10.2026: comments and files of employees about the
-client (passwords, contracts, briefs: `log_type = comment` on the company or
-the person) belong to the whole client. `clientOwnFeedCondition()` excludes
-them, so `deal`, `edit` and the pool see the client's own communications
-(calls, letters, chats) and the records of their deals only; `full`, the main
-responsible, a leader through a `full` subordinate and administrators see all
-(`feedCondition()` null). The card block of overdue tasks takes
-`getTasks()->forManager()`, as the tab «Задачи».
+Owner's decision 29.10.2026 (it replaced «the client's own records are
+seen»). "edit" differs from `deal` only by changing the client data (phones,
+emails, people, addresses, site, requisites).
 
+- One rule of «his deals»: `CrmAccess::ownLeads($user, $record, $openOnly)` —
+  the deals `forManager()` shows him, of this company or person, whose
+  executor is he or his subordinate (`ownerIds()`); `ownOpenLeads()` — new or
+  in work. The feed, the server checks and the card actions block
+  (`CrmCardActionsWidget::ownDeals()`) use it.
+- The feed (`feedCondition()`): `deal`/`edit` see only the records of their
+  deals and of the tasks of those deals — nothing of the client itself. A
+  person of a company the employee has in `full` also shows the person's own
+  records (the person is the company's data); his personal orders stay by
+  `personalLevel()`. The pool shows the client's own communications without
+  comments of employees (`clientOwnFeedCondition()`). The card feed drops the
+  deal copy of a letter or a call that also lies on the client ("twin",
+  `CmsLogQuery::clientDealsCondition()`) only for a whole-client viewer: in a
+  limited feed the client copy is hidden, so the deal copy must stay.
+- Server checks — `CrmAccess::canActOnClient($user, $record, $leadId)`
+  (whole client, or `$leadId` among `ownOpenLeads()`), the message
+  `CrmAccess::OWN_LEAD_REQUIRED`; `clientActionError($companyId, $clientId,
+  $leadId)` checks the acting employee (`actingWorker()`: a web or API
+  session; the console, receiving and agents are not limited):
+  - `CmsLog` rule: a comment on a company or a person;
+  - `CmsTask` rule: a task of a client without his open deal (a task of a
+    service or a project follows those);
+  - cms-proposal: `CmsProposal::validateClient()` and `CmsProposalSend` — a
+    proposal or a presentation of the company or the person itself;
+  - cms-communication: `ComposeForm::validateContext()` (a letter from the
+    client card) and `SendService::send()` (SMS, chat, e-mail sends of a
+    record);
+  - `TelephonyController::actionCall()` →
+    `CmsLeadTelephonyService::outgoingCallError()`: a phone of a client he
+    sees only by his deals is called only with `lead_id` of his open deal; the
+    call attaches to that deal also by a phone of its client.
+  The API goes through the same models and services.
+- Incoming: a letter is linked to an open deal by the deal's own e-mail
+  (`AddressBook::findRecords()`, only when exactly one such deal) and, in the
+  same conversation, by the links of the earlier letters
+  (`MessageLinker::inheritFromConversation()`): a reply to a letter sent from
+  his deal lands in the deal. A call — by the deal's own phone, only one open
+  deal (`CmsLeadTelephonyService::findUnambiguousActiveLead()`). A letter or a
+  call matched only by the company's contacts stays on the client: `deal` and
+  `edit` do not see it (`full` and the main one do).
+
+## Participants only with the main responsible
+
+Owner's decision 29.10.2026. `CrmAccess::ensureMain($code, $id, $added,
+$formerMainId)` runs on every saved or deleted link (`CmsCompany2manager`,
+`CmsUser2manager`): a client with participants always has a main one — a
+participant with `full` (the responsible of an import, the API, a campaign),
+else the administrator or head of a department who adds the first
+participant, else the head of the department of the former main one (or of a
+participant), else `CrmProtection::HISTORY_FALLBACK_USER_ID` / the first
+administrator; written as `main_auto`. `setMain()` suppresses it while it moves
+the mark. The pool has no participants (`canTakeIntoWork()`); a head with the
+pool right manages the access of a pool client (`canManageAccess()`), so the
+«Доступ» window and the bulk actions give its first participant («Сделать
+основным ответственным» makes the employee the main one). Old clients with
+participants and no main: `php yii cms/crm/assign-orphan-main` (the plan;
+`--apply` writes, `CrmProtection::orphanMainPlan()`).
+
+## Pitfall: the pk of a selection over a scope with joins
+
+`forManager()` / `forManagerOrPool()` join `managers`: a bare `['id' => …]`
+over them is ambiguous for a non-administrator (an administrator has no join
+and never meets it). Always `Model::tableName().'.id'`;
+`BackendModelMultiWindowAction::applySelection()` (cms-backend) qualifies the
+pk itself. Test such actions under a leader.
