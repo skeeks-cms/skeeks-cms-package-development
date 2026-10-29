@@ -193,10 +193,13 @@ duplicates, the employee's settings of the kind decide the channels):
 
 ### «Своё»: services, bills, payments, documents, tasks, proposals
 
-Owner's decision 28.10.2026. Bills, payments and documents are not tied to a
-deal (`CmsLead`): they link only to services (`cms_deal2bill`,
-`cms_deal2payment`, `shop_document2deal`), and no flow issues a bill from a
-deal — a bill keeps only `created_by` (Blameable). So `forManager()` of
+Owner's decisions 28.10 and 29.10.2026 («Полноценная работа в рамках своих
+сделок»). A service (`cms_deal`), a bill (`shop_bill`) and a document
+(`shop_document`) are tied to a deal by `cms_lead_id` (migrations
+`m261029_190000` of `skeeks/cms` and `cms-shop`, `CrmAccess::leadLinkReady()`
+before them); a payment — through its bill (`shop_bill2payment`). Besides they
+still link to services (`cms_deal2bill`, `cms_deal2payment`,
+`shop_document2deal`). `forManager()` of
 `CmsDealQuery`, `CmsTaskQuery` (`skeeks/cms`), `ShopBillQuery`,
 `ShopPaymentQuery`, `ShopDocumentQuery` (`cms-shop`, through
 `ShopBillQuery::clientCondition()` with a fallback for an older cms) and
@@ -208,10 +211,14 @@ deal — a bill keeps only `created_by` (Blameable). So `forManager()` of
   subordinate, or he has no own link and the person belongs to such a
   company (`clientDataLevel()` in SQL);
 - or it is «своё» (`$own`, OR):
-  - a service — `created_by` of him or a subordinate (`ownerIds()`);
-  - a bill — `created_by`;
-  - a payment — `created_by`, or a payment of his bill (`shop_bill2payment`);
-  - a document — `created_by`, or a document of his bill (`shop_document2bill`);
+  - a service — `created_by` of him or a subordinate (`ownerIds()`), or of his
+    deal (`CrmAccess::ownLeadCondition()`: the executor of the deal among
+    `ownerIds()` — a leader gets the deals of his subordinates);
+  - a bill — `created_by`, or of his deal (`ShopBillQuery::ownLeadConditions()`);
+  - a payment — `created_by`, or a payment of his bill (`shop_bill2payment`:
+    the bill is his by `created_by` or by its deal);
+  - a document — `created_by`, of his deal, or a document of his bill
+    (`shop_document2bill`);
   - a task — the executor or the author, `cms_lead_id` of a visible deal, a
     visible project or service;
   - a proposal — `responsible_id` or `created_by`, a visible deal or service;
@@ -225,6 +232,34 @@ Everything follows the scopes: the sections and their CSV, the card tabs
 `AdminUserController`), the mail linked to a service
 (`CmsCommMessageQuery::linkedToVisibleCondition`), the «Услуга» select of the
 task and proposal forms, the task RBAC rule (`CmsTaskRule`).
+
+Writing such a record. The models validate `cms_lead_id` by
+`CrmAccess::validateLeadLink($model)` (`CmsDeal`, `ShopBill`, `ShopDocument` —
+`validateLead()`, before the "client required" rules): a chosen or changed
+deal must be in `CmsLeadQuery::forManager()` of the acting employee and of the
+record's client (a record without a client takes the client of the deal); a
+new record of a client the employee sees in part (`deal`, `edit`, a leader
+through such a subordinate) needs his own open deal of that client
+(`canActOnClient()`, `OWN_LEAD_REQUIRED`). A client the employee does not see
+at all (a buyer of an order) and the console are not limited by it. The forms
+take the field from `crm\LeadLinkField::config($model)` (open deals of the
+chosen client, the linked one stays) and `applyLeadClient($model)` fills the
+client when the form is opened from a deal (`<Form>[cms_lead_id]=<id>`). The
+deal card shows what is tied to it in the tabs «Услуги», «Счета», «Платежи»,
+«Документы» (`AdminCmsLeadController`: related grids of the sections with their
+own scopes; «Добавить» passes `cms_lead_id`; payments through their bills).
+REST/MCP: `cms_lead_id` is writable for `cms_deal_*`, `shop_bill_*`,
+`shop_document_*` (the same validation) and a filter of their lists.
+
+The new responsible of a deal — a change of the responsible
+(`LeadTriage::assign()`, the window, the edit form, MCP `cms_lead_update`),
+«Разобрать» (`accept()`), taking a deal (the card, the board) — gets `deal` to
+the client of the deal when he has no link: `CrmAccess::grantLeadExecutorLevel()`
+(an existing level, the main one and the links of others stay; administrators
+get no link; journal event `grant` with `cms_lead_id`). It is called by these
+flows, not in `CmsLead::afterSave()`: «Работать с этим клиентом» writes its own
+journal event `work` after the deal is saved. Stand test:
+`cms/tests/crm-lead-links-stand.php`.
 
 The cards: `controllers\traits\ManagerScopedModel` — `getModel()` loads `pk`
 through `forManager()` of the model query and throws 404 otherwise; used by
