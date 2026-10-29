@@ -52,19 +52,14 @@ The level comes from `CrmAccess::clientDataLevel($user, $code, $id)`:
   companies (his contacts, submitter, partner) only for an incoming deal
   without an executor (the sorting). The protection of a person counts only
   his personal services and payments (`CrmProtection::compute()`): a payment
-  of his company never protects him. A person without a company has the
-  pool, «Взять в работу», «Доступ» and the journal like a company (record
-  code `client`). A person is in the general pool only with no employee of his own
-  and no company that has employees (`CrmAccess::inPool()`,
-  `personCompanyLinks()`, `CmsUserQuery::forManagerOrPool()`); a person of an
-  owned company is its data — seen through the company, taken into work
-  through it.
-- The general pool holds only clients without a history (owner's decision
-  29.10.2026): `CrmAccess::historyCondition()` / `hasHistory()` — a payment,
-  a bill, a service or a deal ever, not an unsorted incoming deal
-  (`STATUS_NEW`); of a person, his personal ones. `inPool()`,
-  `canTakeIntoWork()`, the filter «Общий пул» and both `forManagerOrPool()`
-  check it. A client with a history always has a main responsible:
+  of his company never protects him. A person without a company has his own
+  main responsible, «Доступ» and the journal like a company (record code
+  `client`); a person of an owned company is its data — seen through the
+  company (`personCompanyLinks()`).
+- The history of a client (owner's decision 29.10.2026):
+  `CrmAccess::historyCondition()` / `hasHistory()` — a payment, a bill, a
+  service or a deal ever, not an unsorted incoming deal (`STATUS_NEW`); of a
+  person, his personal ones. A client with a history and no main one gets it by
   `CrmProtection::mainCandidate()` (the bill or the registration of the last
   payment, else the last service, else `HISTORY_FALLBACK_USER_ID`),
   `historyMainPlan()` / `cms/crm/assign-history-main`; «Работать с этим
@@ -280,48 +275,8 @@ and a client):
     «Авто / Всегда по согласованию» switch (`setAlways()`; the old column
     follows for a rollback). `describe()` — «Под защитой до …: последний
     платёж …», «…: действующая услуга №…».
-  - The general pool: a `free` client without a main responsible (no links).
-    `canTakeIntoWork()`, a match shows `canTake` → «Взять в работу» (the deal
-    form, the duplicate search, sorting): `applyIdentity()` makes the actor
-    the main responsible (`setMain()`, `full`), no request, no notification;
-    the next one gets «Работать с этим клиентом». «Вернуть в общий пул»
-    (`returnToPool()`, `canManageAccess()`, refused for a protected client)
-    removes every link.
-  - «Доступ» shows the state, the switch and «Вернуть в общий пул»; the
-    company and client lists filter «Защита: …» and «Общий пул»
-    (`responsibleFilterItems()`).
-  - The pool is seen only with the pool right (owner's decision 29.10.2026,
-    variant Б; it replaced «every CRM employee» of 28.10): RBAC permission
-    `cms/crm-pool` (`CrmAccess::PERMISSION_POOL`, child of the `admin` role);
-    `CrmAccess::canUsePool()` — an administrator, a head of a department
-    (`isDepartmentHead()`: `cms_department.worker_id`) always, others by the
-    permission in a role («Роли») or assigned to one employee in his profile
-    (block «Клиенты в CRM», `views/admin-worker/_crm-settings.php`, action
-    `crm-settings`; given by an administrator or his head — `canGrantPool()`,
-    `setPoolRight()` assigns/revokes the permission itself). Everything goes
-    through it: `canSeePool()` (the card `view`, `crm-take`; otherwise 403),
-    `applyClientVisibility()` (`forManagerOrPool()` only with the right, else
-    `forManager()` — the lists, the card search, the bulk actions, the API
-    `cms_company_*`), `responsibleFilterItems()` drops «Общий пул» for a web
-    user without it. Never use the pool visibility for deals, services, bills,
-    payments, documents or projects: they keep `forManager()`. A pool card is
-    read only (`canEditClientRecord()` is false), the feed is the client's own
-    records (`feedCondition()`), `views/crm/_pool-banner.php` offers «Взять в
-    работу» (`ClientTransferActions::clientTake()` → `setMain()`).
-  - Without the right a match of the pool is «Компания в общей базе»
-    («Контакт в общей базе»): `presentCandidate()` sets `inBase` (not
-    `canTake`), no name and no employees; the button «Попросить у
-    руководителя» sends a `work` request (`LeadTriage::workWithClient()`,
-    `CrmAccess::poolRequestNeeded()`; the deal form and the API refuse to take
-    it with `LeadTriage::POOL_REQUEST_MESSAGE`, the API `cms_lead_create` sends
-    the request, `cms_company_duplicate_check` returns `in_base`).
-    `isPoolRequest()` — the client has no employee and may be taken: the
-    deciders are the requester's heads (`CmsDepartment::leaderIdsOf()`), else
-    administrators (`deciderIds()`, `requestsCondition()` in SQL); approval
-    makes the requester the main responsible (journal `take` with the request,
-    the deal is created as for «по согласованию»), the decider chooses no
-    level. An incoming deal of a pool client sorted by an employee without the
-    right stays his, the client is requested.
+  - «Доступ» shows the state and the switch; the company and client lists
+    filter «Защита: …» (`responsibleFilterItems()`).
 - A protected client (formerly «Доступ только по согласованию»;
   `approvalRequired()`, shown in a match
   as `byApproval`) — a deal by hand is refused (`checkIdentity()`,
@@ -398,11 +353,11 @@ Deciders (`deciderIds()`): the main responsible and his leaders, else the
   `crm\CrmAccessLog`, table `cms_crm_access_log`, migration `m261029_130000`
   copied the old requests in): every event is written where it happens —
   `request`, `request_approved/declined/cancelled/obsolete`
-  (`CrmAccessRequests`), `work` and `take` (`LeadTriage::applyIdentity()`,
-  `clientTake()`), `grant`/`level`/`remove` («Доступ», the add window),
-  `transfer` (`CrmClientTransfer`), `main_auto` (the first payment,
-  `assign-main`, the approver of a client without a main), `pool`
-  (`returnToPool()`): who, to whom, the client, the level before → after, the
+  (`CrmAccessRequests`), `work` (`LeadTriage::applyIdentity()`; `take` and
+  `pool` remain in the history of the former general pool), `grant`/`level`/
+  `remove` («Доступ», the add window), `transfer` (`CrmClientTransfer`),
+  `main_auto` (the creator, the first payment, `assign-main`, the approver of a
+  client without a main, `ensureMain()`): who, to whom, the client, the level before → after, the
   ground (deal, payment, request), a comment. `CrmAccessLog::write()` never
   breaks the action and also writes a client feed record (log type
   `crm_access`, `log\AccessLogRenderer`). Who sees:
@@ -588,17 +543,63 @@ else the administrator or head of a department who adds the first
 participant, else the head of the department of the former main one (or of a
 participant), else `CrmProtection::HISTORY_FALLBACK_USER_ID` / the first
 administrator; written as `main_auto`. `setMain()` suppresses it while it moves
-the mark. The pool has no participants (`canTakeIntoWork()`); a head with the
-pool right manages the access of a pool client (`canManageAccess()`), so the
-«Доступ» window and the bulk actions give its first participant («Сделать
+the mark. A head of a department manages the access of a client without the
+main one (`canManageAccess()`), so the «Доступ» window and the bulk actions give
+its first participant («Сделать
 основным ответственным» makes the employee the main one). Old clients with
 participants and no main: `php yii cms/crm/assign-orphan-main` (the plan;
 `--apply` writes, `CrmProtection::orphanMainPlan()`).
 
 ## Pitfall: the pk of a selection over a scope with joins
 
-`forManager()` / `forManagerOrPool()` join `managers`: a bare `['id' => …]`
+`forManager()` / `forManagerOrOrphans()` join `managers`: a bare `['id' => …]`
 over them is ambiguous for a non-administrator (an administrator has no join
 and never meets it). Always `Model::tableName().'.id'`;
 `BackendModelMultiWindowAction::applySelection()` (cms-backend) qualifies the
 pk itself. Test such actions under a leader.
+
+## There is no general pool: a CRM client always has a main responsible
+
+Owner's decision 29.10.2026 (cms-communication `ARCHITECTURE.md` п. 13а; it
+replaced the general pool, the right «Общий пул», «Взять в работу» and the
+filter «Общий пул»).
+
+- A new company or person gets its main one at insert
+  (`CrmAccess::assignCreatorMain()`, from `keepLinks()`): links given with it
+  (a form) make one of them the main one (`ensureMain()`), else the creator —
+  `created_by`, else the acting employee (`actingWorker()`); a company created
+  without an employee (a console job) gets the default administrator; a
+  person who registered on the site himself gets nobody — a user of the site,
+  not a CRM client (п. 14). The creating code may give its responsible right
+  after (an import «я / сотрудник», the API `manager_ids`, a campaign, the deal
+  form `LeadTriage::newClientMain()`): a repeated link of the creator merges
+  into the automatic one (`CmsCompany2manager::insert()`, `isAutoCreatorLink()`,
+  `confirmAutoMain()`), another employee's `full` link takes the main place and
+  the creator's automatic link goes (`onLinkInserted()`, journal `main_auto`
+  «ответственный, заданный при создании»). Only within the process that created
+  the record; links `setMain()` inserts itself never count.
+- A client without the main one is old data (`isOrphan()`: no employee at all,
+  not an employee, not a person of an owned company): seen by an administrator
+  and the heads of departments (`canSeeOrphan()`, `applyClientVisibility()` →
+  `CmsCompanyQuery/CmsUserQuery::forManagerOrOrphans()`; a person only when an
+  employee created him), the card shows `views/crm/_no-main-banner.php`, a head
+  gives it a main one. «Работать с этим клиентом» on it assigns the main one by
+  the history first (`CrmProtection::assignHistoryMain()`, else
+  `HISTORY_FALLBACK_USER_ID`), the employee gets `deal`. The old ones:
+  `php yii cms/crm/assign-pool-main` (`CrmProtection::poolMainPlan()`: by the
+  history, else `--user`/Семенов; persons only when created by an employee or
+  with a history; the plan by default, `--apply` writes). The RBAC item
+  `cms/crm-pool` is removed by migration `m261029_170000`.
+- The dismissal: an employee who is the main one of clients is not
+  deactivated, made a non-employee or deleted (`User::init()` events,
+  `CrmAccess::deactivationError()` / `mainClientsCount()`; every way — the form,
+  one field, the bulk deactivation, the delete — saves or deletes the model).
+  «Передать всех клиентов» (`AdminWorkerController` action
+  `crm-transfer-clients`, `views/admin-worker/crm-transfer-clients.php`, a button
+  in «Клиенты в CRM» of the profile; an administrator or his head —
+  `canTransferClientsOf()`): `CrmClientTransfer::workOf()` (his clients, his
+  open deals and tasks of them) and `transferAllOf()` — the receiver (the
+  nearest head by default, `nearestHeadId()`) becomes the main one, the deals
+  and tasks move except the kept ones; «Сотрудник увольняется» removes the
+  former main one from the clients and deactivates him. Journal `transfer`
+  (and `remove`).
