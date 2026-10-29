@@ -51,6 +51,10 @@ the reliability boundary. Never invent historical dates from old data.
   way to move a deal between pipelines (rights through `CrmAccess`).
 - Stage changes go through `CmsLeadBoardService::forLead($lead)->move()`
   (kanban, the card stage bar); a terminal column only asks for the result form.
+  A drop of a closed deal into a stage reopens it — that is the interface.
+  The API does not: `cms_lead_move` refuses a closed deal and names
+  `cms_lead_close result=reopen`; `cms_lead_update` never changes the stage
+  or the pipeline.
 - `LeadPipelines::successSignals($lead)` — the pipeline criterion only
   *suggests* closing; a person closes. Packages add reasons through
   `LeadPipelines::EVENT_SUCCESS_SIGNALS` (`LeadSuccessSignalsEvent`, `handled`
