@@ -233,15 +233,36 @@ Everything follows the scopes: the sections and their CSV, the card tabs
 (`CmsCommMessageQuery::linkedToVisibleCondition`), the «Услуга» select of the
 task and proposal forms, the task RBAC rule (`CmsTaskRule`).
 
-Writing such a record. The models validate `cms_lead_id` by
-`CrmAccess::validateLeadLink($model)` (`CmsDeal`, `ShopBill`, `ShopDocument` —
-`validateLead()`, before the "client required" rules): a chosen or changed
-deal must be in `CmsLeadQuery::forManager()` of the acting employee and of the
-record's client (a record without a client takes the client of the deal); a
-new record of a client the employee sees in part (`deal`, `edit`, a leader
-through such a subordinate) needs his own open deal of that client
-(`canActOnClient()`, `OWN_LEAD_REQUIRED`). A client the employee does not see
-at all (a buyer of an order) and the console are not limited by it. The forms
+Writing such a record (audit F1/F2/F6, 29.10.2026). The models check who the
+record belongs to by `CrmAccess::validateLeadLink($model)` (`CmsDeal`,
+`ShopBill`, `ShopDocument` — `validateLead()`, before the "client required"
+rules; `ShopPayment` — `validateClient()`) when the record is new or ANY field
+of its belonging changes (the deal, the company, the person):
+- the client must be available to the acting employee
+  (`clientDataLevel()` not null; an administrator — any). No access is never a
+  permission: `CLIENT_NOT_AVAILABLE`;
+- the deal must be in his `CmsLeadQuery::forManager()` (`LEAD_NOT_AVAILABLE`)
+  and of the same client (`LEAD_OTHER_CLIENT`; moving only the company while
+  keeping the deal is refused); a record without a client takes the client of
+  the deal;
+- a closed deal gets no new records from anyone, administrators and `full`
+  included (`LEAD_CLOSED`); reading and editing its existing records stay,
+  a reopened deal takes records again;
+- a client seen in part (`deal`, `edit`, a leader through such a subordinate)
+  only within his own open deal (`canActOnClient()`, `OWN_LEAD_REQUIRED`); a
+  payment (no `cms_lead_id`, tied to a deal through its bill) — only the
+  available client.
+The refusals never name the hidden client or deal, and
+`forgetHiddenBelonging()` returns the model to its previous belonging, so a form
+drawn again with the error and any serialization never show the hidden name.
+Only an acting employee is checked (`actingWorker()`): the console, customers
+of the site and system work wrapped in `CrmAccess::systemWrite(fn)` (the bill of
+an order by its payment system, `PaysystemHandler::createShopBill()`) are not.
+`CmsDeal::createBill()` gives the bill the deal of its service. Regressions:
+`cms/tests/crm-lead-links-write-stand.php` (company/person and moves between
+them × none/deal/edit/full/leader/admin × no/own/other/closed deal, through
+`cmsMcp->executeTool` and the form with a CSRF token; after a refusal — no row,
+no journal event, no hidden name) and `crm-leak-audit.php`. The forms
 take the field from `crm\LeadLinkField::config($model)` (open deals of the
 chosen client, the linked one stays) and `applyLeadClient($model)` fills the
 client when the form is opened from a deal (`<Form>[cms_lead_id]=<id>`). The
@@ -271,6 +292,23 @@ journal event (`ClientTransferActions` «Уровень доступа не из
 `CrmAccessLog::levelChange($log)` is the one «было → стало» of the journal
 table, the section «Доступы» and the feed text (a new link: «нет доступа → …»).
 Stand test: `cms/tests/crm-lead-links-stand.php`.
+
+Answers of rights within one web request (audit F10: a feed asked the same
+questions hundreds of times). `CmsDepartment::tree()` reads the departments and
+their employees once (`subordinateIds()`, `leaderIdsOf()`), dropped by
+`resetTree()` on a save or delete of a department or its employee.
+`CrmAccess::memo()` keeps `canSeeCompany()`, `canSeeClient()`, `linkLevel()`
+and the employee by id; it is dropped when the signed-in identity changes, on
+a save or delete of `CmsCompany2manager`, `CmsUser2manager`, `CmsCompany2user`,
+a department or its employee (class events), and by `resetMemo()` in the
+writers that bypass the models (`setMain()`, `setLevel()`, the managers field,
+`setApprovalRequired()`). A new writer of links with `updateAll()` must call
+`resetMemo()`. Nothing is kept across requests, and the console and workers
+keep nothing (`CrmAccess::keepsAnswers()`; `$keepAnswersInConsole` is only for
+`cms/tests/crm-access-memo-stand.php`). RBAC rules ask these methods instead of
+their own queries (`CmsCompanyRule` → `canSeeCompany()`). A feed page loads the
+records of its entries in one query per class (`CmsLog::preloadModels()` in
+`log-list.php`; `getModel()`/`getSubModel()` read once per entry).
 
 The cards: `controllers\traits\ManagerScopedModel` — `getModel()` loads `pk`
 through `forManager()` of the model query and throws 404 otherwise; used by
