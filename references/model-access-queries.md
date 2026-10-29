@@ -39,7 +39,20 @@ a relation alias for their own filter join it themselves after the scope.
 Verified consumer: `CmsContractorQuery::forManager()` (skeeks/cms 6.4.9.46),
 checked locally for admin, a scoped worker (row count equals distinct count)
 and a worker without clients; bill/payment forms add their own
-`companies`/`users` joins.
+`companies`/`users` joins. `CmsCompanyQuery::forManager()` and
+`forManagerOrOrphans()` (release rehearsal 30.10.2026): a company linked to a
+head and to his subordinate was two rows (grid 2369, distinct 2366); now `id IN`
+over `cms_company2manager` and `NOT EXISTS` for «nobody linked» — the grid
+total equals the scope and pages have no repeated rows.
+
+A section of a shop or any package that lists client records is scoped even
+when it is not in the menu: a direct address is enough to open it. `cms-shop`
+`AdminBillController` («Счета по заказам», `/~sxx/shop/admin-bill`) applies
+`ShopBillQuery::forManager()` to its grid and CSV and `ManagerScopedModel` to
+its model actions, the multi delete is for administrators (covered by
+`crm-leak-audit`). Without a visibility rule yet: `AdminOrderController`
+(orders, also the orders tab of a product) and `AdminShopCheckController`
+(checks) — their rule is a decision of the owner.
 
 Verified consumer: `cms-hosting/AdminDnsZoneController::getModel()`, whose
 manager scope joins the related deal for non-administrators.
