@@ -184,6 +184,19 @@ button rows or a separate comment surface to a card.
   emails make a choice. The block holds only contact and
   record actions: adding people or client data stays with the contact blocks
   and their access level ([crm-access-levels.md](crm-access-levels.md)).
+- What the client card offers (`client()`): "Задача" and "Сделка" (the
+  create form with the client chosen), "Позвонить", "Письмо", the package
+  tabs, and in "Ещё" the records of the card tabs — "Услуга", "Счёт",
+  "Платёж" (заплатили нам / мы заплатили), "Документ" (types of
+  `ShopDocument::optionsForType()`, the reconciliation act through
+  `create-reconciliation`). Each opens the existing create form of its
+  section; none is shown unless the employee has the right of that card tab
+  (`cms/admin-company/manage`, `cms/admin-user/manage`) and the `create`
+  action of its controller is allowed (`isAllow`, `canCreate()`). "Свои
+  сделки" and "edit" get only "Сделка" of these: services, bills, payments
+  and documents have no link to a deal. Do not add a new create form for the
+  block — add the tab of the existing one.
+- Tabs use the text colour; the muted colour reads as disabled.
 - Company and client cards connect it with one line,
   `CrmCardActionsWidget::client($model, $phones, $emails)`. An employee who
   works with the client only through his deals ("Свои сделки" and "Свои
