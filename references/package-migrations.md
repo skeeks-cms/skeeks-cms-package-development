@@ -101,6 +101,46 @@ Check every case on a separate database: the old schema with rows, a second
 run, an interrupted run, down with and without own data
 (`cms-communication/tests/flow-migration-db.php`).
 
+A repeated `cms/migrate` skips a version already written to the history, so it
+proves nothing here: the dangerous case is a run stopped after some DDL and
+before the history row (lost connection, killed deploy). Rules for every new
+DDL migration (release audit N4/N5, 29.10.2026):
+
+- every step of `safeUp` checks before it acts: a column, an index, a foreign
+  key, a table is added only when missing; a dropped index is dropped only when
+  present. In `skeeks/cms` 6.4.9.75+ use `skeeks\cms\db\RepeatableMigrationTrait`
+  (`addColumnIfMissing`, `createIndexIfMissing`, `addForeignKeyIfMissing`,
+  `createTableIfMissing` and the `…IfExists` drops); other packages may inline
+  the same checks (`hasIndex` through `getSchema()->getTableIndexes($t, true)`,
+  foreign keys through `getTableSchema($t, true)->foreignKeys[$name]`);
+- a data step between DDL statements must be safe to repeat: copy only rows the
+  target does not have yet (`NOT EXISTS`), fill only records still without a
+  value (a main responsible only where none is set), and when a step must not
+  rerun once users could change its result, run it before the last DDL of that
+  table and skip the table when that last object exists (crm_protection: the
+  index is created after the «always» carry-over);
+- `safeDown` checks every kind of data it would erase — filled columns, rows of
+  dropped tables, references to dropped tables — before its first DDL
+  (`refuseRollbackWithData()` of the trait throws «Откат невозможен…»; a
+  package without the trait returns false with a message), each check only for
+  a column or table that still exists, and then drops only what exists, so a
+  stopped rollback can be repeated too. A unique check on names is not enough:
+  history rows with unique names are lost the same way.
+
+Test it with the interruption harness `skeeks/cms`
+`tests/support/migration-interrupt.php`: it stops `safeUp` before each
+executed statement in turn and requires that up resumes to the schema of one
+clean run and that down returns the schema before the migration (columns,
+indexes, foreign keys, comments through information_schema). Examples:
+`cms/tests/crm-migrations-repeat-stand.php`,
+`cms-communication/tests/migrations-repeat-db.php`. They copy empty tables from
+the stand database into a separate one, bring it back with the migrations' own
+`safeDown` and drop it at the end. MariaDB keeps instantly dropped columns in
+the row format until a rebuild, so the harness rebuilds a table after each
+rollback; without that, dozens of cycles on a wide table end in «Row size too
+large», which a single real run does not meet. Verify that a new test fails on
+the old migration before trusting it.
+
 ## Verification
 
 When a migration checks columns added by an earlier migration, request a fresh
