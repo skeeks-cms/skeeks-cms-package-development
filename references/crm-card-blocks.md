@@ -207,6 +207,23 @@ button rows or a separate comment surface to a card.
   and "edit" get them in the client card through `dealTabs()`, by their
   open deals, and none without one.
 - Tabs use the text colour; the muted colour reads as disabled.
+- The header of a company, a person client and a deal shows
+  `CrmCardActionsWidget::headerTools($record, $icons, $controller)`: the
+  icons «Позвонить» and «Письмо» are the very actions of the block (same
+  phone choice, CRM letter window, choice of an own deal; no action — no
+  icon), then «⋯» with every action of the block and «Ещё» (rows first),
+  «Примечание» opening the note of the block (`#sx-crm-note` on another
+  tab), and «Удалить» last under a separator, red, from
+  `BackendModelHeader::deleteActionData($controller)` (the same delete action
+  and its rights; the confirmation names the record and counts its deals,
+  services, bills, payments, documents). The header then gets
+  `actions => false` (no trash icon). One source: `cardConfig()`
+  (`clientConfig()`, `leadConfig()`) feeds the block and the header — never
+  build card actions in a view. An unsorted deal shows only «⋯» beside
+  «Взять в работу» / «Не продажа»; a narrow screen hides the icons (they are
+  in «⋯»). No SMS or `tel:`/`mailto:` icons outside the block actions.
+- A mouse click leaves no focus frame (`:focus:not(:focus-visible)` in
+  cms-backend `ui.css`); keyboard focus styles go on `:focus-visible`.
 - The tabs of the three CRM cards keep one order, set only by the `priority`
   of their backend actions from `crm\CrmCardTabs::PRIORITY_*` (no per-card
   numbers; a tab hidden from an employee does not shift the others):
