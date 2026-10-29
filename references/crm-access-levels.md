@@ -61,7 +61,7 @@ The level comes from `CrmAccess::clientDataLevel($user, $code, $id)`:
   service or a deal ever, not an unsorted incoming deal (`STATUS_NEW`); of a
   person, his personal ones. A client with a history and no main one gets it by
   `CrmProtection::mainCandidate()` (the bill or the registration of the last
-  payment, else the last service, else `HISTORY_FALLBACK_USER_ID`),
+  payment, else the last service, else the responsible by default),
   `historyMainPlan()` / `cms/crm/assign-history-main`; «Работать с этим
   клиентом» assigns it first when missing (`assignHistoryMain()`, the deal
   being created is not counted as history), then the actor gets `deal`.
@@ -81,6 +81,26 @@ The level comes from `CrmAccess::clientDataLevel($user, $code, $id)`:
 | Change the company/person data: name, form, requisites, existing phones and emails, addresses, links, people | no | yes | yes |
 | Responsible employees and levels (the `managers` form field, «Доступ к клиенту») | no | no | main, leader, admin (`canManageAccess()`) |
 | Deleting the company or the person | no | no | yes |
+
+### No fixed ids: the defaults are settings
+
+The packages run on many sites: no employee, company, site, pipeline, stage,
+department, mailbox or bot id, address or person's name in the code that
+runs — on another site id 1 may be anyone or nobody. A default is a setting of
+the site (`crmSettings`), empty by default, with a rule for the empty value.
+Names in comments and examples are made up («Петрова Анна», «Ромашка»).
+
+«Ответственный по умолчанию» (`crmSettings->defaultResponsibleId`) — who takes
+what has nobody else: a client left without the main one and without a head of
+a department (`ensureMain()`), a company created without an employee
+(`assignCreatorMain()`), a client with a history (`CrmProtection::mainCandidate()`,
+`assignHistoryMain()`), the default `--user` of `cms/crm/assign-*-main`. One
+rule, `CrmAccess::defaultResponsible()`: the setting when he is an active
+employee, else the first active administrator (`adminIds()`), else nobody; it
+returns why (`DEFAULT_FROM_SETTINGS`, `DEFAULT_FIRST_ADMIN`), the journal and
+the console plans show it (`CrmProtection::fallback()`).
+`CrmProtection::HISTORY_FALLBACK_USER_ID` stays only as a `@deprecated`
+declaration. Stand test: `cms/tests/crm-default-responsible-stand.php`.
 
 ### Who works on a deal
 
@@ -689,8 +709,8 @@ $formerMainId)` runs on every saved or deleted link (`CmsCompany2manager`,
 participant with `full` (the responsible of an import, the API, a campaign),
 else the administrator or head of a department who adds the first
 participant, else the head of the department of the former main one (or of a
-participant), else `CrmProtection::HISTORY_FALLBACK_USER_ID` / the first
-administrator; written as `main_auto`. `setMain()` suppresses it while it moves
+participant), else the responsible by default (`CrmAccess::defaultResponsible()`: the setting, else the first
+administrator); written as `main_auto`. `setMain()` suppresses it while it moves
 the mark. A head of a department manages the access of a client without the
 main one (`canManageAccess()`), so the «Доступ» window and the bulk actions give
 its first participant («Сделать
@@ -733,9 +753,9 @@ filter «Общий пул»).
   employee created him), the card shows `views/crm/_no-main-banner.php`, a head
   gives it a main one. «Работать с этим клиентом» on it assigns the main one by
   the history first (`CrmProtection::assignHistoryMain()`, else
-  `HISTORY_FALLBACK_USER_ID`), the employee gets `deal`. The old ones:
+  the responsible by default), the employee gets `deal`. The old ones:
   `php yii cms/crm/assign-pool-main` (`CrmProtection::poolMainPlan()`: by the
-  history, else `--user`/Семенов; persons only when created by an employee or
+  history, else `--user` or the responsible by default; persons only when created by an employee or
   with a history; the plan by default, `--apply` writes). The RBAC item
   `cms/crm-pool` is removed by migration `m261029_170000`.
 - The dismissal: an employee who is the main one of clients is not

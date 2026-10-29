@@ -17,7 +17,7 @@ Verified 2026-10-27 (step У4a; `skeeks/cms` `notify\`, `skeeks/cms-communicatio
   works: it gets the category of its record (`modelCategories`) and stays in
   the CRM only.
 - Format of a row (verified 2026-10-28, П2а): `name` is the event as plain
-  text (grey line: «Фирстова Елизавета просит сделку по клиенту»), `model` is
+  text (grey line: «Петрова Анна просит сделку по клиенту»), `model` is
   the record it concerns — shown as the bold link line by its `asText`, also
   the label in messengers and mail. `model` must be a record registered in
   `skeeks->modelsConfig` (lead, company, client, task…): a service row such
