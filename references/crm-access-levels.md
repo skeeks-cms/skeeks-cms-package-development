@@ -258,8 +258,19 @@ the client of the deal when he has no link: `CrmAccess::grantLeadExecutorLevel()
 (an existing level, the main one and the links of others stay; administrators
 get no link; journal event `grant` with `cms_lead_id`). It is called by these
 flows, not in `CmsLead::afterSave()`: «Работать с этим клиентом» writes its own
-journal event `work` after the deal is saved. Stand test:
-`cms/tests/crm-lead-links-stand.php`.
+journal event `work` after the deal is saved. The event of the journal «Доступы»
+and of the client feed: the actor, the employee, `нет доступа → Свои сделки`,
+the comment «Смена ответственного сделки №N» and `cms_lead_id` (the journal
+links the deal, the feed entry gets it in `data` and `AccessLogRenderer` links
+it). A responsible who already has a level gets no journal event (the deal's
+own event is enough); the method returns false then.
+
+Writing levels never fakes a change: `setLevel()` returns whether the level
+changed — no link is an error, the same level again is a success without a
+journal event (`ClientTransferActions` «Уровень доступа не изменился»).
+`CrmAccessLog::levelChange($log)` is the one «было → стало» of the journal
+table, the section «Доступы» and the feed text (a new link: «нет доступа → …»).
+Stand test: `cms/tests/crm-lead-links-stand.php`.
 
 The cards: `controllers\traits\ManagerScopedModel` — `getModel()` loads `pk`
 through `forManager()` of the model query and throws 404 otherwise; used by
