@@ -571,6 +571,31 @@ emails, people, addresses, site, requisites).
   `SiteMessages::receive()`, `ChatFeed::onMessage()` of a private dialog; a
   chat is attached whole by `ChatLinks::attach()`). A record older than a day
   (a history import) only goes to the one deal, nobody is notified.
+- Reading and writing the correspondence (cms-communication, release audit
+  N1/N2, 29.10.2026). One policy for letters and chats —
+  `services\CrmRecords::communicationQuery($type, $user)`: a letter or a chat
+  linked to a company or a person is read only when the client is seen in
+  full (the company outside `dealOnlyCompanyIds()`; a person — a `full` link
+  of him or a subordinate, or a person of such a company), an administrator —
+  all; deals, services and tasks keep their scopes (they already give «своё»).
+  `visibleQuery()` stays for choosing and linking records. Users:
+  `CmsCommMessageQuery::linkedToVisibleCondition()` (the mail list, a letter,
+  the search, files, REST/MCP — all go through `forManager()`) and
+  `ChatAccess::linkedCondition()` (the chat list, a chat, REST/MCP). A full
+  access to a mailbox or a bot (`read_level = all`) stays a right of its own.
+  Writing to a chat with «own» sending — `ChatAccess::sendRefusal()`: a chat
+  the employee took, or linked to an open deal he works on
+  (`CrmRecords::workingLeadsQuery()` — `isLeadWorker()` in SQL: his and his
+  subordinates' deals, every deal of a client seen in full) or to a client
+  seen in full; otherwise the refusal asks to link the chat to his open deal.
+  It is checked in the chat page, `cms_comm_chat_reply_check`/`_send` and
+  once more right before the queue (`BotSend::queue()` for the acting worker,
+  so a repeat by an old token after the deal was closed is refused); «any»
+  sending on the bot writes to every chat it reads. Regressions:
+  cms-communication `tests/crm-communication-access-stand.php` (company-only
+  and person-only letters, deal/edit/full, his, a foreign and a closed deal, a
+  head of department, an administrator, a fake messenger), and the
+  company-only letter among the forbidden markers of `crm-leak-audit.php`.
 
 ## Participants only with the main responsible
 

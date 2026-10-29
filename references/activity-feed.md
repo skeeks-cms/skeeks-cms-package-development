@@ -42,7 +42,10 @@ deals (`CmsLead`), as in Bitrix24:
   `comm_visit` are compared: comments and changes are never twins, their
   `data` is often `[]`;
 - the level of the employee decides through `crm\CrmAccess::feedCondition()`
-  (see `crm-access-levels.md`);
+  (see `crm-access-levels.md`); the letters and chats a feed entry opens
+  follow the same rule in cms-communication (`CrmRecords::communicationQuery()`):
+  for «Свои сделки» and "edit" the correspondence of the client itself is
+  hidden both in the feed and in the mail and chat lists;
 - pinned: `notPinnedOf($record)` leaves out only the card's own pinned
   entries (they are shown above the feed); a deal entry pinned in its deal
   stays in the feed as a normal entry;
