@@ -67,6 +67,18 @@ personal-link mailer inside a document package.
   comparing or formatting.
 - "Почта" lists only `channel = email`; SMS and messenger messages live in feeds
   and conversations.
+- A new action from a deal (a letter, an SMS, "Прикрепить из…", a proposal
+  and its sending) goes through `services\LeadActions::error($user, $lead)`
+  (verified 2026-10-29, `tests/lead-actions-stand.php`): who works on the deal
+  (core `CrmAccess::isLeadWorker()`), and a closed deal only for who acts on
+  its client anyway (`canActOnClient()` without a deal: an administrator,
+  "full", the main responsible). «Свои сделки» and "edit" return the deal to
+  work first. `isLeadWorker()` says who belongs to the deal, not whether the
+  action is allowed by its state: never use it alone for a new action. Check
+  the card of the send and every `CmsLead` among `getSendRecords()`
+  (`SendService::leadsError()`); models of a document check their own deal
+  for the acting employee (`LeadActions::actingError()`), so the API and the
+  UI refuse alike. Reading the history of a closed deal is not limited.
 
 ## Formatted text
 
