@@ -74,7 +74,8 @@ The level comes from `CrmAccess::clientDataLevel($user, $code, $id)`:
 | | `deal` «Свои сделки» | `edit` | `full`, main, leader, admin |
 | --- | --- | --- | --- |
 | The card: data, people, phones, emails; call, write | yes | yes | yes |
-| The client feed: the client's own records (calls, letters, chats, comments), his deals' records and their tasks | yes | yes | yes |
+| The client feed: the client's own communications (calls, letters, chats), his deals' records and their tasks | yes | yes | yes |
+| Comments and files of employees about the company or the person (`log_type = comment`) | no | no | yes |
 | The feed records of other deals, services, projects, bills, payments, tasks not tied to his deals | no | no | yes |
 | Pin a comment of the company or the person | no | yes | yes |
 | Own deals: proposals, tasks, the deal's own requisites and links (`cms_lead_*`) | yes | yes | yes |
@@ -112,7 +113,8 @@ One place decides, everything uses it:
   or a person (`getCardLogs()` of the card, `getCompanyLogs()`/`getUserLogs()`,
   `getLogs()` of «Активность» add it for the current employee): for `deal` the
   records of the client itself (`model_code` of the company or the person —
-  incoming calls, letters, chat messages, comments are written there), of his
+  incoming calls, letters, chat messages are written there; not the comments
+  of employees, owner's decision 29.10.2026), of his
   own deals and of the tasks with `cms_lead_id` of his deals — the same for
   `edit`; null — no limit (`full`, the main responsible, a leader through a
   `full` subordinate see the entries of all the
@@ -287,22 +289,38 @@ and a client):
   - «Доступ» shows the state, the switch and «Вернуть в общий пул»; the
     company and client lists filter «Защита: …» and «Общий пул»
     (`responsibleFilterItems()`).
-  - The pool is seen by every CRM employee (owner's decision 28.10.2026):
-    `CrmAccess::inPool()` (no links), `canSeePool()` (the right to the
-    companies or clients section). One visibility of the lists, the card search
-    and the API — `CrmAccess::applyClientVisibility()` →
-    `CmsCompanyQuery::forManagerOrPool()` / `CmsUserQuery::forManagerOrPool()`
-    (a client person of the pool is a non-employee without links). Never use it
-    for deals, services, bills, payments, documents or projects: they keep
-    `forManager()`, so a pool company shows none of them. The card `view`
-    action allows `canSeePool()`; the other tabs keep the manage right and are
-    hidden; the data is read only (`canEditClientRecord()` is false), the feed is
-    the client's own records (`feedCondition()`), `views/crm/_pool-banner.php`
-    at the top offers «Взять в работу» (action `crm-take`,
-    `ClientTransferActions::clientTake()` → `setMain()`), then the card opens
-    in full. A protected client without employees shows the state; a leader
-    or an administrator assigns it. The match search keeps the old visibility
-    (a pool company is `visible: false`, `canTake: true`).
+  - The pool is seen only with the pool right (owner's decision 29.10.2026,
+    variant Б; it replaced «every CRM employee» of 28.10): RBAC permission
+    `cms/crm-pool` (`CrmAccess::PERMISSION_POOL`, child of the `admin` role);
+    `CrmAccess::canUsePool()` — an administrator, a head of a department
+    (`isDepartmentHead()`: `cms_department.worker_id`) always, others by the
+    permission in a role («Роли») or assigned to one employee in his profile
+    (block «Клиенты в CRM», `views/admin-worker/_crm-settings.php`, action
+    `crm-settings`; given by an administrator or his head — `canGrantPool()`,
+    `setPoolRight()` assigns/revokes the permission itself). Everything goes
+    through it: `canSeePool()` (the card `view`, `crm-take`; otherwise 403),
+    `applyClientVisibility()` (`forManagerOrPool()` only with the right, else
+    `forManager()` — the lists, the card search, the bulk actions, the API
+    `cms_company_*`), `responsibleFilterItems()` drops «Общий пул» for a web
+    user without it. Never use the pool visibility for deals, services, bills,
+    payments, documents or projects: they keep `forManager()`. A pool card is
+    read only (`canEditClientRecord()` is false), the feed is the client's own
+    records (`feedCondition()`), `views/crm/_pool-banner.php` offers «Взять в
+    работу» (`ClientTransferActions::clientTake()` → `setMain()`).
+  - Without the right a match of the pool is «Компания в общей базе»
+    («Контакт в общей базе»): `presentCandidate()` sets `inBase` (not
+    `canTake`), no name and no employees; the button «Попросить у
+    руководителя» sends a `work` request (`LeadTriage::workWithClient()`,
+    `CrmAccess::poolRequestNeeded()`; the deal form and the API refuse to take
+    it with `LeadTriage::POOL_REQUEST_MESSAGE`, the API `cms_lead_create` sends
+    the request, `cms_company_duplicate_check` returns `in_base`).
+    `isPoolRequest()` — the client has no employee and may be taken: the
+    deciders are the requester's heads (`CmsDepartment::leaderIdsOf()`), else
+    administrators (`deciderIds()`, `requestsCondition()` in SQL); approval
+    makes the requester the main responsible (journal `take` with the request,
+    the deal is created as for «по согласованию»), the decider chooses no
+    level. An incoming deal of a pool client sorted by an employee without the
+    right stays his, the client is requested.
 - A protected client (formerly «Доступ только по согласованию»;
   `approvalRequired()`, shown in a match
   as `byApproval`) — a deal by hand is refused (`checkIdentity()`,
@@ -417,8 +435,8 @@ Deciders (`deciderIds()`): the main responsible and his leaders, else the
   (`my_main`, `no_main`, `no_responsible`, `pool` of
   `CrmAccess::responsibleFilterItems()`), `crm_protection`, `crm_main_user`
   and `crm_employee` (`CrmAccess::applyEmployeeFilter()`, main only or any
-  link), `crm_created` (`DaterangeInputWidget::parseRange()`); a protection
-  badge after the name. A saved view keeps its own `visibleFilters`, so new
+  link), `crm_created` (`DaterangeInputWidget::parseRange()`); the shield of
+  protection after the name (below). A saved view keeps its own `visibleFilters`, so new
   filters need a migration appending them to `backend_showing`
   (`m261029_140000`). Bulk actions `crm-bulk-main/grant/protection` are
   `crm\CrmBulkAccessAction` (a `BackendModelMultiWindowAction`) with
@@ -471,3 +489,41 @@ attribute (`data-sx-confirm`) and confirm itself.
   a field whose search is limited by `forManager()` never names a hidden
   record put into the form address — give every CRM select a limited
   `searchQuery`, not a bare `find()`.
+
+## The shield of protection and the protection of new clients
+
+Owner's decision 29.10.2026:
+
+- A protected client stands out everywhere, a free one shows nothing: one
+  helper `CrmProtection::shield($record, $withReason)` /
+  `shieldFor($record)` (the reason — payments, services — only to who sees
+  the whole client or manages the access) / `shieldIcon($state, $text)` for
+  a match (`presentCandidate()` carries `protection`, `protectionText`). An
+  icon `fa-shield-alt` with the hint «Под защитой до …: …» or «Всегда по
+  согласованию: …», asset `CrmShieldAsset` (registered by the helper;
+  `LeadIdentityAsset` depends on it for the AJAX matches). Used at the name in
+  the company and client lists, in the card headers (`titleSuffix` of the
+  standard `BackendModelHeader`: the company controller sets `modelHeader`,
+  the client — `views/admin-user/_model_header.php`), in the duplicate search
+  and the company choice of the deal form. Never a text badge «Свободная».
+- The employee setting «Новые компании и клиенты, которые я создаю, —
+  „Всегда по согласованию“» — `cms_user.crm_new_always` (migration
+  `m261029_160000`), switched in «Клиенты в CRM» of the profile by him, his
+  head or an administrator (`canEditCrmSettings()`).
+  `CrmProtection::onCreated()` on `EVENT_AFTER_INSERT` of a company or a
+  person (attached in `CrmAccess::keepLinks()`): the creator — `created_by`,
+  else the web user — decides, not the main responsible he assigns; so the
+  forms, the deal form, an import, REST and MCP all follow. Journal
+  `protection`.
+
+## The feed of «Свои сделки»: no comments of employees
+
+Owner's decision 29.10.2026: comments and files of employees about the
+client (passwords, contracts, briefs: `log_type = comment` on the company or
+the person) belong to the whole client. `clientOwnFeedCondition()` excludes
+them, so `deal`, `edit` and the pool see the client's own communications
+(calls, letters, chats) and the records of their deals only; `full`, the main
+responsible, a leader through a `full` subordinate and administrators see all
+(`feedCondition()` null). The card block of overdue tasks takes
+`getTasks()->forManager()`, as the tab «Задачи».
+
