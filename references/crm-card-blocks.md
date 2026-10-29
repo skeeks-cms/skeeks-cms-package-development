@@ -192,10 +192,20 @@ button rows or a separate comment surface to a card.
   `create-reconciliation`). Each opens the existing create form of its
   section; none is shown unless the employee has the right of that card tab
   (`cms/admin-company/manage`, `cms/admin-user/manage`) and the `create`
-  action of its controller is allowed (`isAllow`, `canCreate()`). "Свои
-  сделки" and "edit" get only "Сделка" of these: services, bills, payments
-  and documents have no link to a deal. Do not add a new create form for the
-  block — add the tab of the existing one.
+  action of its controller is allowed (`isAllow`, `canCreate()`). Do not add
+  a new create form for the block — add the tab of the existing one.
+- The records of a deal (`leadRecordTabs($lead)`, in "Ещё"): "Услуга",
+  "Счёт", "Документ" open with `<Form>[cms_lead_id]` only — the form takes
+  the client of the deal (`LeadLinkField::applyLeadClient()`), the server
+  checks it (`CrmAccess::validateLeadLink()`); "Платёж" is of the client
+  (`ofClient`: a payment is tied to a deal through its bill), once, without
+  a choice of deal. Each needs `CrmAccess::leadLinkReady()` of its table and
+  `canCreate()`; none for a deal without a client or one the server refuses
+  (`canActOnClient($user, $client, $leadId)`). The reconciliation act is of
+  the company, not of a deal: only for who acts on the company itself. The
+  deal card adds them when the employee works with the deal; "Свои сделки"
+  and "edit" get them in the client card through `dealTabs()`, by their
+  open deals, and none without one.
 - Tabs use the text colour; the muted colour reads as disabled.
 - Company and client cards connect it with one line,
   `CrmCardActionsWidget::client($model, $phones, $emails)`. An employee who
