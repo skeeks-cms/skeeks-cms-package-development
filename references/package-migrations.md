@@ -125,7 +125,20 @@ DDL migration (release audit N4/N5, 29.10.2026):
   package without the trait returns false with a message), each check only for
   a column or table that still exists, and then drops only what exists, so a
   stopped rollback can be repeated too. A unique check on names is not enough:
-  history rows with unique names are lost the same way.
+  history rows with unique names are lost the same way;
+- never return early because the table exists: a run stopped right after
+  `CREATE TABLE` leaves it without its unique index and foreign keys, so each
+  element is restored on its own. Before a unique index on a table that may
+  already have been written, merge the duplicates the database groups by its
+  collation (`GROUP BY … HAVING COUNT(*) > 1`), keeping the row that stays
+  meaningful (the latest updated). Verified: `m261029_210000`
+  `cms_crm_inbound_rotation` (release audit F4);
+- what counts as data for an honest down: anything users entered (settings,
+  lists in JSON columns) — refuse while a value differs from the default
+  (NULL, '', `[]`, `{}`, `null` for JSON lists), as `m261029_220000` does for
+  the queue settings of a pipeline (F5). Derived state the code rebuilds by
+  itself (a round-robin cursor) may be dropped; say in the docblock what its
+  loss changes.
 
 Test it with the interruption harness `skeeks/cms`
 `tests/support/migration-interrupt.php`: it stops `safeUp` before each
