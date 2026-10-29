@@ -207,6 +207,24 @@ button rows or a separate comment surface to a card.
   and "edit" get them in the client card through `dealTabs()`, by their
   open deals, and none without one.
 - Tabs use the text colour; the muted colour reads as disabled.
+- The tabs of the three CRM cards keep one order, set only by the `priority`
+  of their backend actions from `crm\CrmCardTabs::PRIORITY_*` (no per-card
+  numbers; a tab hidden from an employee does not shift the others):
+  Профиль / Карточка сделки, Сделки, Услуги, Счета, Платежи, Документы, the
+  own finance tabs of a person (Чеки, Бонусы, Заказы), Задачи, Звонки,
+  История этапов, Доступ, Редактировать, Активность.
+- Every list tab of a card has the button «Новая …» over its grid (and in its
+  empty state) — `CrmCardTabs::createOver()` in the `on gridInit` of a related
+  tab, `CrmCardTabs::attach()` over a list a card renders itself. The button
+  is the action of the card block of the same key
+  (`CrmCardActionsWidget::recordActions()`: lead, task, service, bill,
+  payment, document, bonus), so the tab and the block never differ in the
+  form, the preset client or deal, the rights and the choice of an own deal
+  on «Свои сделки»/"edit"; several links make a menu (deals, document types,
+  «Заплатили нам / Мы заплатили»). No button where the section has no
+  `create` (calls come from telephony, checks from the cash register). The
+  bills of a person are the CRM bills (`/cms/admin-cms-bill`, `cms_user_id`);
+  `/shop/admin-bill` is the read-only list of order bills.
 - Company and client cards connect it with one line,
   `CrmCardActionsWidget::client($model, $phones, $emails)`. An employee who
   works with the client only through his deals ("Свои сделки" and "Свои
