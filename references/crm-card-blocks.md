@@ -222,6 +222,10 @@ button rows or a separate comment surface to a card.
   build card actions in a view. An unsorted deal shows only «⋯» beside
   «Взять в работу» / «Не продажа»; a narrow screen hides the icons (they are
   in «⋯»). No SMS or `tel:`/`mailto:` icons outside the block actions.
+  Every button of the header side (`.btn`, `.sx-button` incl. `--sm`, menu
+  summaries) is the medium button height by cms-backend `ui.css`
+  (`.sx-model-header__toolbar`), the status beside them is centred: a card
+  never sizes its header buttons itself.
 - A mouse click leaves no focus frame (`:focus:not(:focus-visible)` in
   cms-backend `ui.css`); keyboard focus styles go on `:focus-visible`.
 - The tabs of the three CRM cards keep one order, set only by the `priority`
