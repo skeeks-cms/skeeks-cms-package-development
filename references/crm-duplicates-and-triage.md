@@ -360,8 +360,9 @@ A manager never keeps contacts in a deal:
   `client_line`) without a new person.
 - A deal without a client comes only from `CmsLeadService::createFromSource()`
   (forms, partners, campaign replies) and from a record source of a letter or
-  a chat; its request data are read only (`crm-requisites.md`). The card shows «Указать клиента»
-  instead of «Добавить …»: `triage` for an unsorted deal the employee may
+  a chat; its request data (phones, emails, addresses, links, requisites)
+  are read only (`crm-requisites.md`). The card shows «Указать клиента»
+  instead of any «Добавить …»: `triage` for an unsorted deal the employee may
   sort, `identity` («Клиент сделки») for a deal in work he works on.
 - The edit form never changes the client (`cms_company_id`, `cms_user_id`
   are restored), so an incoming deal without a client stays editable.

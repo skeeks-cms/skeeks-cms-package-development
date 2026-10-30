@@ -67,13 +67,17 @@ existing one from its saved value, and the flat cross-lead `index` list is for
 administrators only. New lead-owned record types reuse the trait instead of
 copying the checks.
 
-Phones, emails and addresses of a lead are «данные обращения» (П2г, 2026-10-30):
-their controllers pass `leadContactActions(…, true)`, so `create` and `update`
-are refused to everybody (hidden and 403 on a direct request), `delete` stays
-for the lead worker. Only incoming sources write them; a manager adds a
-contact to the company or the person — see "A deal by an employee always has
-a client" in `crm-duplicates-and-triage.md`. Requisites and links of a lead
-without a client keep their «Добавить …» for now.
+Phones, emails, addresses, links and requisites of a lead are «данные
+обращения» (П2г, 2026-10-30): the phone, email, address and link controllers
+pass `leadContactActions(…, true)`, so `create` and `update` are refused to
+everybody (hidden and 403 on a direct request), `delete` stays for the lead
+worker; `AdminCmsLeadContractorController` refuses `create`, `detach` stays.
+Only incoming sources write them; a manager adds them to the company or the
+person — see "A deal by an employee always has a client" in
+`crm-duplicates-and-triage.md`. When the deal gets a company (sorting,
+«Клиент сделки»), `LeadTriage::copyRequestDataToCompany()` copies addresses,
+links and requisite links into it (a new company, or "edit" level and above),
+skipping values it already has.
 
 Lead addresses and links mirror the company tables field for field, so
 `AdminCmsLeadCompanyController::linkCompany()` copies them (and links the
