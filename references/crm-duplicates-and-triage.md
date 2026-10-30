@@ -158,7 +158,10 @@ One service for the admin windows, tests and future API:
   invitation; the contacts of the request stay with the deal («Из обращения»,
   read only) and go to the card by `contacts` (`copyContact()`); the windows
   preselect `LeadIdentityForm::CONTACT_TO_CARD` — the person of the deal,
-  else its company.
+  else its company; `accept()` and `linkIdentity()` given no `contacts` at all
+  (the API, «Это он») fill `CONTACT_TO_CARD` for every phone and email
+  themselves, and a default copy the card refuses stays request data instead
+  of failing the decision.
 - `merge()` of a request into a deal that has a client puts the contacts of
   the request into that client's card (the person, else the company; a row
   the card refuses, e.g. a strict duplicate, stays with the deal); a target
@@ -366,10 +369,15 @@ A manager never keeps contacts in a deal:
   sort, `identity` («Клиент сделки») for a deal in work he works on.
 - The edit form never changes the client (`cms_company_id`, `cms_user_id`
   are restored), so an incoming deal without a client stays editable.
+- An import of recipients into deals (`cms-communication` `LeadImport`) is an
+  employee's action too: a row of a new client gets its company or person
+  first (`AudienceImport::newClient()`, contacts in the cards) and the deal
+  in work is linked to it; a row of a client the CRM already knows becomes an
+  unsorted deal with request data, sorting links the client.
 - Old deals and their own contacts are not touched; moving them is П2г-2.
 
 Tests: `cms/tests/crm-lead-triage-stand.php`, `cms/tests/cms-lead-contract.php`,
-`cms-mcp/tests/crm-leads.php`.
+`cms-mcp/tests/crm-leads.php`, `cms-communication/tests/lead-import-stand.php`.
 
 ## The deal form keeps the standard create window
 
