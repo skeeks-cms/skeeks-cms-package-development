@@ -167,6 +167,77 @@ lists with an excluding list, light, dark and 375 px).
   every campaign by the list; a rule adds only records that never were in the
   list, so a member removed by hand stays removed.
 
+## Mailing services and delivery events
+
+Verified with `skeeks/cms-communication` 1.19.6 and the driver package
+`skeeks/cms-communication-unisender` 1.0.0 (test `tests/unisender.php`; real
+sends and event exports on the stand and «Проверить подключение» with the
+webhook on skeeks.com, 30.10.2026; two external reviews).
+
+- A mailing service is a send-only mail driver
+  (`mail\MailingServiceInterface`) behind an ordinary mailbox, not a parallel
+  sender: campaign letters, "Написать" and "Отправить клиенту" from that
+  mailbox all go through `MailComposeService::queue()` and the mail send job,
+  so feeds, rights, the opt-out and link marks need nothing new. Receiving,
+  "Sent" copies and a manager's working mailbox skip such mailboxes.
+- The driver enforces the service's rules at the last moment, whatever sent
+  the letter: an advertising letter (with a topic) only to contacts with
+  consent (`MailingPolicy::MODE_SERVICE`), never a letter of a campaign of
+  managers' mailboxes. Its campaign channel asks the same mode, so cold
+  contacts are excluded in the summary with the reason.
+- One API call per letter with our ids in the service's metadata (letter,
+  site, installation, campaign, recipient); the service's job id is kept on
+  the letter (`provider_ref`).
+- Several installations share one account of a service (a stand with a copy
+  of the site's database, two sites), so letter ids collide. An event belongs
+  to a letter when its job id equals the letter's `provider_ref`; a letter
+  with an unknown outcome (no job id) takes only an event of its own
+  installation and site. The installation id is random, made once and kept in
+  a file of the installation (`runtime/…`), never in the database (a copied
+  database would carry it) and never derived from the DSN (two Docker
+  installations share `host=db`). A refused match never falls back to the job
+  id, and an event of another installation touches no stop list.
+- Everything a person wrote stays literal for the service's template engine:
+  break `{{`/`}}` (HTML entities, a zero-width space in text and subject)
+  before adding the service's own tags (`{{UnsubscribeUrl}}`). Switching the
+  engine off may break the service's own headers (Unisender Go `Sender`).
+- A service campaign never leaves through an ordinary mailbox, checked at the
+  channel and again in the mail send job (the mailbox may be switched to
+  another connection after the launch), as the reverse is checked by the
+  service driver.
+- "Sent" means only that the service took the letter. A refusal "for now"
+  (429) re-queues the letter for a limited time; a server error or a broken
+  connection is an unknown outcome and is never resent.
+- Webhooks: limit the body before the signature (Content-Length, bounded
+  read of the input, gzip unpacked piece by piece under the same limit),
+  check the signature, store the body once and answer at once (services
+  retry for a day and then stop the webhook), apply by a coalescing job that
+  works in portions until nothing waits, retries a failed call later and has
+  recovery attempts; an agent wakes it for waiting calls (a run lost to a
+  crash after the service got 200), a repeated call wakes it too. Clear the
+  raw body once applied (readers' IP and device), keep its hash against
+  repeats. The rollback of the table refuses while calls are new or failed.
+- «Проверить подключение» compares the webhook with the exact address of this
+  connection: the core passes the connection to the driver
+  (`ConnectionDriver::getConnectionId()`, set by
+  `CmsCommConnection::createDriver()`, not a setting). One writer of events (`services\DeliveryEvents`): an event is unique
+  per provider and event key (retries carry new bodies), the letter's state
+  follows its first "To" only and never goes down in rank, a bounce reaches
+  the stop list only when the address itself is dead (not our sender's
+  reputation), a complaint always, an opt-out through the service's link
+  opts out of the letter's topic. Consequences apply only when the event's
+  address is a recipient of our letter.
+- A service may replace the Message-ID: match a reply with an unknown parent
+  to our latest letter from a service mailbox to its author with the same
+  subject without "Re:".
+- A stand gets no webhooks: read the same events through the service's
+  event export and record them with the same writer.
+- Features a service must allow (Unisender Go: no tracking `track_*=0`, no
+  own opt-out block `skip_unsubscribe`) are settings that default to the safe
+  value and say in their hint that letters fail until the support allows it;
+  until then the service's opt-out tag replaces our link, so the letter has
+  one opt-out line, not two.
+
 ## The audience of the new CRM model: cards, not deals
 
 Verified 2026-10-28 with `skeeks/cms-communication` П5 on the skeeks.com

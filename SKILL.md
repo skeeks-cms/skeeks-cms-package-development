@@ -278,9 +278,10 @@ Read the relevant reference completely before acting:
   template, pluggable campaign channels, the pace of a manager's mailbox in
   a long-waiting job, the report, lists of recipients and the rules of every
   mailing: frequency per contact, "не мешать менеджеру", one letter per
-  company), for personal links made in jobs and for the audience of the new CRM
-  model (a base imported into a list as companies and contacts without deals,
-  warm signals), read
+  company), for mailing services (a send-only driver behind an ordinary
+  mailbox, delivery events by webhook, the stop list), for personal links
+  made in jobs and for the audience of the new CRM model (a base imported into
+  a list as companies and contacts without deals, warm signals), read
   [references/mailing-campaigns.md](references/mailing-campaigns.md).
 - For messenger bots (Telegram, MAX): the driver boundary, a bot as an
   account of its channel (`findMailboxes()` for mail code), durable receipt
