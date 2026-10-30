@@ -185,6 +185,23 @@ without an approval). So:
   check that every repeated plan of the sequence is empty
   (`cms/tests/crm-owner-assignment-stand.php`).
 
+## Releasing under hosting maintenance
+
+Migrations and data transition commands of a release run while user writes
+are stopped, and the backup is taken after the stop. On sites managed by
+`skeeks/cms-hosting` the stop is its gate (`scripts/site-update-isolation.php`):
+while `/etc/skeeks/site-updates/control/site-<id>/maintenance` exists, the
+site's `.htaccess` answers 503 and the gate at the top of `yii` exits 75 for
+every command — cron, workers, the release itself — except one started with
+`SKEEKS_UPDATE_STATE=/var/lib/skeeks-site-updates/<id>/<contents of that file>`.
+Release tooling passes that variable to its own `yii` calls and refuses to run
+when maintenance is required but the file is absent (skeeks.com
+`ops/deploy.sh --maintenance`); without it the deploy stops at `migrate` with
+75 (verified on a production snapshot, release audit 30.10.2026). Workers
+already running are not stopped by the gate: stop their units first. Recovery
+after a failed release restores the previous code, vendor and database backup
+together; never a mass `migrate/down`.
+
 ## Verification
 
 When a migration checks columns added by an earlier migration, request a fresh
