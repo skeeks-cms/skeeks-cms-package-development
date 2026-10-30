@@ -260,6 +260,20 @@ button rows or a separate comment surface to a card.
   `create` (calls come from telephony, checks from the cash register). The
   bills of a person are the CRM bills (`/cms/admin-cms-bill`, `cms_user_id`);
   `/shop/admin-bill` is the read-only list of order bills.
+- One comment composer for every card: the note of `CrmCardActionsWidget`
+  (one line «Напишите …», a click opens CmsCommentWidget with «Отправить» /
+  «Отмена»), never a bare always-open editor in a card. A card pinning a
+  "result" names it by `pinLabel` («Результат по задаче»); its pinned entries
+  are rendered once under the block (`getLogs()->activity()->pinned()`) and
+  the feed below is `activity()->notPinned()`, both inside the feed pjax.
+- The task card uses `CrmCardActionsWidget::taskConfig($task, $canUpdate)`:
+  «Позвонить» / «Письмо» are the actions of the card of its deal, else company,
+  else client (`cardConfig()` of that record: its rights and own-deal
+  choice), plus «Связанная задача», «Привязать задачу» (the dialog
+  `#sx-task-link-modal`: an `AjaxSelectModel` of `forManager()` tasks with a
+  scope «По сделке / По компании / Все задачи» sent as `scope`) and «Перенести
+  срок» (the edit window, when `update` is allowed). Related tasks are shown
+  compactly and only when there are; empty properties are not rendered.
 - Company and client cards connect it with one line,
   `CrmCardActionsWidget::client($model, $phones, $emails)`. An employee who
   works with the client only through his deals ("Свои сделки" and "Свои
