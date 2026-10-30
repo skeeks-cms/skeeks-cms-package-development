@@ -562,6 +562,13 @@ The isolated 2026-07-30 smoke test verified:
 - semantic light and dark canvas/button colors;
 - no JavaScript console errors from the native asset.
 
+The drawer spinner ends when the frame document is parsed
+(`readyState !== "loading"`, polled from the parent), not at the frame
+`load` event. `load` waits for every image, and one image of a dead site in a
+feed entry kept the spinner for 11 seconds. A cross-origin frame cannot be
+polled: there `load` or an 8-second limit ends the spinner. The opener
+widget is attached at both moments, so in-frame navigation still gets it.
+
 The close control belongs to the drawer shell, not to iframe content. On
 desktop it is placed completely outside the left edge of its panel: the
 button's right edge touches the panel's left edge, so it never covers the

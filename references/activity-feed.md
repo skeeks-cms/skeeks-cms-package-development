@@ -98,6 +98,23 @@ Core types are built in `CmsLog::entry()`: comment, phone call (in/out,
 answered green, failed red with "Пропущен"/"Не дозвонились", duration,
 recording), insert, update and delete.
 
+A comment body is never printed as stored: `CmsLog::entry()` and `render()`
+pass it through `helpers\CommentHtml::render()`. Old comments hold whatever
+came in: the Bitrix24 import put whole letters into them ("[Bitrix: Email]"
+with `min-width`, tables and images of the sender's site) and "[URL=…]"
+links. The helper:
+- cleans with `RichTextHtml` (preset `basic`, pictures on, colors off:
+  pasted texts carry a letter's dark text and white backgrounds);
+- opens links in a new tab;
+- turns "[URL=…]text[/URL]" into a link;
+- keeps an image of another host as `data-sx-src` behind «Показать
+  картинки» (`cms-activity.js`), as letters in «Почта» do.
+
+An image of a dead site held the frame `load` event for 11 seconds, and the
+drawer spinner with it (company 563, 30.10.2026). A package renderer that
+prints foreign HTML (letters) keeps it in its own sandboxed frame instead.
+Covered by `cms/tests/comment-html.php`.
+
 ## Icons and tones
 
 Use one outline icon per event type from `BackendIcon` (24px grid, 2px
