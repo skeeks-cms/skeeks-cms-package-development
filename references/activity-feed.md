@@ -55,7 +55,23 @@ deals (`CmsLead`), as in Bitrix24:
   number, `asText`), which opens the deal in the backend window.
 
 The «Активность» tab (`getLogs()`) has the deals' entries too, with the same
-condition.
+condition. Its other kinds (services, bills, payments, tasks, projects or
+bonuses) also go in as id lists (`CmsLogQuery::feedIds()`), not subqueries:
+with a chain of `OR … IN (subquery)` MariaDB merged the single-column indexes
+over all ~70 000 entries and sorted them (150–740 ms per page). With lists it
+reads `cms_log__model_code_id` (a few ms). A kind with more than
+`FEED_IDS_LIMIT` records stays a subquery. The feed set did not change: old
+and new ids were compared for 31 companies and 21 clients on a production
+copy (30.10.2026).
+
+Feed renderers are singletons of one request (`Skeeks::getLogRenderer()`).
+A renderer that checks access per entry keeps its answer for the request,
+keyed by the employee and the record: a group chat gives a digest a day, so
+a card asked the same chat check 40 times. Examples:
+`ChatDigestLogRenderer` (chat and `canRead`), `MessageLogRenderer` (the
+letter under `forManager()`). Apply this only under
+`CrmAccess::keepsAnswers()`, so the console and workers read every time.
+Never keep an answer across requests or employees.
 
 A package log type registers its renderer in `Skeeks::$logRenderers` (see
 `model-activity-log.md`) and extends `skeeks\cms\log\CmsLogEntryRenderer`,
