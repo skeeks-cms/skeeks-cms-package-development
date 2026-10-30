@@ -154,6 +154,37 @@ rollback; without that, dozens of cycles on a wide table end in «Row size too
 large», which a single real run does not meet. Verify that a new test fails on
 the old migration before trusting it.
 
+Rollback guards are tested on rows the test creates itself in its own
+database (structure copied with `CREATE TABLE … LIKE`, every required column
+filled by type), never on rows that happen to exist in the stand database:
+a fresh production snapshot may have none, and the check then fails or passes
+for the wrong reason (`cms/tests/crm-migrations-rollback-stand.php`, audit
+F4-02). Name each expected kind of data in the assertion on the refusal message.
+
+## Data transition commands
+
+A transition of old data is often several console commands with a plan mode and
+`--apply` (in `skeeks/cms`: `cms/crm/assign-owners` → `assign-pool-main` →
+`assign-owners` again → `protect-owners`). One command's empty repeated plan
+does not prove the sequence is complete: a step that derives from another
+step's result (a contact gets the main responsible of his company) sees nothing
+while that result does not exist yet, and a later step that only processes
+records already in its state (protection of records with an owner as main)
+does not see the skipped ones either (release audit F4-01: 22 contacts of
+companies given out from the pool stayed free, so «Работать» made a deal
+without an approval). So:
+
+- rerun a deriving step after every step that creates its input, and write the
+  order into the release plan;
+- let the later step refuse `--apply` while the input of its precondition is
+  still pending, and name the step to run (`protect-owners` checks
+  `OwnerAssignment::pendingOwnerContacts()`);
+- test the composition on own fixtures that reproduce the problematic data (a
+  record without an author and without history), with the real roles of the
+  site, including the user-visible effect (a request instead of a deal), and
+  check that every repeated plan of the sequence is empty
+  (`cms/tests/crm-owner-assignment-stand.php`).
+
 ## Verification
 
 When a migration checks columns added by an earlier migration, request a fresh
