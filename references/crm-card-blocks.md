@@ -60,8 +60,8 @@ Verified 2026-10-28 (П2г-1) on the skeeks.com stand: deals 670 (company),
   not rebuild them in a view.
 - `limit` + `moreUrl` of the block show the first N rows and «ещё N» to the
   card that has them all.
-- Contacts live in the company or the person (cms-communication
-  `ARCHITECTURE.md`, п. 12). The deal card (`views/admin-cms-lead/_client.php`)
+- Contacts live in the company or the person (
+  [platform-plan `crm/links-contract.md`](https://github.com/skeeks-cms/platform-plan/blob/main/crm/links-contract.md), п. 12). The deal card (`views/admin-cms-lead/_client.php`)
   shows the people (first 3), the phones and the emails (first 5) of the
   company, else of the person, with the deal as the `$owner` (the context of
   calls and letters). «Добавить телефон/email» opens the create window of the

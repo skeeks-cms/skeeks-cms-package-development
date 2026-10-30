@@ -1,6 +1,6 @@
 # CRM: the main responsible, three levels and «Работать с этим клиентом»
 
-Owner's decision 28.10.2026 (cms-communication `ARCHITECTURE.md`, П1/П2
+Owner's decision 28.10.2026 ([platform-plan `crm/links-contract.md`](https://github.com/skeeks-cms/platform-plan/blob/main/crm/links-contract.md),
 пп. 10–11). Code: `skeeks\cms\crm\CrmAccess`, `CrmAccessRequests`,
 `CrmClientTransfer`, `LeadTriage::workWithClient()`; migration
 `m261028_140000__alter_table__crm_main_responsible`.
@@ -731,7 +731,7 @@ pk itself. Test such actions under a leader.
 
 ## There is no general pool: a CRM client always has a main responsible
 
-Owner's decision 29.10.2026 (cms-communication `ARCHITECTURE.md` п. 13а; it
+Owner's decision 29.10.2026 ([platform-plan `crm/links-contract.md`](https://github.com/skeeks-cms/platform-plan/blob/main/crm/links-contract.md) п. 13а; it
 replaced the general pool, the right «Общий пул», «Взять в работу» and the
 filter «Общий пул»).
 

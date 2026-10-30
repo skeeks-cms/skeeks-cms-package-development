@@ -186,7 +186,7 @@ the target deal or service.
 
 ## «Неразобранное»: two buttons and «Входящие заявки»
 
-Owner's decision 29.10.2026 (cms-communication `ARCHITECTURE.md` п. 13б; as
+Owner's decision 29.10.2026 ([platform-plan `crm/links-contract.md`](https://github.com/skeeks-cms/platform-plan/blob/main/crm/links-contract.md) п. 13б; as
 «Принять / Отклонить» of amoCRM plus the queue of Bitrix24).
 
 - The header of an unsorted deal (`views/admin-cms-lead/_model_header.php`)

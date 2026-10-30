@@ -6,7 +6,8 @@ Verified 2026-10-23 with `skeeks/cms-communication` stage 4B and
 campaigns of five test leads sent from a stand mailbox with a lowered
 limit, a presentation for everybody and a КП from a template, an opening, a
 one-click opt-out, light, dark and 375 px). Domain rules live in the package
-`ARCHITECTURE.md`; consent and opt-out are
+`ARCHITECTURE.md`, the owner decisions on audiences and the flow of a campaign
+in [platform-plan `crm/links-contract.md`](https://github.com/skeeks-cms/platform-plan/blob/main/crm/links-contract.md); consent and opt-out are
 [mailing-consent.md](mailing-consent.md); sendable documents are
 [client-sends.md](client-sends.md).
 
