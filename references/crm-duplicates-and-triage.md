@@ -153,10 +153,16 @@ of the main responsible. The whole contract: `crm-access-levels.md`.
 One service for the admin windows, tests and future API:
 
 - `accept()` — take into work with a found or created company and person
-  (`LeadIdentityForm`), or without a client; the person is linked to the
-  company (`CmsCompany2user`), gets no password or invitation; the contacts of
-  the request stay with the deal («Из обращения») and go to the card only by
-  choice (`contacts`, `copyContact()`).
+  (`LeadIdentityForm`), or without a client (an incoming deal only); the
+  person is linked to the company (`CmsCompany2user`), gets no password or
+  invitation; the contacts of the request stay with the deal («Из обращения»,
+  read only) and go to the card by `contacts` (`copyContact()`); the windows
+  preselect `LeadIdentityForm::CONTACT_TO_CARD` — the person of the deal,
+  else its company.
+- `merge()` of a request into a deal that has a client puts the contacts of
+  the request into that client's card (the person, else the company; a row
+  the card refuses, e.g. a strict duplicate, stays with the deal); a target
+  without a client keeps them as its request data.
 - `merge()` — the request continues an open deal: contacts and open tasks go
   there, the request closes (`status=rejected`, `triage_result=merged`,
   `merged_into_id`). A partner request goes only into a deal of the same
@@ -333,6 +339,36 @@ or rejected deal in its forms, card, kanban and list; `deal_amount` —
 (`getExpectedAmountNote()`) when they differ. A rejected deal keeps «Сумма»
 and never gets «Сумма сделки». Reports and API: amount is expected,
 deal_amount is the result; never add them up.
+
+## A deal by an employee always has a client (П2г)
+
+Owner's decision 2026-10-30 ([platform-plan `crm/links-contract.md`](https://github.com/skeeks-cms/platform-plan/blob/main/crm/links-contract.md) п. 12).
+A manager never keeps contacts in a deal:
+
+- `LeadTriage::requireClient($lead, $form)` refuses (`LeadTriage::CLIENT_REQUIRED`)
+  a deal whose form is empty (`LeadIdentityForm::isEmpty()`) and that has no
+  `cms_company_id`/`cms_user_id`. `createLead()` always calls it (the API,
+  `workWithClient()`); the create window calls it from `checkCreateIdentity()`
+  unless the window makes the deal from a record source
+  (`RecordSources::has($action)`: a letter or a chat message is an incoming
+  channel, its address stays request data).
+- Typed phones and emails go only into a new company (`company_phones`,
+  `company_emails`) or a new person (`client_phone`, `client_email` with
+  `client_mode = new`) through `CrmDuplicateGuard`; `finishNewLead()` never
+  writes `cms_lead_phone`/`cms_lead_email`. `cms-mcp` `cms_lead_create`
+  refuses an empty client and `client_phone`/`client_email` (or phones of a
+  `client_line`) without a new person.
+- A deal without a client comes only from `CmsLeadService::createFromSource()`
+  (forms, partners, campaign replies) and from a record source of a letter or
+  a chat; its request data are read only (`crm-requisites.md`). The card shows «Указать клиента»
+  instead of «Добавить …»: `triage` for an unsorted deal the employee may
+  sort, `identity` («Клиент сделки») for a deal in work he works on.
+- The edit form never changes the client (`cms_company_id`, `cms_user_id`
+  are restored), so an incoming deal without a client stays editable.
+- Old deals and their own contacts are not touched; moving them is П2г-2.
+
+Tests: `cms/tests/crm-lead-triage-stand.php`, `cms/tests/cms-lead-contract.php`,
+`cms-mcp/tests/crm-leads.php`.
 
 ## The deal form keeps the standard create window
 
