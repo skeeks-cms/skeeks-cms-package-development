@@ -372,8 +372,12 @@ A manager never keeps contacts in a deal:
 - An import of recipients into deals (`cms-communication` `LeadImport`) is an
   employee's action too: a row of a new client gets its company or person
   first (`AudienceImport::newClient()`, contacts in the cards) and the deal
-  in work is linked to it; a row of a client the CRM already knows becomes an
-  unsorted deal with request data, sorting links the client.
+  in work is linked to it; a row of a known client the author of the import
+  sees (`CrmAccess::canSeeCompany()`/`canSeeClient()`, the client of a
+  matched old deal) makes a deal linked to that client, the row's contacts
+  are not written. Another manager's client or an old deal without a client
+  makes no deal: the row is a duplicate with the reason. Only an older core
+  without `LeadTriage` keeps unsorted deals with request data.
 - Old deals and their own contacts are not touched; moving them is П2г-2.
 
 Tests: `cms/tests/crm-lead-triage-stand.php`, `cms/tests/cms-lead-contract.php`,
