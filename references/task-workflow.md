@@ -10,6 +10,11 @@ validation, and saves status plus time records atomically. Starting work opens
 the employee schedule when needed and one task schedule. Pausing or completing
 work closes the task schedule only; the employee schedule remains open.
 An existing open interval on another task blocks starting a new task.
+Cancelling a new or accepted task and resuming a cancelled one are allowed to
+its author, its executor and an administrator (`PERMISSION_ROLE_ADMIN_ACCESS`):
+one check `CmsTask::canCancel()` serves the model rule, `TaskWorkflow` and the
+card buttons, so an administrator can clean up tasks of closed deals through
+administration or `cms_task_action`. Other transitions stay with participants.
 Same-state retries do not create another interval. Inconsistent or missing
 intervals fail instead of inventing timestamps.
 
