@@ -267,9 +267,8 @@ button rows or a separate comment surface to a card.
   are rendered once under the block (`getLogs()->activity()->pinned()`) and
   the feed below is `activity()->notPinned()`, both inside the feed pjax.
 - The task card uses `CrmCardActionsWidget::taskConfig($task, $canUpdate)`:
-  «Позвонить» / «Письмо» are the actions of the card of its deal, else company,
-  else client (`cardConfig()` of that record: its rights and own-deal
-  choice), plus «Связанная задача», «Привязать задачу» (the dialog
+  no call or letter (they belong to the card of the client or deal), only
+  «Связанная задача», «Привязать задачу» (the dialog
   `#sx-task-link-modal`: an `AjaxSelectModel` of `forManager()` tasks with a
   scope «По сделке / По компании / Все задачи» sent as `scope`) and «Перенести
   срок» (the edit window, when `update` is allowed). Related tasks are shown
