@@ -104,7 +104,13 @@ mailboxes must ask `CmsCommAccount::findMailboxes()` (channel `email`), not
   history never doubles a message and never reaches handlers.
 - Event handlers of other packages (`communication.botHandlers`,
   `bot\BotEventHandlerInterface`) run inside the event transaction: they
-  must be repeatable and may only queue external work.
+  must be repeatable and may only queue external work. A side effect that
+  is not the message itself (a notification) catches and logs its own
+  failure: an exception there rolls back the received message, and the
+  update fails five times and is lost from the chat (skeeks.com 28–30.10.2026:
+  emoji in a sender name hit the utf8 `cms_web_notify`; `cms` migration
+  m261030_120000 converts it to utf8mb4). Every table that stores people's
+  names or texts must be utf8mb4.
 
 ## The bot never hears itself
 
