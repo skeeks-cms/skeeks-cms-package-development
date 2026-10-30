@@ -326,7 +326,10 @@ writers that bypass the models (`setMain()`, `setLevel()`, the managers field,
 `resetMemo()`. Nothing is kept across requests, and the console and workers
 keep nothing (`CrmAccess::keepsAnswers()`; `$keepAnswersInConsole` is only for
 `cms/tests/crm-access-memo-stand.php`). RBAC rules ask these methods instead of
-their own queries (`CmsCompanyRule` → `canSeeCompany()`). A feed page loads the
+their own queries (`CmsCompanyRule` → `canSeeCompany()`). Other code keeps
+its rights answers in the same memo through `CrmAccess::remember()`, never in
+a cache of its own: a separate cache outlived a revoked access (audit F5-01,
+see activity-feed.md). A feed page loads the
 records of its entries in one query per class (`CmsLog::preloadModels()` in
 `log-list.php`; `getModel()`/`getSubModel()` read once per entry).
 

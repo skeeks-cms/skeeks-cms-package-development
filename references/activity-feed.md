@@ -64,14 +64,27 @@ reads `cms_log__model_code_id` (a few ms). A kind with more than
 and new ids were compared for 31 companies and 21 clients on a production
 copy (30.10.2026).
 
-Feed renderers are singletons of one request (`Skeeks::getLogRenderer()`).
-A renderer that checks access per entry keeps its answer for the request,
-keyed by the employee and the record: a group chat gives a digest a day, so
-a card asked the same chat check 40 times. Examples:
-`ChatDigestLogRenderer` (chat and `canRead`), `MessageLogRenderer` (the
-letter under `forManager()`). Apply this only under
-`CrmAccess::keepsAnswers()`, so the console and workers read every time.
-Never keep an answer across requests or employees.
+Feed renderers are singletons of one request (`Skeeks::getLogRenderer()`),
+and the same check repeats on a page: a group chat gives a digest a day, so a
+card asked the same chat check 40 times. Keep such answers only in the request
+memo of CrmAccess, never in a property of a renderer or controller. Use
+`CrmAccess::instance()->remember($key, $compute)`; package code goes through
+its wrapper, e.g. cms-communication `log\FeedAnswers::remember()`. Put the
+employee and the record into the key. The memo:
+- drops everything on `resetMemo()`;
+- drops everything when the signed-in identity changes;
+- drops everything after a save or delete of a CRM link or department;
+- keeps nothing in the console and workers (`keepsAnswers()`).
+
+A package whose rights live in its own tables makes their save or delete
+reset the memo too: `FeedAnswers` does it for mailbox and bot access rows,
+accounts, links of letters and chats, conversations. Independent caches
+outlived a revoked access: after a level was lowered or a link deleted, the
+old renderer still showed the letter and the chat, and «Доступ» stayed open
+(audit F5-01). Covered by
+`cms-communication/tests/feed-answers-memo-stand.php`: it reuses the
+instances across real `save()`/`delete()`, an explicit reset, a grant back,
+a bot right and the console.
 
 A package log type registers its renderer in `Skeeks::$logRenderers` (see
 `model-activity-log.md`) and extends `skeeks\cms\log\CmsLogEntryRenderer`,
