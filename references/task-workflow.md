@@ -41,11 +41,12 @@ verified 2026-10-23). Rules:
   a client page has none). The blameable behavior overwrites `created_by`
   with the (absent) signed-in user on insert, so set it again with
   `updateAttributes()` after saving.
-- `plan_start_at` may not be sooner than 30 minutes from now (the model
-  rule). "Today" means the first working period of the employee's
-  `work_shedule` (`CmsScheduleHelper::getSchedulesByWorktimeForDate()`)
-  that ends after now + 31 minutes, otherwise the start of the nearest
-  working period; use a default schedule for employees without one.
+- The start of such a task comes from `TaskPlanner::nearestStart($executor,
+  $duration, $notBefore)` — the nearest free window of the executor's
+  schedule that fits the duration (see «Task start» below). Keep a fallback
+  to the schedule alone (`class_exists(TaskPlanner::class)`) while the
+  package supports an older `cms` (`CampaignTasks::startFor()`,
+  `ProposalTasks::startFor()`, verified 2026-10-31).
 - Core tasks know only the project, company, lead and client. Keep the link
   to the package record in a package table (`cms_proposal_task`), use it to
   skip a new task while the employee has an open one (`CmsTask::activeStatuses()`)
@@ -53,6 +54,56 @@ verified 2026-10-23). Rules:
   of the package's record source.
 - The event must not fail because of the task: catch, log and go on. Let
   the site switch the rule off with a component setting.
+
+## Task start: fixed or planned
+
+Verified 2026-10-31 (`skeeks/cms` `services\TaskPlanner`, `tests/task-planner-stand.php`).
+Every active task has `plan_start_at`. `is_fixed_start = 1` — a person chose
+the time and nothing moves it (any future time, outside the schedule or over
+other tasks allowed; `TaskPlanner::warnings()` only warns). `0` — the planner
+gives the start:
+
+- `TaskPlanner::plan($user, $sortIds)` lays out the executor's active tasks:
+  fixed ones and the task in work take their time out of `work_shedule`
+  (default weekdays 9–18); auto tasks follow `executor_sort` into the free
+  time, a long one continues after a break, starts on a 5-minute grid. It
+  writes `plan_start_at`, `plan_end_at`, `executor_end_at`, `executor_sort`
+  (and a reminder «before the start») with `updateAll()` — no history, no
+  `afterSave()`. A mutex `cms-task-plan-<id>` keeps parallel runs apart.
+- `CmsTask::afterSave()` replans on insert and on changes of executor,
+  duration, start, mode or status; `recalculateTasksPriority()` is now a
+  wrapper (a manual reorder passes the auto task ids). Views replan the shown
+  employee before drawing, the agent `cms/task/plan` (job `cms.task-plan`)
+  every 15 minutes moves auto tasks whose time passed.
+- The model decides the mode: a new task with a start is fixed; on update a
+  changed start fixes it unless `is_fixed_start` was set in the same save;
+  an emptied start returns it to the planner. Compare with
+  `isAttributeChanged($name, false)` — forms post strings. A form must show
+  an auto task without its start (the planner's time is not a choice).
+- Moving a task from a view goes through one action,
+  `admin-cms-task/reschedule` (POST `plan_start_at`, or `day` — the first
+  free time of that day, or only `plan_duration`, or `mode=auto`): the
+  manager query, `cms/admin-task/manage`, no move of closed tasks or the task
+  in work, model validation. API: `cms_task_*` takes `plan_start_at` and
+  `start_mode` (auto/fixed), answers `start_mode`.
+
+## Task reminders
+
+Verified 2026-10-31 (`services\TaskReminders`, `tests/task-reminder-stand.php`,
+`cms-mcp/tests/task-start-reminder.php`). `remind_at` — when;
+`remind_offset` — seconds before the start: the reminder follows the start
+(model and planner recompute it); `remind_author`; `reminded_at` — sent. A
+reminder moved to the future is sent again. The form and API set the virtual
+`reminder` ('' or `none`, seconds from `CmsTask::reminderOffsets()`,
+`custom` with `remind_at`, never in the past).
+
+The agent `cms/task/remind` (job `cms.task-remind`, every minute) claims each
+due reminder with a conditional `updateAll(reminded_at)` and only then calls
+`notify()` with the kind `task.reminder` (important, not mutable): the
+notification system delivers it to the person's channels. Reminders older
+than a day are only marked. A task with a reminder shows
+`CmsTask::getReminderIconHtml()` (the bell, its time in the title) in every
+task view; do not draw a bell of your own.
 
 ## Task comments and results
 
