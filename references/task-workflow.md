@@ -113,6 +113,14 @@ Verified 2026-10-31. The views «Задачи» (day list), «Сроки», «К
   controls (`start`, `tools`), then employee, search, «Добавить задачу»
   (executor preset), all 32 px high. A new view uses it instead of its own
   bar; a form `GET` keeps the other query parameters.
+- Icons of the views and of task marks come from the backend icon library
+  (`skeeks\cms\backend\helpers\BackendIcon`, `'svg:<name>'` in an action's
+  `icon`): `task-list`, `kanban`, `calendar`, `gantt`, `table`, `chart-bar`,
+  `plus`, `grip` (drag handle), `pin`, `bell`, `history`, `alert-circle`,
+  `chevron-left/right`. Marks are drawn by `CmsTask::icon()` and the model's
+  `get*IconHtml()`; a browser-drawn view receives the rendered icons in its
+  data. Do not add icon-font classes to task views; a missing icon is added to
+  the library in its line style (24 grid, stroke 2, round caps).
 - A list of task rows loads `TaskViewContext::ROW_RELATIONS` with `with()`:
   the row widgets read project, company, their images, client and work
   intervals — without it a long list costs five queries per task.
