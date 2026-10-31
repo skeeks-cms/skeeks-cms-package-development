@@ -361,8 +361,9 @@ Executable source remains the final source of truth.
 For SQL conditions in per-model permission checks, follow
 [model-access-queries.md](references/model-access-queries.md).
 
-For task status transitions, timer side effects, tasks made automatically
-by a package event, task comments/results and API integration, read
+For task status transitions, timer side effects, the start of a task
+(fixed or planned, TaskPlanner), reminders, tasks made automatically by a
+package event, task comments/results and API integration, read
 [task-workflow.md](references/task-workflow.md).
 
 For discounted storefront prices and totals for selected quantities, read
