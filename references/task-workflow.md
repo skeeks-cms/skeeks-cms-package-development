@@ -58,7 +58,12 @@ verified 2026-10-23). Rules:
 ## Task start: fixed or planned
 
 Verified 2026-10-31 (`skeeks/cms` `services\TaskPlanner`, `tests/task-planner-stand.php`).
-Every active task has `plan_start_at`. `is_fixed_start = 1` — a person chose
+`plan_start_at` is NOT NULL (m261031_150000): `CmsTask::beforeSave()` gives a
+task without a start the planner's provisional time (`TaskPlanner::estimate()`,
+the end of the executor's queue; no executor — now) and keeps it auto. Every
+way of creating a task (form, API, packages, import) must go through the
+model; there is no direct insert into `cms_task` (checked 2026-10-31).
+`is_fixed_start = 1` — a person chose
 the time and nothing moves it (any future time, outside the schedule or over
 other tasks allowed; `TaskPlanner::warnings()` only warns). `0` — the planner
 gives the start:
@@ -93,6 +98,15 @@ gives the start:
   manager query, `cms/admin-task/manage`, no move of closed tasks or the task
   in work, model validation. API: `cms_task_*` takes `plan_start_at` and
   `start_mode` (auto/fixed), answers `start_mode`.
+
+## Task deadline
+
+`deadline_at` is optional (m261031_140000). Empty — nothing is checked. When
+the planned end (`plan_end_at`) of an active task is after it,
+`CmsTask::isBehindDeadline()` is true and every task view draws
+`getDeadlineMarkHtml()` (red «не успевает», the deadline and the planned end
+in the title); the API answers `behind_deadline`. No notification is sent
+(owner's decision 31.10.2026).
 
 ## Task reminders
 
