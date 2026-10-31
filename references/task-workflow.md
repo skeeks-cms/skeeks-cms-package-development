@@ -69,12 +69,19 @@ gives the start:
   time, a long one continues after a break, starts on a 5-minute grid. It
   writes `plan_start_at`, `plan_end_at`, `executor_end_at`, `executor_sort`
   (and a reminder «before the start») with `updateAll()` — no history, no
-  `afterSave()`. A mutex `cms-task-plan-<id>` keeps parallel runs apart.
-- `CmsTask::afterSave()` replans on insert and on changes of executor,
-  duration, start, mode or status; `recalculateTasksPriority()` is now a
-  wrapper (a manual reorder passes the auto task ids). Views replan the shown
-  employee before drawing, the agent `cms/task/plan` (job `cms.task-plan`)
-  every 15 minutes moves auto tasks whose time passed.
+  `afterSave()`. The layout of one executor runs under a database lock
+  (`GET_LOCK('cms-task-plan-<id>')`; the site has no mutex component).
+- Tasks do not jump (owner's clarification 31.10.2026): the planner runs only
+  on events — `CmsTask::afterSave()` on insert and on changes of executor,
+  duration, start, mode or status (closing included), a move through
+  `reschedule`, a changed `work_shedule` (`User` after update; a vacation is
+  a schedule change). Never replan when a page opens or by a timer;
+  `cms/task/plan` is a manual console command. `recalculateTasksPriority()`
+  is a wrapper (a manual reorder passes the auto task ids).
+- A noticeable move of an auto task (another day or `NOTICEABLE_MOVE`, 30
+  minutes) keeps `replanned_from` / `replanned_at`; views draw
+  `CmsTask::getReplannedIconHtml()` next to the bell, the card shows
+  «Перенесена». A person choosing the time clears it.
 - The model decides the mode: a new task with a start is fixed; on update a
   changed start fixes it unless `is_fixed_start` was set in the same save;
   an emptied start returns it to the planner. Compare with
@@ -99,9 +106,12 @@ reminder moved to the future is sent again. The form and API set the virtual
 
 The agent `cms/task/remind` (job `cms.task-remind`, every minute) claims each
 due reminder with a conditional `updateAll(reminded_at)` and only then calls
-`notify()` with the kind `task.reminder` (important, not mutable): the
-notification system delivers it to the person's channels. Reminders older
-than a day are only marked. A task with a reminder shows
+`notify()`: the notification system delivers it to the person's channels.
+A recipient who set the reminder (`remind_by`, written when the reminder is
+chosen, kept when it only follows a moved start) gets `task.reminder_self`
+(no quiet hours); others get `task.reminder` (waits for quiet hours). Both
+are important and not mutable. A missed reminder is never skipped: it goes
+with «опоздало на N мин», still once. A task with a reminder shows
 `CmsTask::getReminderIconHtml()` (the bell, its time in the title) in every
 task view; do not draw a bell of your own.
 

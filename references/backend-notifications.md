@@ -12,7 +12,9 @@ Verified 2026-10-27 (step У4a; `skeeks/cms` `notify\`, `skeeks/cms-communicatio
   $kind, $data)`, not `new CmsWebNotify()`. A package registers its kinds in
   its config (`components.notifications.kinds`: name, category, importance
   0/1/2, audience worker/client/any, `mutable`, `dealArea` for client
-  notifications); categories are the core ones (tasks, clients, messages,
+  notifications, `quietHours` => false for a kind that comes during quiet
+  hours without being urgent — `Notifications::ignoresQuietHours()`, checked
+  by the delivery; verified 2026-10-31); categories are the core ones (tasks, clients, messages,
   finance, system, other) unless a package adds one. A direct row still
   works: it gets the category of its record (`modelCategories`) and stays in
   the CRM only.
