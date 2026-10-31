@@ -205,6 +205,10 @@ Read the relevant reference completely before acting:
   [references/rich-text-editor.md](references/rich-text-editor.md).
   `skeeks/yii2-ckeditor` is removed: see the "Rich-text editors" section
   of [references/backend-ui-assets.md](references/backend-ui-assets.md).
+- For any date or date-and-time field use the shared `DateTimeInputWidget`
+  (kartik date widgets are being removed): options, saved values, markup,
+  events and migrating a DateControl field — read
+  [references/date-time-input.md](references/date-time-input.md).
 - For files attached to a record in a form (comments, letters, tasks): the
   shared compact `AttachmentsInputWidget` ("Прикрепить", drop, paste, chips,
   temporary area until save), read
