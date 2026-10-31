@@ -93,10 +93,21 @@ gives the start:
   `isAttributeChanged($name, false)` — forms post strings. A form must show
   an auto task without its start (the planner's time is not a choice).
 - Moving a task from a view goes through one action,
-  `admin-cms-task/reschedule` (POST `plan_start_at`, or `day` — the first
-  free time of that day, or only `plan_duration`, or `mode=auto`): the
-  manager query, `cms/admin-task/manage`, no move of closed tasks or the task
-  in work, model validation. API: `cms_task_*` takes `plan_start_at` and
+  `admin-cms-task/reschedule`: `plan_start_at` (a time the person saw while
+  choosing it — calendar, Gantt), `day` + `keep_time=1` (a fixed task to
+  another day at the same time of day, never shifted, only warned), `day`
+  alone (an auto task to the first free time of that day), `mode=auto`,
+  `plan_duration` alone; the manager query, `cms/admin-task/manage`, no move
+  of closed tasks or the task in work, model validation. The answer carries
+  `previous` for «Отменить» (`fixed` + `restore=1` brings back even a past
+  start); a reminder of its own time moves with the task.
+- A fixed time changes only by a choice a person sees (owner, 31.10.2026):
+  a list never derives a fixed time from a drop position (inside a day a fixed
+  task does not move; on another day it keeps its time of day); calendar and
+  Gantt drag in steps of 5 minutes showing the new time. Every view moves
+  through `sx.taskMove(url, id, data, {kind, done})` of `task-calendar.js`:
+  one message «Было → стало» / «Перенесено на …» with the reminder's time,
+  warnings and «Отменить». API: `cms_task_*` takes `plan_start_at` and
   `start_mode` (auto/fixed), answers `start_mode`.
 
 ## Task views
