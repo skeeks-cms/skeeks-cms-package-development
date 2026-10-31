@@ -21,6 +21,14 @@ existing kartik fields are migrated gradually (decision of 2026-10-31).
   but not earlier than now for today and not earlier than `min`); a quick
   choice applies at once; "Готово", Enter on the selected day, Ctrl+Enter
   or a click outside apply; Esc cancels.
+- Typing: the window starts with a text input (`дд.мм.гггг чч:мм`). It
+  accepts `05.11.2026 14:30`, `5.11 14:30` (the current year), `05.11.26`,
+  `2026-11-05 14:30` and a dot in the time; without a time the chosen or the
+  default time is kept. Every keystroke checks the text: a valid value moves
+  the calendar and shows its human text under the input, an error ("Не похоже
+  на дату", "Такой даты нет", "Не раньше: …", "Не позже: …") sets
+  `aria-invalid`. Enter applies; Enter on an empty input clears (when
+  allowed). A digit typed over the calendar starts typing.
 - Keyboard: arrows by day/week, Home/End — the week, PageUp/PageDown — the
   month (Shift — the year), arrows in the time grids, Tab stays inside the
   window, ArrowDown on the button opens it. The window is `role="dialog"`,
@@ -38,7 +46,7 @@ works unchanged because the type values are the same strings.
 
 | Option | Default | Meaning |
 |---|---|---|
-| `type` | `datetime` | `date`, `datetime`; `range` is reserved (throws `NotSupportedException`) |
+| `type` | `datetime` | `date`, `datetime`; any other type is a configuration error |
 | `displayFormat` | `human` | or a PHP pattern (`php:d.m.Y H:i`), tokens `d j m n Y y H G i s D M` (`D`, `M` — Russian short names) |
 | `saveFormat` | `php:U` | `php:U`, `php:Y-m-d`, `php:Y-m-d H:i:s` or another pattern of the same tokens |
 | `options` | | attributes of the button (`form-control` is removed) |
@@ -57,6 +65,13 @@ time of `timeZone`. In date mode the saved value is midnight of the day. The
 server parses the current value (unix time, the save pattern, then
 `strtotime()`) and writes it back in the save format; an unchanged value is
 not rounded.
+
+`min`/`max` limit the window and the typed text only. The model rules stay
+the server check: the field does not validate on the server.
+
+A period of two dates is not a type of this field. It will be a separate
+field built on the same calendar (the plan: `platform-plan` `crm/tasks.md`,
+"Элемент даты и времени"); until then periods use `DaterangeInputWidget`.
 
 ## Markup and JS contract
 
@@ -79,6 +94,10 @@ div.sx-dt[data-sx-datetime='{json}']#<id>-widget
   and appended to `body` (or to the closest `.modal`, so Bootstrap focus
   enforcement keeps working), `position: fixed`. Fields loaded by PJAX, into
   drawers, iframes or modals need no initialization; `pjax:send` closes it.
+  Verified on the stand: two fields in a Bootstrap modal (the window opens
+  inside the modal, Esc closes only the window), the form inserted again by
+  `innerHTML`, one window at a time across several fields.
+- Day and time cells are at least 44 px high on the phone sheet.
 - `sx.DateTimeInput.open(root)`, `close()`, `setValue(root, savedValue)`.
 - `DateTimeInputAsset` (CSS + JS, depends only on jQuery) is registered by
   the widget, never globally.
@@ -100,5 +119,7 @@ div.sx-dt[data-sx-datetime='{json}']#<id>-widget
 Reference consumers: the task start (`AdminCmsTaskController`,
 `plan_start_at`), the document date (`AdminCmsDocumentController`), the
 proposal validity (`cms-proposal`) and the agent next run (`cms-agent`).
-The remaining kartik places are listed in the platform plan
-(ROADMAP, «Кабинеты»).
+The remaining kartik places and the migration waves are in the platform plan
+(`crm/tasks.md`, "Элемент даты и времени"). Remove `DateControlInputWidget`,
+the `datecontrol` module and `kartik-v/yii2-datecontrol` only after the last
+place is migrated.
