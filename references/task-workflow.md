@@ -4,11 +4,16 @@
 `CmsTaskBtnsWidget` and `cms-mcp/CmsTaskService`. Do not reproduce a transition
 by saving only `CmsTask.status` or by separately inserting a time interval.
 
-The service locks the executor row and task row in one transaction, reloads
-the task, checks participant permissions, applies the model's transition
+The service takes the executor's layout lock (`TaskPlanner::lockExecutors()`,
+before any row lock — see «Task start»), locks the executor row and task row in
+one transaction, reloads the task, checks participant permissions, applies the model's transition
 validation, and saves status plus time records atomically. Starting work opens
 the employee schedule when needed and one task schedule. Pausing or completing
 work closes the task schedule only; the employee schedule remains open.
+Starting work fixes the task on when its work first started (the first task
+schedule, else now; `is_fixed_start = 1`, `CmsTask::$startingWork` lets that
+past time through validation) before the queue is laid out (owner's decision
+3, verified 2026-10-31 `tests/task-review-regressions.php`).
 An existing open interval on another task blocks starting a new task.
 Cancelling a new or accepted task and resuming a cancelled one are allowed to
 its author, its executor and an administrator (`PERMISSION_ROLE_ADMIN_ACCESS`):
@@ -47,6 +52,12 @@ verified 2026-10-23). Rules:
   to the schedule alone (`class_exists(TaskPlanner::class)`) while the
   package supports an older `cms` (`CampaignTasks::startFor()`,
   `ProposalTasks::startFor()`, verified 2026-10-31).
+- A calculated start is not a person's choice: set `$task->isAutoStart = true`
+  (guarded by `$task->hasProperty('isAutoStart')` for an older `cms`). The new
+  task stays auto and takes its place in the queue by that time — before the
+  first auto task starting later (`CmsTask::afterSave()`); without the flag a
+  start given to a new task fixes it (`CampaignTasks`, `LinkVisits`,
+  `ProposalTasks`, verified 2026-10-31).
 - Core tasks know only the project, company, lead and client. Keep the link
   to the package record in a package table (`cms_proposal_task`), use it to
   skip a new task while the employee has an open one (`CmsTask::activeStatuses()`)
@@ -73,9 +84,22 @@ gives the start:
   (default weekdays 9–18); auto tasks follow `executor_sort` into the free
   time, a long one continues after a break, starts on a 5-minute grid. It
   writes `plan_start_at`, `plan_end_at`, `executor_end_at`, `executor_sort`
-  (and a reminder «before the start») with `updateAll()` — no history, no
-  `afterSave()`. The layout of one executor runs under a database lock
-  (`GET_LOCK('cms-task-plan-<id>')`; the site has no mutex component).
+  (and the reminder, see «Task reminders») with `updateAll()` — no history, no
+  `afterSave()`. A task in work is fixed on when its work first started.
+- Locks (verified 2026-10-31, `tests/task-concurrency-disposable.php`): every
+  change of a task takes the layout lock of its executor (and of the former
+  one) before it reads the queue — `CmsTask::beforeSave()`,
+  `TaskWorkflow::transition()`, `plan()`; locks go in the order of ids
+  (`TaskPlanner::lockExecutors()`, `GET_LOCK('cms-task-plan-<id>')`, the site
+  has no mutex component). Every task save is a transaction
+  (`CmsTask::isTransactional()`), and inside a transaction the lock is held
+  until it is committed or rolled back (`Connection` commit/rollback events);
+  `plan()` reads the queue with `FOR UPDATE`, so a layout always sees the
+  committed result of the previous one, even in a transaction that began
+  earlier. A lock not given within `LOCK_TIMEOUT` is an error of the operation
+  (`TaskPlanner::BUSY_MESSAGE`; beforeSave adds it to the model), never a
+  silently skipped layout. A new path that writes tasks takes the lock first,
+  before any row lock.
 - Tasks do not jump (owner's clarification 31.10.2026): the planner runs only
   on events — `CmsTask::afterSave()` on insert and on changes of executor,
   duration, start, mode or status (closing included), a move through
@@ -95,11 +119,20 @@ gives the start:
   minutes) keeps `replanned_from` / `replanned_at`; views draw
   `CmsTask::getReplannedIconHtml()` next to the bell, the card shows
   «Перенесена». A person choosing the time clears it.
-- The model decides the mode: a new task with a start is fixed; on update a
-  changed start fixes it unless `is_fixed_start` was set in the same save;
-  an emptied start returns it to the planner. Compare with
-  `isAttributeChanged($name, false)` — forms post strings. A form must show
-  an auto task without its start (the planner's time is not a choice).
+- The model decides the mode: a new task with a start is fixed (unless
+  `isAutoStart`); on update a changed start fixes it unless `is_fixed_start`
+  was set in the same save; an emptied start returns it to the planner.
+  Compare with `isAttributeChanged($name, false)` — forms post strings. A form
+  must show an auto task without its start (the planner's time is not a choice).
+- A closed task and the task in work do not move, whoever saves them:
+  `CmsTask::startChangeError()` (by the saved status) is a validation rule of
+  `plan_start_at`, `is_fixed_start` and `plan_duration` (the duration of a task
+  in work may change — the rest of the work), so a form, a view and the API
+  are refused before anything is saved; `reschedule`, `pin` and
+  `setFixedStart()` answer with the same text.
+- `beforeSave()` recomputes `plan_end_at` only for a new task or a changed
+  start or duration: an edit of anything else keeps the end the planner
+  calculated after a break.
 - Moving a task from a view goes through one action,
   `admin-cms-task/reschedule`: `plan_start_at` (a time the person saw while
   choosing it — calendar, Gantt), `day` + `keep_time=1` (a fixed task to
@@ -107,12 +140,15 @@ gives the start:
   alone (an auto task to the first free time of that day), `mode=auto`,
   `plan_duration` alone; the manager query, `cms/admin-task/manage`, no move
   of closed tasks or the task in work, model validation. The answer carries
-  `previous` for «Отменить» (`fixed` + `restore=1` brings back even a past
-  start); a reminder of its own time moves with the task.
+  `previous` for «Отменить»: `fixed` + `restore=1` + `remind_at`/`reminded_at`
+  bring back the former start (even a past one), mode and reminder exactly
+  (`CmsTask::$restoringStart`, the reminder's author stays).
 - A fixed time changes only by a choice a person sees (owner, 31.10.2026):
   a list never derives a fixed time from a drop position (inside a day a fixed
   task does not move; on another day it keeps its time of day); calendar and
-  Gantt drag in steps of 5 minutes showing the new time. Every view moves
+  Gantt drag in steps of 5 minutes showing the new time; the Gantt's month
+  moves by whole days keeping the time of day (the same `day` + `keep_time`
+  request as the list, a day is 44 px there). Every view moves
   through `sx.taskMove(url, id, data, {kind, done})` of `task-calendar.js`:
   one message «Было → стало» / «Перенесено на …» with the reminder's time,
   warnings and «Отменить». API: `cms_task_*` takes `plan_start_at` and
@@ -159,15 +195,24 @@ Verified 2026-10-31 (`services\TaskReminders`, `tests/task-reminder-stand.php`,
 `cms-mcp/tests/task-start-reminder.php`). `remind_at` — when;
 `remind_offset` — seconds before the start: the reminder follows the start
 (model and planner recompute it); `remind_author`; `reminded_at` — sent. A
-reminder moved to the future is sent again. The form and API set the virtual
+reminder of its own time (`remind_offset` null) follows the task as well,
+keeping its distance to the start, on every path — a model save of a new
+start (form, API, views), a layout of the planner, unpinning
+(`CmsTask::followedReminderAt()`: one that would fall into the past reminds
+now, one already due stays). A reminder of a task in work does not move.
+A reminder moved to the future is sent again. The form and API set the virtual
 `reminder` ('' or `none`, seconds from `CmsTask::reminderOffsets()`,
 `custom` with `remind_at`, never in the past).
 
-The agent `cms/task/remind` (job `cms.task-remind`, every minute) claims each
-due reminder with a conditional `updateAll(reminded_at)` and only then calls
-`notify()`: the notification system delivers it to the person's channels.
-A recipient who set the reminder (`remind_by`, written when the reminder is
-chosen, kept when it only follows a moved start) gets `task.reminder_self`
+The agent `cms/task/remind` (job `cms.task-remind`, every minute) sends each
+due reminder in its own transaction: a locking read of the row (still active,
+not reminded, due — a task closed or moved meanwhile is skipped), the mark
+`reminded_at` and `notify()` (the stored notification and its deliveries)
+commit together; a failure before that rolls the mark back and the next run
+sends it. The notification system delivers it to the person's channels.
+A recipient who set the reminder (`remind_by`, written only when a person
+chooses the reminder in this save — never when it follows a move by someone
+else or comes back with «Отменить») gets `task.reminder_self`
 (no quiet hours); others get `task.reminder` (waits for quiet hours). Both
 are important and not mutable. A missed reminder is never skipped: it goes
 with «опоздало на N мин», still once. A task with a reminder shows
