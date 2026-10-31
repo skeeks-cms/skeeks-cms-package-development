@@ -83,6 +83,14 @@ gives the start:
   a schedule change). Never replan when a page opens or by a timer;
   `cms/task/plan` is a manual console command. `recalculateTasksPriority()`
   is a wrapper (a manual reorder passes the auto task ids).
+- The pin is a toggle: `CmsTask::setFixedStart(bool)` fixes on the current
+  start or gives the start back to the planner (which replans at once), refuses
+  closed tasks and the task in work, and writes a history record in words
+  («Закреплено на …» / «Закрепление снято (было …)», `is_fixed_start` itself is
+  in `no_log_fields`). Views call `admin-cms-task/pin` through
+  `[data-sx-task-pin]` of `task-calendar.js` (unfixing asks first,
+  `sx.taskConfirm`); the API takes `is_fixed_start` without a new start and
+  calls the same method without a confirmation.
 - A noticeable move of an auto task (another day or `NOTICEABLE_MOVE`, 30
   minutes) keeps `replanned_from` / `replanned_at`; views draw
   `CmsTask::getReplannedIconHtml()` next to the bell, the card shows
