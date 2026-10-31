@@ -390,6 +390,10 @@ For canonical URLs, noindex of empty listings, stock-aware sitemap exclusion,
 the sitemap job and the shop 404 page, read
 [storefront-indexing.md](references/storefront-indexing.md).
 
+For link previews in messengers and social networks (the generated og:image
+card of pages without their own picture, its cache and the site style), read
+[link-preview-card.md](references/link-preview-card.md).
+
 For the external links transition page `/~redirect` (signed links, allowed
 schemes, confirmation for unsigned links, noindex), read
 [external-links-redirect.md](references/external-links-redirect.md).
