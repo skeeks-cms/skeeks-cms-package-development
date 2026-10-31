@@ -99,6 +99,24 @@ gives the start:
   in work, model validation. API: `cms_task_*` takes `plan_start_at` and
   `start_mode` (auto/fixed), answers `start_mode`.
 
+## Task views
+
+Verified 2026-10-31. The views «Задачи» (day list), «Сроки», «Календарь»,
+«Гант» of `admin-cms-task` and of an employee's card (`admin-worker`) share:
+
+- `widgets\admin\TaskViewContext` — whose tasks and the search: in the task
+  section `fromRequest()` (GET `executor_id` among `CmsUser::managedBy()`,
+  oneself by default; GET `q`), in a card `forUser($model)` (no choice).
+  `applySearch()` narrows any task query (name, number, project, company,
+  client).
+- `widgets\admin\CmsTaskViewToolbarWidget` — one toolbar: the view's own
+  controls (`start`, `tools`), then employee, search, «Добавить задачу»
+  (executor preset), all 32 px high. A new view uses it instead of its own
+  bar; a form `GET` keeps the other query parameters.
+- A list of task rows loads `TaskViewContext::ROW_RELATIONS` with `with()`:
+  the row widgets read project, company, their images, client and work
+  intervals — without it a long list costs five queries per task.
+
 ## Task deadline
 
 `deadline_at` is optional (m261031_140000). Empty — nothing is checked. When
