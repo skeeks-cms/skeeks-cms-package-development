@@ -118,8 +118,15 @@ gives the start:
   with `CmsTask::pinToggleHtml($label)` (owner, 01.11.2026, like the pin of a
   comment): an empty grey pin — auto, a filled accent pin (`.is-fixed`, svg
   `fill: currentColor`) — fixed; the card adds the state as text. A static mark
-  of a fixed task (`CmsTask::icon('pin')`) is filled as well. A fixed task has
-  no drag handle in the list: it is not dragged at all.
+  of a fixed task (`CmsTask::icon('pin')`) is filled as well. A fixed task is
+  not dragged in the list: its handle stays in the row but `.sx-task-tr--fixed`
+  hides it, and the handle column keeps one width.
+- The pin toggles without a reload: `admin-cms-task/pin` answers `moved` —
+  every task of the executor whose start changed (`id`, `start`, `day`, `time`,
+  `text`); the list updates those rows and their order inside the day
+  (`tr[data-start]`, `.sx-task-calendar__time-value`, `.sx-task-start-text`)
+  and reloads only when a row changes its day; the card reloads only when its
+  start changed (verified 2026-11-01, `tests/task-review-regressions.php`).
 - A noticeable move of an auto task (another day or `NOTICEABLE_MOVE`, 30
   minutes) keeps `replanned_from` / `replanned_at`; views draw
   `CmsTask::getReplannedIconHtml()` next to the bell, the card shows
