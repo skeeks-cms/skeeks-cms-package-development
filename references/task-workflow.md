@@ -99,7 +99,19 @@ gives the start:
   earlier. A lock not given within `LOCK_TIMEOUT` is an error of the operation
   (`TaskPlanner::BUSY_MESSAGE`; beforeSave adds it to the model), never a
   silently skipped layout. A new path that writes tasks takes the lock first,
-  before any row lock.
+  before any row lock. A compound operation over several executors in one
+  outer transaction takes all of them in one `lockExecutors([...])` call when
+  it knows them; otherwise two such operations in opposite orders deadlock on
+  the locks and the database's victim gets `false` from `lockExecutors()` —
+  the same `BUSY_MESSAGE`, never an SQL error (`TaskPlanner::acquire()` turns
+  MariaDB 1213 / MySQL 3058 of `GET_LOCK` into a refusal; two processes are
+  needed to see it, the package tests do not run that case).
+- A change of `work_shedule` is one operation with the layout
+  (`User::isTransactional()` for a changed schedule; the stored value is JSON,
+  compare decoded): before the update the employee's lock is taken, a busy lock
+  refuses the save (`BUSY_MESSAGE` on `work_shedule`, nothing written), a
+  failed layout rolls the schedule back (verified 2026-11-01,
+  `tests/task-review-regressions.php`).
 - Tasks do not jump (owner's clarification 31.10.2026): the planner runs only
   on events — `CmsTask::afterSave()` on insert and on changes of executor,
   duration, start, mode or status (closing included), a move through
@@ -122,11 +134,20 @@ gives the start:
   not dragged in the list: its handle stays in the row but `.sx-task-tr--fixed`
   hides it, and the handle column keeps one width.
 - The pin toggles without a reload: `admin-cms-task/pin` answers `moved` —
-  every task of the executor whose start changed (`id`, `start`, `day`, `time`,
-  `text`); the list updates those rows and their order inside the day
-  (`tr[data-start]`, `.sx-task-calendar__time-value`, `.sx-task-start-text`)
-  and reloads only when a row changes its day; the card reloads only when its
-  start changed (verified 2026-11-01, `tests/task-review-regressions.php`).
+  the tasks of the executor whose start or marks changed (start, end, mode,
+  reminder, `replanned_from`, deadline), narrowed by the manager query of the
+  person: the layout counts the whole queue, the answer never names a task the
+  person may not see. Each entry: `id`, `start`, `day`, `time`, `text`,
+  `marks` (`CmsTask::startMarksHtml()` — bell, «перенесена», «не успевает»,
+  «Просрочена!», rendered by the server) and `reminder`. The list updates
+  those rows and their order inside the day (`tr[data-start]`,
+  `.sx-task-calendar__time-value`, `.sx-task-start-text`,
+  `.sx-task-start-marks`, the toggle's `data-reminder`) and reloads only when
+  a row changes its day; the card reloads only when its own start changed
+  (toggle `data-start`). Verified 2026-11-01, `tests/task-review-regressions.php`.
+- The order of the day list (`CmsWorkerTasksCalendarWidget::orderError()`)
+  takes only queue tasks — the executor's, visible, auto, not in work, not
+  closed; the page sends `.sx-task-tr:not(.sx-task-tr--fixed)`.
 - A noticeable move of an auto task (another day or `NOTICEABLE_MOVE`, 30
   minutes) keeps `replanned_from` / `replanned_at`; views draw
   `CmsTask::getReplannedIconHtml()` next to the bell, the card shows
@@ -163,7 +184,11 @@ gives the start:
   through `sx.taskMove(url, id, data, {kind, done})` of `task-calendar.js`:
   one message «Было → стало» / «Перенесено на …» with the reminder's time,
   warnings and «Отменить». API: `cms_task_*` takes `plan_start_at` and
-  `start_mode` (auto/fixed), answers `start_mode`.
+  `start_mode` (auto/fixed), answers `start_mode`. On an older `cms` (or its
+  migrations not applied) the API refuses each new field — `start_mode`,
+  `is_fixed_start`, `reminder`, `remind_at`, `remind_author`, `deadline_at` —
+  before anything is saved (`CmsTaskService::rejectUnsupported()`): an older
+  model would skip them silently and answer success.
 
 ## Task views
 
