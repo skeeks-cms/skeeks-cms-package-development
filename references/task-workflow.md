@@ -113,7 +113,7 @@ gives the start:
   («Закреплено на …» / «Закрепление снято (было …)», `is_fixed_start` itself is
   in `no_log_fields`). Views call `admin-cms-task/pin` through
   `[data-sx-task-pin]` of `task-calendar.js` (unfixing asks first,
-  `sx.taskConfirm`); the API takes `is_fixed_start` without a new start and
+  the standard `sx.backend.confirm()`, see `backend-ui-assets.md`); the API takes `is_fixed_start` without a new start and
   calls the same method without a confirmation. Every view renders the toggle
   with `CmsTask::pinToggleHtml($label)` (owner, 01.11.2026, like the pin of a
   comment): an empty grey pin — auto, a filled accent pin (`.is-fixed`, svg

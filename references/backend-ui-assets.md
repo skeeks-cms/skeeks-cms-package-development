@@ -1227,6 +1227,21 @@ Verify the legacy methods and extended API in Admin and UPA, both explicit
 themes, mobile width, keyboard close, reduced motion and the absence of
 `jquery.jgrowl.*` in the standard graph.
 
+## Confirmation dialog
+
+A question with its own words on the buttons («Снять» / «Оставить») uses
+`sx.backend.confirm({title, text|html, ok, cancel, danger, onOk, onCancel})`
+of `BackendConfirmAsset` (`backend-confirm.js`/`.css`, verified 2026-11-01 on
+the task pin). It is a conditional asset, not part of `BackendUiAsset` or
+`BackendAsset`: the page or widget asset that asks depends on it; a package
+that supports an older `cms-backend` adds the dependency under
+`class_exists()` and falls back to `window.confirm()`. The dialog consumes
+`--sx-overlay-background` and `--sx-modal-*` (both themes), focuses «cancel»
+first, cancels on Escape or a click outside, keeps Tab inside and returns focus
+to the opener. Do not build a product-local overlay for a confirmation.
+`sx.confirm()` of `yii2-sx` is still the native `window.confirm()` used by
+controller actions; moving those callers is a separate step.
+
 ## Container blocking and loading
 
 `sx.block(target, options)` and `new sx.classes.Blocker(target, options)` are
