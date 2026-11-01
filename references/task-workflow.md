@@ -144,7 +144,12 @@ gives the start:
   `.sx-task-calendar__time-value`, `.sx-task-start-text`,
   `.sx-task-start-marks`, the toggle's `data-reminder`) and reloads only when
   a row changes its day; the card reloads only when its own start changed
-  (toggle `data-start`). Verified 2026-11-01, `tests/task-review-regressions.php`.
+  (toggle `data-start`). With the same start the own entry's `card`
+  (`actions`, `properties` — `views/admin-cms-task/_start-state.php`, the
+  same partial the card renders: end, «Просрочена», bell, «не успевает»,
+  deadline, «Перенесена», reminder; elements `[data-sx-task-state]`)
+  replaces those elements in place. Verified 2026-11-01,
+  `tests/task-review-regressions.php`.
 - The order of the day list (`CmsWorkerTasksCalendarWidget::orderError()`)
   takes only queue tasks — the executor's, visible, auto, not in work, not
   closed; the page sends `.sx-task-tr:not(.sx-task-tr--fixed)`.
