@@ -114,7 +114,12 @@ gives the start:
   in `no_log_fields`). Views call `admin-cms-task/pin` through
   `[data-sx-task-pin]` of `task-calendar.js` (unfixing asks first,
   `sx.taskConfirm`); the API takes `is_fixed_start` without a new start and
-  calls the same method without a confirmation.
+  calls the same method without a confirmation. Every view renders the toggle
+  with `CmsTask::pinToggleHtml($label)` (owner, 01.11.2026, like the pin of a
+  comment): an empty grey pin — auto, a filled accent pin (`.is-fixed`, svg
+  `fill: currentColor`) — fixed; the card adds the state as text. A static mark
+  of a fixed task (`CmsTask::icon('pin')`) is filled as well. A fixed task has
+  no drag handle in the list: it is not dragged at all.
 - A noticeable move of an auto task (another day or `NOTICEABLE_MOVE`, 30
   minutes) keeps `replanned_from` / `replanned_at`; views draw
   `CmsTask::getReplannedIconHtml()` next to the bell, the card shows
@@ -144,11 +149,10 @@ gives the start:
   bring back the former start (even a past one), mode and reminder exactly
   (`CmsTask::$restoringStart`, the reminder's author stays).
 - A fixed time changes only by a choice a person sees (owner, 31.10.2026):
-  a list never derives a fixed time from a drop position (inside a day a fixed
-  task does not move; on another day it keeps its time of day); calendar and
+  a list never moves a fixed task (no handle, 01.11.2026); calendar and
   Gantt drag in steps of 5 minutes showing the new time; the Gantt's month
-  moves by whole days keeping the time of day (the same `day` + `keep_time`
-  request as the list, a day is 44 px there). Every view moves
+  moves by whole days keeping the time of day (`day` + `keep_time`, a day is
+  44 px there; «Сроки» uses it for a fixed task too). Every view moves
   through `sx.taskMove(url, id, data, {kind, done})` of `task-calendar.js`:
   one message «Было → стало» / «Перенесено на …» with the reminder's time,
   warnings and «Отменить». API: `cms_task_*` takes `plan_start_at` and
