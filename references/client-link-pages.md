@@ -127,23 +127,29 @@ second installation):
 
 - Only the text written now is marked, before the quote, the forwarded
   letter, the personal links of sendables and the opt-out link are added:
-  earlier letters keep their codes, a link that already has `sx` is never
+  earlier letters keep their codes, a link that already has a code is never
   touched, a resend reuses the stored body. Paths starting with `/~`
   (personal pages) and other hosts, `mailto:`, `tel:`, anchors stay. Missing
-  `utm_*` are added, existing ones (any case) stay; there is no redirect.
+  `utm_source`, `utm_medium`, `utm_campaign` and `utm_content=link-<N>` (the
+  number of our link in its part: HTML and plain text count each) are added,
+  existing ones (any case) stay; the code goes last as `sx_code`. Letters sent
+  before cms-communication 1.20.0 carry `sx`: every reader accepts both names
+  (`LinkMarks::CODE_PARAMS`, `codeOf()`, `removeCode()`, the page script,
+  the canonical-address allowance, the AI link mask); never drop the old name
+  while such letters may still be opened. There is no redirect.
 - The code (`cms_comm_track`, 16 url-safe characters) is one per letter and
   its first "Кому" recipient with the recipient's CRM record; it is written
   in the transaction of the letter, and only when a link was marked.
 - The site script (`assets\VisitAsset`) is registered by the package
-  bootstrap on `View::EVENT_END_BODY` only for a GET page with `?sx=` or the
+  bootstrap on `View::EVENT_END_BODY` only for a GET page with the code or the
   visit cookie, never in a backend; the site's script compressor puts it in
-  a separate compressed file, other pages are unchanged. It removes `sx` from
+  a separate compressed file, other pages are unchanged. It removes the code from
   the address bar at once, counts the visit only through `whenSeen()`, keeps
   the visit token in a first-party cookie (`sx_visit`, session) and reports
   next pages by the token (`POST /~comm-visit/seen|page`, fixed paths
   prepended in the bootstrap).
 - `skeeks/cms-seo` canonical addresses redirect away unknown parameters on
-  some sites (seen on skeeks-platform.ru): the bootstrap adds `sx` with
+  some sites (seen on skeeks-platform.ru): the bootstrap adds both code names with
   `seo->canUrl->ADDminor_pname()` on frontend requests. A site on another
   installation must do the same before including `/~comm-visit/visit.js` of
   the CRM site.
@@ -164,12 +170,12 @@ second installation):
   cookies), only for a visit with `is_bot=0`, no `check_reason` and
   `last_at` within `LinkVisits::IDLE`; a signed-in employee and non-visitor
   sources are never asked about. Without the cookie (the visit ended, the
-  form is on another page later) the code itself binds: on a GET with `?sx=`
+  form is on another page later) the code itself binds: on a GET with the code
   the package adds it to the marks `skeeks/cms-seo` keeps in the session
   (`seo->getUtms()/setUtms()`, 24 hours, replaced by the next marked visit;
   `LinkRequests::rememberCode()` on `EVENT_BEFORE_ACTION`, after cms-seo
   collected them on `EVENT_BEFORE_REQUEST`). Form2 copies the marks into the
-  submission and the lead (`source_data.utm.sx`, utm columns); the handler
+  submission and the lead (`source_data.utm.sx_code`, utm columns); the handler
   accepts the code only with a counted visit of its letter within
   `CODE_LIFETIME`. The core stores only the code; decoding is the package's.
   The letter is linked to the deal (`MessageLinker`, thread). The open call task of the visit
