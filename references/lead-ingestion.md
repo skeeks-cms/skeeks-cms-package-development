@@ -81,8 +81,10 @@ Form2 stay unchanged.
   `notifyContinue = false` when the handler already told its responsible).
   `origin` keeps the handler's data for the second trigger.
 - `InboundQueue::route()` takes the event: the named client is linked, the
-  deal goes in work to the main responsible of that client (a person of a
-  company — the company's), otherwise to `executorId`; both must be active
+  deal goes in work to the main responsible of that client (a company — its
+  own; a person — their own, else the one of their company, as
+  `InboundQueue::mainOf()` decides for a contact match; a named company wins
+  over a named person), otherwise to `executorId`; both must be active
   employees of the site with `cms/admin-lead`, else the usual route runs.
   The main responsible never changes; `afterRoute()` grants the level by
   `grantLeadExecutorLevel()` and writes "<reason>: …передана …". It does not
@@ -93,7 +95,13 @@ Form2 stay unchanged.
   `triage_result=merged`, `merged_into_id`, the target's executor and client,
   `suppressNotifications`), so `fromSource()` + `resolveMerged()` and a
   source card keep working; both feeds get the "Добавлено обращение" pair as
-  in `LeadTriage::merge()`. The service returns the target deal.
+  in `LeadTriage::merge()`. The phones and emails of the request are saved
+  to the target too, at once — the same as a repeated event of that request
+  (`syncContacts()` of the lookup) would do, so the first request and its
+  repeat give one result. The service returns the target deal.
+- A handler swallows its own failures (the request is saved anyway) except a
+  lock conflict (`CmsLeadService::isLockConflict()`): MySQL rolled the whole
+  transaction back, so it is rethrown for the owner to repeat or fail.
 - `EVENT_LEAD_ORIGIN_SAVED` fires with the same event after the request, its
   contacts and creation entry are saved, still in the transaction: `lead` is
   the saved request, `target` the deal where the work goes on. Handlers write
