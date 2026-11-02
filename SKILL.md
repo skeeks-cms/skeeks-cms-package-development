@@ -234,8 +234,9 @@ Read the relevant reference completely before acting:
   multi-word queries, phone normalization, join cost and search over large
   bodies or whole threads (a narrow normalized search table), read
   [references/entity-search.md](references/entity-search.md).
-- For shared lead ingestion, source adapters, idempotency, source payloads and
-  source-submission links, read
+- For shared lead ingestion, source adapters, idempotency, source payloads,
+  source-submission links and a package naming the origin of a request (its
+  client or open deal, `crm\LeadOriginEvent`), read
   [references/lead-ingestion.md](references/lead-ingestion.md).
 - For the one duplicate check of companies, people and deals (`CrmMatcher`,
   hidden matches as "уже есть, ответственный …"), employee rights in the CRM

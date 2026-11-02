@@ -157,3 +157,12 @@ second installation):
   check is written once per letter. The first counted visit of a code gives
   the call task unless the executor has an open `Позвонить…` task on that
   record (an offer's included): never two calls for one interest.
+- A request of any site form within a counted, unfinished visit goes to the
+  client of the letter (`services\LinkRequests` answers the core origin event,
+  `lead-ingestion.md` "Origin of a request"): the token is read from
+  `$_COOKIE` (set by the script, unsigned, so not through Yii request
+  cookies), only for a visit with `is_bot=0`, no `check_reason` and
+  `last_at` within `LinkVisits::IDLE`; a signed-in employee and non-visitor
+  sources are never asked about. The open call task of the visit
+  (`LinkVisits::CALL_TASK_NAME`, by the deal executor or the sender) is moved
+  into the deal, not repeated.

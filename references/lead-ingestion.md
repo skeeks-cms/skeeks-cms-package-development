@@ -64,6 +64,51 @@ and keep the canonical ongoing work in the lead. Keep the source adapter
 backward-aware: the source submission must remain usable when the lead class or
 table is not yet available during a staged package rollout.
 
+## Origin of a request
+
+A package may know where a new request came from by evidence the core does
+not have (cms-communication: the visit of a letter link kept in the browser
+cookie `sx_visit`). The core asks through class-level events of
+`CmsLeadService`, never by depending on that package; source adapters such as
+Form2 stay unchanged.
+
+- `EVENT_LEAD_ORIGIN` fires inside the creation transaction of a brand-new
+  request only, before routing; a repeated `source_type` + `source_ref`
+  returns its deal earlier and asks nobody. The `crm\LeadOriginEvent` handler
+  names the client (`companyId`, `clientId`), the employee for a client
+  without a main responsible (`executorId`, `executorRole` for the feed),
+  `reason`, or an open deal the request goes on in (`continueLead`;
+  `notifyContinue = false` when the handler already told its responsible).
+  `origin` keeps the handler's data for the second trigger.
+- `InboundQueue::route()` takes the event: the named client is linked, the
+  deal goes in work to the main responsible of that client (a person of a
+  company — the company's), otherwise to `executorId`; both must be active
+  employees of the site with `cms/admin-lead`, else the usual route runs.
+  The main responsible never changes; `afterRoute()` grants the level by
+  `grantLeadExecutorLevel()` and writes "<reason>: …передана …". It does not
+  depend on `inboundToMain`: named evidence is not a contact guess.
+- `continueLead` must be open, of the same site and, for a partner request,
+  of the same partner. The request still gets its own row and source
+  reference, saved closed as added (`status=rejected`,
+  `triage_result=merged`, `merged_into_id`, the target's executor and client,
+  `suppressNotifications`), so `fromSource()` + `resolveMerged()` and a
+  source card keep working; both feeds get the "Добавлено обращение" pair as
+  in `LeadTriage::merge()`. The service returns the target deal.
+- `EVENT_LEAD_ORIGIN_SAVED` fires with the same event after the request, its
+  contacts and creation entry are saved, still in the transaction: `lead` is
+  the saved request, `target` the deal where the work goes on. Handlers write
+  their feed entries there and move their own records (an open call task) to
+  `target`.
+- A handler that creates its own request inside `EVENT_LEAD_ORIGIN` (the
+  campaign request of a letter, created through `createFromSource()` again)
+  guards against answering its own nested request (a static busy flag and
+  skipping non-visitor sources).
+- The feed keeps only absolute `http(s)` links (`helpers\CommentHtml`): build
+  links of system entries with `Url::to([...], true)`.
+
+Covered by `cms/tests/lead-origin-stand.php` (a test handler) and
+`cms-communication/tests/link-requests-stand.php` (visits of letters).
+
 ## System activity entries
 
 `CmsLead` owns the readable activity stream of a lead. Every system event is a
