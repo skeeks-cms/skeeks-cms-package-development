@@ -163,6 +163,15 @@ second installation):
   `$_COOKIE` (set by the script, unsigned, so not through Yii request
   cookies), only for a visit with `is_bot=0`, no `check_reason` and
   `last_at` within `LinkVisits::IDLE`; a signed-in employee and non-visitor
-  sources are never asked about. The open call task of the visit
+  sources are never asked about. Without the cookie (the visit ended, the
+  form is on another page later) the code itself binds: on a GET with `?sx=`
+  the package adds it to the marks `skeeks/cms-seo` keeps in the session
+  (`seo->getUtms()/setUtms()`, 24 hours, replaced by the next marked visit;
+  `LinkRequests::rememberCode()` on `EVENT_BEFORE_ACTION`, after cms-seo
+  collected them on `EVENT_BEFORE_REQUEST`). Form2 copies the marks into the
+  submission and the lead (`source_data.utm.sx`, utm columns); the handler
+  accepts the code only with a counted visit of its letter within
+  `CODE_LIFETIME`. The core stores only the code; decoding is the package's.
+  The letter is linked to the deal (`MessageLinker`, thread). The open call task of the visit
   (`LinkVisits::CALL_TASK_NAME`, by the deal executor or the sender) is moved
   into the deal, not repeated.
