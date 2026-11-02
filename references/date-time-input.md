@@ -56,6 +56,7 @@ works unchanged because the type values are the same strings.
 | `allowClear`, `placeholder` | true, by type | "Очистить" in the window and × on the button |
 | `quickOptions` | five built-ins | keys `today tomorrow weekEnd nextWeek monthEnd`, `key => label`, `['label' => …, 'days' => N]`; `false` — none |
 | `defaultTime` | `09:00` | time of a day chosen without one |
+| `timeOptional` | false | datetime only: a day may stay without a time — the value is then `Y-m-d`, the label «…, без времени», «Без времени» in the time view (a task «на день», verified 2026-11-02); with a time — `saveFormat`. Use a string `saveFormat` (`php:Y-m-d H:i`), not `U` |
 | `timeZone` (`displayTimezone`) | formatter time zone | wall time of the field |
 | `disabled`, `readonly` | false | the button is disabled |
 

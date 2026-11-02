@@ -153,6 +153,41 @@ gives the start:
 - The order of the day list (`CmsWorkerTasksCalendarWidget::orderError()`)
   takes only queue tasks — the executor's, visible, auto, not in work, not
   closed; the page sends `.sx-task-tr:not(.sx-task-tr--fixed)`.
+- Three modes of the start (owner, 02.11.2026; `CmsTask::getStartMode()`):
+  `fixed` (`is_fixed_start = 1`, the pin), `day` («на день»: `is_fixed_start = 0`
+  and `plan_day` DATE, m261102_100000) and `auto`. `plan_day` is a column of its
+  own, not a value of the flag: an unfinished task of a passed day waits today
+  (its `plan_start_at` is today) and keeps its day for «Просрочена на N дн.»
+  (`getOverdueDays()`). `TaskPlanner::layout()` lays a day out as: fixed and in
+  work, then `placeDays()` — the overdue ones today first, then each day's own in
+  queue order into its free working time, the rest after its working time (the
+  task never leaves its day; `dayOverload()` / `CmsTaskGanttWidget::overloadData()`
+  give «перегружен, +N ч» for «Сроки», «Календарь», «Гант» and the list), then
+  auto tasks in what is left. A manual reorder orders day tasks and auto tasks.
+- The model decides the mode: a chosen `plan_day` (new, or changed in the save)
+  makes the task `day`; a time chosen makes it `fixed` and drops the day; an
+  emptied start without a new day makes it `auto`; `setFixedStart(true)` pins a
+  day task on its time; `setStartDay($day, $allowPast)` puts any open task «на
+  день» with a history record (mass action `to-day-multi`, the API). A past day
+  is refused unless `allowPastDay` (the mass action and the one-time move keep a
+  passed day). Forms use one field «Когда» (`startWhen`, `DateTimeInputWidget`
+  with `timeOptional`: «Y-m-d» — day, «Y-m-d H:i» — fixed, empty — auto),
+  applied in `beforeValidate()` so the usual rules check it; its errors are
+  copied to `startWhen` in `afterValidate()`.
+- Moves: `reschedule` with `day` alone makes the task «на день» of that day (a
+  column of «Сроки», another day of the list, the Gantt's month for a task
+  without a pin) — replaces the rule of 31.10 that pinned it on the found time;
+  `day` + `keep_time` keeps a fixed task fixed; a time chosen in the calendar or
+  the Gantt (day, week) fixes. «Отменить» posts `plan_day` back. Views show a
+  day task with `CmsTask::getDayChipHtml()` (a dashed date chip, «Просрочена на
+  N дн.» when overdue; part of `startMarksHtml()`), never with the pin.
+- API: `start_mode` auto/day/fixed, `plan_day`; a date without a time in
+  `plan_start_at` is «на день» (`CmsTaskService::dayArguments()`); a date with
+  `start_mode=fixed` is refused. `cms/task/to-day` (`services\TaskDayMigration`)
+  moves fixed open tasks without a reminder and without «звон»/«встреч» in the
+  name «на день» of their date: a dry run by default, `--apply` only after the
+  owner's «да» (verified 2026-11-02, `tests/task-day-mode-stand.php`,
+  `cms-mcp/tests/task-start-reminder.php`).
 - A noticeable move of an auto task (another day or `NOTICEABLE_MOVE`, 30
   minutes) keeps `replanned_from` / `replanned_at`; views draw
   `CmsTask::getReplannedIconHtml()` next to the bell, the card shows
@@ -175,7 +210,7 @@ gives the start:
   `admin-cms-task/reschedule`: `plan_start_at` (a time the person saw while
   choosing it — calendar, Gantt), `day` + `keep_time=1` (a fixed task to
   another day at the same time of day, never shifted, only warned), `day`
-  alone (an auto task to the first free time of that day), `mode=auto`,
+  alone (since 02.11.2026 — the task becomes «на день» of that day), `mode=auto`,
   `plan_duration` alone; the manager query, `cms/admin-task/manage`, no move
   of closed tasks or the task in work, model validation. The answer carries
   `previous` for «Отменить»: `fixed` + `restore=1` + `remind_at`/`reminded_at`
