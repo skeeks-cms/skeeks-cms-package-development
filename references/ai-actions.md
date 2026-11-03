@@ -142,7 +142,11 @@ Verified 03.11.2026 (`services\DraftOwners`, `AiSend`, `AdminCmsCommMessageContr
   rights to the actor or the actor's mailboxes to the owner's draft. Every
   rule that asks "who acts" must get the owner explicitly — a rule that
   reads the session user (the right to act on a client, a deal) checks the
-  actor instead. A stored draft keeps its owner on a change: never fall
+  actor instead. The owner's rights decide only while the actor acts for
+  the owner (the form says so: `ComposeForm::$actedBy`); preparing a draft
+  into somebody's folder (AI for the responsible of a client) is the
+  caller's own action and checks the caller, documents included. A
+  document the actor adds to an employee's draft must be one both may send. A stored draft keeps its owner on a change: never fall
   back to the mailbox or responsible of the client; no mailbox — a refusal.
 - What links a draft to letters and cards (the answered and forwarded
   letter, its attachments, the client) comes from the stored draft when
@@ -160,7 +164,14 @@ Verified 03.11.2026 (`services\DraftOwners`, `AiSend`, `AdminCmsCommMessageContr
   draft (`MailDrafts::version()`), never `updated_at`: two changes share a
   second. A send compares the version it checked; a window holds the
   version it opened with (renewed by each save) and neither saves over nor
-  sends past a change made elsewhere. The check token includes the owner.
+  sends past a change made elsewhere; a form without a version (a tab
+  opened before) never writes an existing draft. The check token includes
+  the owner and everything the send adds below the text (the answered or
+  forwarded letter, the quote switch, the quote itself, the forwarded
+  files); the preview shows the quote.
+- Reading a draft writes nothing: a check fills the form in memory only;
+  a window keeps renewed picture tokens in the draft only under the lock
+  and only when the locked row is still the version that was read.
 - One draft makes one letter, and a refusal is the answer only after the
   key is read again: a parallel repeat of the same request waits for the
   first one and returns its result.
@@ -176,10 +187,15 @@ Verified 03.11.2026 (`services\DraftOwners`, `AiSend`, `AdminCmsCommMessageContr
 - The send row keeps both: the caller (idempotency keys and status reads
   stay his) and the owner of the draft (the day limit of sends counts
   against the owner's drafts, whoever sent them). Every channel that shares
-  the limit (letters, chat messages) takes its place atomically through one
-  reservation: the owner's row locked in the send transaction, then the
-  count (`AiSend::reserveDay()`); a check before the transaction alone lets
-  two sends pass the last place. Preparing
+  the limit (letters, chat messages) takes its place through one
+  reservation: a named lock of the employee (`GET_LOCK`, `withDayLock()`)
+  taken BEFORE the send's transaction, then the count inside it
+  (`reserveDay()`). Under REPEATABLE READ a count reads the transaction's
+  snapshot: a transaction begun after the lock sees every committed send;
+  one opened before it counts with a locking read. Never lock a `cms_user`
+  row for this — every insert with a foreign key to the employee would
+  wait on it and two crossed sends deadlock. The real two-connection case
+  is a test of its own (a disposable database), never only one connection. Preparing
   limits of the actor are asked before a change that counts it today; test
   mode asks the actor's role.
 - Handing a draft over changes only its owner, and only between employees
