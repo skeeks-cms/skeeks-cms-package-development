@@ -18,7 +18,9 @@ executable check. Read tools are in [ai-read-api.md](ai-read-api.md).
 - Every action runs as the OAuth user: `forManager()` for records, the
   user's own send rights for a chosen mailbox, the section right for
   campaigns. Never accept another user, a mark or a status from arguments;
-  unknown argument fields are ignored, not applied.
+  unknown argument fields are ignored, not applied. The one exception is a
+  draft of an employee the user manages (below): then the draft's owner is
+  taken from the stored draft, never from an argument.
 
 ## The same path as the screen
 
@@ -92,9 +94,10 @@ Verified 24.10.2026 (`services\AiSend`, `cms_comm_api_send`,
   sending are different scopes; a grant given for preparing never sends.
   Do not reuse an existing "send" scope that old tokens already hold for
   other purposes — they would gain sending silently.
-- Send only a saved draft of the OAuth user, never arguments: what was
-  checked and shown to the person is what leaves. A draft of another
-  employee is theirs to send.
+- Send only a saved draft, never arguments: what was checked and shown to
+  the person is what leaves. The draft is the OAuth user's own or of an
+  employee he manages (next section); anyone else's is refused with a
+  stable reason (`not_own`) whose message says who may work with it.
 - The check reads the draft through the screen's path (fill the letter
   form, validate it) plus the API rules, with no side effects (no letter,
   no personal link, no opening; a dead button in the preview), and returns a
@@ -119,6 +122,38 @@ Verified 24.10.2026 (`services\AiSend`, `cms_comm_api_send`,
 - Reference data the send needs (mailing topics) is managed by API with the
   section's right; a send never creates it, and an empty list says what to
   set up.
+
+## Drafts of managed employees: acting as the owner
+
+Verified 03.11.2026 (`services\DraftOwners`, `AiSend`, `AdminCmsCommMessageController`,
+`tests/draft-owners-stand.php` of cms-communication).
+
+- Who is available is the core rule, not a copy: `CmsUserQuery::managedBy()`
+  over `CmsDepartment::subordinateIds()` — subordinates by departments,
+  every employee for an administrator. No consent of the employee: the
+  leader reads, edits, checks, sends and hands over the drafts himself. One
+  service answers it for the screen and the API alike (find, list, transfer).
+- Working with such a draft means acting as its owner: the letter form, the
+  mailbox send rights, "own clients only", visibility of the client, the
+  signature and the day limit of sends are the owner's (`MailDrafts`,
+  `MailComposeService`, the check of the owner). Never give the owner's
+  rights to the actor or the actor's mailboxes to the owner's draft.
+- The letter stays the owner's (`sent_by_user_id`, his mailbox) and records
+  who actually sent it (`acted_by_user_id`), set only in code from the
+  session or OAuth user; the feed, the letter page and the API show
+  "отправил … по поручению сотрудника …". An AI mark of a change made by
+  the actor names the actor ("по запросу"), and his preparing limits count.
+- The send row keeps both: the caller (idempotency keys and status reads
+  stay his) and the owner of the draft (the day limit of sends counts
+  against the owner's drafts, whoever sent them).
+- Handing a draft over changes only its owner, and only between employees
+  the actor manages (himself included). The mailbox stays when the new
+  owner may send from it, otherwise it becomes his default one; the former
+  owner's signature block gives way to the new owner's; an untouched AI
+  text stays untouched (its fingerprint follows the new signature).
+- Mass actions on drafts (delete, hand over) take draft ids through the
+  same service and never reach letter actions (read marks, moves): the
+  list says which kind its checks choose.
 
 ## Purpose, files and test sends of an API letter
 
