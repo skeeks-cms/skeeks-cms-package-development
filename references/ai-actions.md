@@ -130,14 +130,33 @@ Verified 03.11.2026 (`services\DraftOwners`, `AiSend`, `AdminCmsCommMessageContr
 
 - Who is available is the core rule, not a copy: `CmsUserQuery::managedBy()`
   over `CmsDepartment::subordinateIds()` — subordinates by departments,
-  every employee for an administrator. No consent of the employee: the
-  leader reads, edits, checks, sends and hands over the drafts himself. One
-  service answers it for the screen and the API alike (find, list, transfer).
+  every employee for an administrator, inactive ones included (their drafts
+  must stay reachable); only an active employee (or the actor) receives a
+  draft. No consent of the employee: the leader reads, edits, checks, sends
+  and hands over the drafts himself. One service answers it for the screen
+  and the API alike (find, list, transfer, refusal reasons).
 - Working with such a draft means acting as its owner: the letter form, the
   mailbox send rights, "own clients only", visibility of the client, the
   signature and the day limit of sends are the owner's (`MailDrafts`,
   `MailComposeService`, the check of the owner). Never give the owner's
-  rights to the actor or the actor's mailboxes to the owner's draft.
+  rights to the actor or the actor's mailboxes to the owner's draft. Every
+  rule that asks "who acts" must get the owner explicitly — a rule that
+  reads the session user (the right to act on a client, a deal) checks the
+  actor instead. A stored draft keeps its owner on a change: never fall
+  back to the mailbox or responsible of the client; no mailbox — a refusal.
+- What links a draft to letters and cards (the answered and forwarded
+  letter, its attachments, the client) comes from the stored draft when
+  the actor is not the owner, never from the request: the owner's rights
+  would otherwise open the owner's letters to the actor. Suggestions in
+  such a window (recipients, documents) are asked as the owner, for a draft
+  the actor may reach.
+- One draft makes one letter: the send locks the draft row
+  (`SELECT … FOR UPDATE`) inside its transaction and compares what it
+  checked (owner, mailbox, last change, files) before queueing; a parallel
+  send or hand-over then finds it gone or changed. The check token includes
+  the owner. A window opened for another owner (the draft was handed over)
+  neither saves nor sends; a window whose draft is gone sends nothing —
+  never the actor's own letter instead.
 - The letter stays the owner's (`sent_by_user_id`, his mailbox) and records
   who actually sent it (`acted_by_user_id`), set only in code from the
   session or OAuth user; the feed, the letter page and the API show
@@ -145,15 +164,22 @@ Verified 03.11.2026 (`services\DraftOwners`, `AiSend`, `AdminCmsCommMessageContr
   the actor names the actor ("по запросу"), and his preparing limits count.
 - The send row keeps both: the caller (idempotency keys and status reads
   stay his) and the owner of the draft (the day limit of sends counts
-  against the owner's drafts, whoever sent them).
+  against the owner's drafts, whoever sent them). Every channel that shares
+  the limit (letters, chat messages) reads the same counter. Preparing
+  limits of the actor are asked before a change that counts it today; test
+  mode asks the actor's role.
 - Handing a draft over changes only its owner, and only between employees
   the actor manages (himself included). The mailbox stays when the new
   owner may send from it, otherwise it becomes his default one; the former
   owner's signature block gives way to the new owner's; an untouched AI
   text stays untouched (its fingerprint follows the new signature).
 - Mass actions on drafts (delete, hand over) take draft ids through the
-  same service and never reach letter actions (read marks, moves): the
-  list says which kind its checks choose.
+  same service and never reach letter actions (read marks, moves, the row
+  menu): the list says which kind its checks choose. A hand-over from an
+  open window happens only after the last version is saved; a failed save
+  leaves the window open. The API has the same hand-over tool, and every
+  draft tool refuses with one structure (`success=false`, `reason`
+  `not_found` or `not_own`, `message`).
 
 ## Purpose, files and test sends of an API letter
 
