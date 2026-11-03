@@ -148,15 +148,26 @@ Verified 03.11.2026 (`services\DraftOwners`, `AiSend`, `AdminCmsCommMessageContr
   letter, its attachments, the client) comes from the stored draft when
   the actor is not the owner, never from the request: the owner's rights
   would otherwise open the owner's letters to the actor. Suggestions in
-  such a window (recipients, documents) are asked as the owner, for a draft
-  the actor may reach.
-- One draft makes one letter: the send locks the draft row
-  (`SELECT … FOR UPDATE`) inside its transaction and compares what it
-  checked (owner, mailbox, last change, files) before queueing; a parallel
-  send or hand-over then finds it gone or changed. The check token includes
-  the owner. A window opened for another owner (the draft was handed over)
-  neither saves nor sends; a window whose draft is gone sends nothing —
-  never the actor's own letter instead.
+  such a window (recipients, documents) are what both may see — the
+  owner's results filtered by the actor's — never the owner's whole
+  correspondence; a new document joins only when the actor sees it too.
+- Every write to a draft — save, delete, hand-over, files, send, the API
+  and the screen alike — runs under the draft's row lock
+  (`SELECT … FOR UPDATE`) and checks the rights, the expected owner and the
+  expected version on the locked row (`DraftOwners::withLocked()`): a check
+  on an earlier read and a write after it let a hand-over slip between.
+- The version is a fingerprint of everything a letter takes from the
+  draft (`MailDrafts::version()`), never `updated_at`: two changes share a
+  second. A send compares the version it checked; a window holds the
+  version it opened with (renewed by each save) and neither saves over nor
+  sends past a change made elsewhere. The check token includes the owner.
+- One draft makes one letter, and a refusal is the answer only after the
+  key is read again: a parallel repeat of the same request waits for the
+  first one and returns its result.
+- A window or list opened for another owner neither saves, sends, deletes
+  nor hands over: the request carries the owner it was opened for, checked
+  under the lock; a window whose draft is gone sends nothing — never the
+  actor's own letter instead. A closed window acts on nothing.
 - The letter stays the owner's (`sent_by_user_id`, his mailbox) and records
   who actually sent it (`acted_by_user_id`), set only in code from the
   session or OAuth user; the feed, the letter page and the API show
@@ -165,14 +176,20 @@ Verified 03.11.2026 (`services\DraftOwners`, `AiSend`, `AdminCmsCommMessageContr
 - The send row keeps both: the caller (idempotency keys and status reads
   stay his) and the owner of the draft (the day limit of sends counts
   against the owner's drafts, whoever sent them). Every channel that shares
-  the limit (letters, chat messages) reads the same counter. Preparing
+  the limit (letters, chat messages) takes its place atomically through one
+  reservation: the owner's row locked in the send transaction, then the
+  count (`AiSend::reserveDay()`); a check before the transaction alone lets
+  two sends pass the last place. Preparing
   limits of the actor are asked before a change that counts it today; test
   mode asks the actor's role.
 - Handing a draft over changes only its owner, and only between employees
   the actor manages (himself included). The mailbox stays when the new
   owner may send from it, otherwise it becomes his default one; the former
   owner's signature block gives way to the new owner's; an untouched AI
-  text stays untouched (its fingerprint follows the new signature).
+  text stays untouched (its fingerprint follows the new signature). Only a block that can be
+  told for sure is replaced — the form's `<div>` with the "-- " line first,
+  at the end of the text; an author's "--" elsewhere is text and stays,
+  and then the new signature is only added.
 - Mass actions on drafts (delete, hand over) take draft ids through the
   same service and never reach letter actions (read marks, moves, the row
   menu): the list says which kind its checks choose. A hand-over from an
