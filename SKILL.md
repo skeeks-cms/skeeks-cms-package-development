@@ -251,6 +251,11 @@ Read the relevant reference completely before acting:
   pipelines, the success criterion that only suggests closing, the kanban of a
   pipeline and the funnel report by the history, read
   [references/crm-pipelines.md](references/crm-pipelines.md).
+- For «Откуда узнали» (the advertising source of a deal, `CmsLeadReferral`)
+  versus the channel `source_type`, its automatic filling by marks, the first
+  page of a visit and the called number, the channel «Визит» and its form,
+  the report and the API, read
+  [references/crm-lead-referrals.md](references/crm-lead-referrals.md).
 - For creating a task, lead, deal or other CRM record from a source (a
   letter, a call) in the standard create window (`?source=<type>:<id>`,
   `Skeeks::$recordSources`), read

@@ -138,7 +138,9 @@ author is resolved from `created_by`, then `submitted_by_id`, then
 replaced by the current session on insert.
 
 Sources that persist a complete lead in one save record the entry from the lead
-lifecycle. `SOURCE_FORM` is the deliberate exception: its contacts are stored
+lifecycle. A form submission (`CmsLead::isFormSubmission()`: the channel
+`SOURCE_FORM`, or `SOURCE_VISIT` of a form with that channel,
+`crm-lead-referrals.md`) is the deliberate exception: its contacts are stored
 after the lead row, so the lifecycle skips it and `CmsLeadService` calls
 `recordCreationActivity()` after the phone and email relations and before the
 commit. That entry names the submitted form, its submission number from
