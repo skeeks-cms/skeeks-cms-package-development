@@ -336,8 +336,11 @@ Read the relevant reference completely before acting:
   or deleted on the remote side without a change feed, read
   [references/external-change-streams.md](references/external-change-streams.md).
 - For large resumable browser uploads, chunk identity, offset reconciliation,
-  temporary-file safety and form integration, and for storing or serving
-  non-public files (the CMS storage has no private cluster), read
+  temporary-file safety and form integration, where the size and count
+  limits of a file field are checked (the model rule at save, not PHP or
+  nginx; `Cms::getUploadLimits()` for sections and elements, property
+  limits in bytes), and for storing or serving non-public files (the CMS
+  storage has no private cluster), read
   [references/resumable-file-uploads.md](references/resumable-file-uploads.md).
 - For console commands that construct a web application to inspect routes,
   controllers or backend menus, read

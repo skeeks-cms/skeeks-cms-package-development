@@ -33,6 +33,43 @@ documents. Disable the form's save action between uploader `startUpload` and
 is still transferring chunks. Show a visible progress/waiting state and enable
 save only after the server returns the completed temporary-file value.
 
+## Size and count limits of a field
+
+Verified 2026-11-06 (`skeeks/cms`, `yii2-ajax-file-upload` 2.0.3): the default
+tool of `AjaxFileUploadWidget` is the chunked one (`AjaxFileUploadDefaultTool`
+extends `AjaxFileUploadBigTool`, 1 MB portions to `ajaxfileupload/upload/bin`).
+Neither the upload controller nor the browser checks a maximum size
+(`skeeks\cms\validators\FileValidator::clientValidateAttribute()` returns
+nothing). The only size and count check is the model rule
+`skeeks\cms\validators\FileValidator` at save: the field value is the path of
+the assembled temporary file, and the validator measures it with `filesize()`.
+Already stored files (storage ids) are not re-measured. So:
+
+- the limit of a field is its model rule; PHP `upload_max_filesize` /
+  `post_max_size` and nginx `client_max_body_size` only bound one chunk, so do
+  not warn against them in settings and do not add a second check in the
+  controller;
+- standard fields of sections and content elements (`image_id`,
+  `image_full_id`, `imageIds`, `fileIds` of `Tree` / `CmsContentElement` and
+  products inheriting it) take maxSize/maxFiles from
+  `Yii::$app->cms->getUploadLimits(Cms::UPLOAD_SCOPE_TREE|UPLOAD_SCOPE_ELEMENT)`
+  through the model's `fileUploadLimits()`. The settings live in the `Cms`
+  component (fieldset «Загрузка фото и файлов», MB and pieces; defaults are the
+  former hardcoded 15 MB / 40 / 50 MB / 40 for sections and 15 MB / 100 /
+  50 MB / 50 for elements); an empty or non-positive stored value falls back to
+  the default. `minSize` stays in code. Do not hardcode new limits in these
+  rules;
+- a narrower level (section type `CmsTreeType`, content `CmsContent`) is to be
+  added by passing its values as the second argument of `getUploadLimits()`
+  inside `fileUploadLimits()` (same keys as `Cms::defaultUploadLimitSettings()`;
+  empty values fall back to the common ones), not by a parallel resolver;
+- a content property of type file (`PropertyTypeStorageFile`) has its own
+  limits: `maxSize` / `minSize` are stored in bytes in `component_settings`
+  (API and scripts write bytes); the settings form edits the virtual
+  `maxSizeMb` / `minSizeKb`, which are not serialized.
+
+Test: `skeeks/cms` `tests/upload-limits-stand.php`.
+
 ## Verification
 
 Check JavaScript syntax and PHP syntax, then exercise: a normal small upload, a
