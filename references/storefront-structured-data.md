@@ -8,6 +8,13 @@ and `_product-price.php`. Google accepts Product rich results for one product
 or its variants, not for a category or filter page. Do not wrap a listing in
 `Product`/`AggregateOffer`/`AggregateRating`.
 
+Product `description` (Yandex requires it for product snippets): the card takes
+`productDescriptionShort`, otherwise `productDescriptionFull` (both getters
+already fall back to the main/parent product), strips HTML including
+`script`/`style`, decodes entities, collapses whitespace and cuts to 500
+characters at a word boundary. The meta tag is omitted only when both are empty
+(theme-unify-shop 2.2.1.22).
+
 `ShopComponent::getAgregateCategoryData()` (`cms-shop`) still returns
 `offerCount`, `lowPrice`, `highPrice` and the rating keys (`reviewCount`,
 `ratingValue`, `bestRating`, `worsRating`). The theme uses only `offerCount`
