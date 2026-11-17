@@ -70,6 +70,19 @@ Copying PHP files to production does not update the consumer's Composer lock.
 
 ## Списки коллекций
 
+Режим «Коллекции» раздела, сохранённого фильтра и бренда строит запрос через
+`theme-unify-shop` `helpers\CollectionsByProducts::query($productsQuery)`:
+id коллекций выбираются одним `column()` из клона запроса товаров
+(GROUP BY collections.id, realPrice сохраняется для HAVING фильтра цены),
+затем `ShopCollection` по списку id, сортировка `show_counter DESC, id DESC`.
+Не возвращать `INNER JOIN (запрос товаров) main`: MariaDB 10.5 выполняет такую
+производную таблицу как LATERAL DERIVED для каждой коллекции сайта. Исходный
+запрос товаров провайдера не изменяется. Фильтр характеристик не присоединяет
+дочерние элементы (договор — в `cms-shop/AGENTS.md`). На сайте плитки (31,8 тыс.
+товаров, 13 тыс. коллекций, кеш запросов MariaDB выключен на сессию) SQL страницы
+сохранённого фильтра 1,0–1,4 → 0,13 с, бренда 0,31 → 0,07 с; HTML совпал,
+кроме CSRF. Проектные шаблоны с прежним JOIN должны перейти на этот помощник.
+
 В `theme-unify-shop` шаблоны `collections/collection-list.php` и
 `collections/collection-list-no-page.php` добавляют `image`, `images`,
 `shopCollectionStickers`, `brand.country` в eager loading запроса провайдера
