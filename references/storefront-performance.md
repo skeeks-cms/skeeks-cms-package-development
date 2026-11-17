@@ -118,6 +118,14 @@ getAttributeAsHtml/getAttributeAsText ради устранения повтор
 product-measures.php, с автозагрузчиком Composer и short_open_tag=1.
 Первый тест также принимает путь src/views предыдущей версии для сравнения HTML.
 
+## Списки сохранённых фильтров
+
+Название ссылки CmsSavedFilter (`getName`/`getSeoName`) читает связь по типу
+фильтра: `valueContentElement`, `valueContentPropertyEnum`, `brand` или `country`.
+Списки ссылок в шаблонах каталога `theme-unify-shop` (`catalogs/left-col.php`,
+`no-col.php`) загружают все четыре связи через `with()`; без `brand`/`country`
+страница раздела делала до 200 отдельных запросов. Новые списки ссылок строить так же.
+
 ## Кеш блоков коллекций главной
 
 `theme-unify-shop` кеширует оба блока коллекций одним HTML-фрагментом на 28800
