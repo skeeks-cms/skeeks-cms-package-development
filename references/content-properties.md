@@ -36,6 +36,11 @@ The package's `AGENTS.md` owns the tool contract.
   `is_country` are also unique per site and are not edited in administration.
 - Administration does not allow changing a list (`L`) property with enum
   values to a non-list component.
+- A phone is a text property with `component_settings.fieldElement = 'phone'`
+  (`PropertyTypeText::FIELD_PHONE`): input type=tel, soft mask, validation and
+  international storage by `PhoneValidator`. Rely on this format, not on the
+  property name, wherever code must find phones of arbitrary fields
+  ([public-form-protection.md](public-form-protection.md)).
 
 ## Enum values
 

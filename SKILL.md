@@ -256,6 +256,11 @@ Read the relevant reference completely before acting:
   page of a visit and the called number, the channel «Визит» and its form,
   the report and the API, read
   [references/crm-lead-referrals.md](references/crm-lead-referrals.md).
+- For protection of public forms of the form constructor (suspicious
+  submissions saved instead of dropped, the signed one-time stamp, pluggable
+  bot checks, the server-confirmed conversion event, limits, phone checks,
+  diagnostics instead of request dumps), read
+  [references/public-form-protection.md](references/public-form-protection.md).
 - For creating a task, lead, deal or other CRM record from a source (a
   letter, a call) in the standard create window (`?source=<type>:<id>`,
   `Skeeks::$recordSources`), read
