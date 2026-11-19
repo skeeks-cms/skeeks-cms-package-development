@@ -44,3 +44,12 @@ and in project overrides of `product-list.php` the ItemList is simply absent.
 The block is skipped for an empty listing and when the section/filter
 description already contains its own `CollectionPage` JSON-LD: hand-written
 SEO markup in content takes priority, the theme must not duplicate it.
+
+The brand page `views/modules/shop/brand/view.php` (since theme-unify-shop
+2.2.1.25; before it wrapped the brand in `NewsArticle` microdata) follows the
+same contract: one JSON-LD `CollectionPage` with `@id` `<brand url>#webpage`,
+`description` read from the meta description registered by `BrandController`,
+`about` = `Brand` (name, logo) and the same `sxCatalogLdItems` handshake around
+`product-list` (no ItemList in collections mode). It is skipped when the brand
+has no products or its description already has `CollectionPage`.
+`NewsArticle` stays only on real publications.
