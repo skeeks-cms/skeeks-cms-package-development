@@ -95,3 +95,15 @@ codes render the core view.
 `lowPrice` (positive prices only). When the listing has no priced products the
 phrase «цены/цена/стоимость от {=minMoney}» is removed instead of printing
 «от 0 р.».
+
+## Public URL rules
+
+Element, brand, collection and saved-filter pages end with
+`<code>-<id>`, `<code>-b<id>`, `<code>-c<id>` and `<code>-f<id>`. In
+`skeeks/cms-basic-shop` the rule order is `saved-filter`, `content-element`,
+`shop-brand`, `shop-collection`, `seo`, `tree`. A broad rule must not claim a
+path it cannot prove: `UrlRuleContentElement` accepts the legacy `<id>-<code>`
+format only when an element with exactly that id and code exists (since
+`skeeks/cms` 6.4.9.87), otherwise it returns `false` so brand and collection
+paths whose code starts with digits (`1721-…-b58`, `9512-c1260`) reach their
+own rules. New rules follow the same contract instead of depending on order.
