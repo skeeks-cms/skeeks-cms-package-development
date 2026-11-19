@@ -107,3 +107,12 @@ format only when an element with exactly that id and code exists (since
 `skeeks/cms` 6.4.9.87), otherwise it returns `false` so brand and collection
 paths whose code starts with digits (`1721-…-b58`, `9512-c1260`) reach their
 own rules. New rules follow the same contract instead of depending on order.
+
+A rule whose `parseRequest` returns path parts as route params (`code` of
+brand and collection rules) puts them into the request GET, so pagination and
+`Url::current()` pass them back to `createUrl`. `createUrl` must drop every
+param already encoded in the path (`UrlRuleBrand`/`UrlRuleCollection` drop
+`id`, `model` and `code` since `skeeks/cms-shop` 3.2.7.46), otherwise every
+listing link gets a duplicate `?code=` address. `CanUrl` builds the canonical
+form through the same rules, so old `?code=` addresses then get one 301 to
+their clean pair with `page`, view mode and minor params kept.
