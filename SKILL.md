@@ -413,6 +413,11 @@ For link previews in messengers and social networks (the generated og:image
 card of pages without their own picture, its cache and the site style), read
 [link-preview-card.md](references/link-preview-card.md).
 
+For legal documents of a site (`legal` component, the separate consent
+document), consent checkboxes in forms, cart, «Купить в 1 клик» and login, and
+Google fonts served from the site itself (`localFonts`), read
+[site-legal-152fz.md](references/site-legal-152fz.md).
+
 For the external links transition page `/~redirect` (signed links, allowed
 schemes, confirmation for unsigned links, noindex), read
 [external-links-redirect.md](references/external-links-redirect.md).
