@@ -121,7 +121,7 @@ simple, fast, stable; a page does only a file check.
   and leaves `.failed`; the job itself ignores the failure pause (`force`).
 - `build()`: one build per key under `flock`, waiting at most `lockWait`
   (20 s; a busy lock is not a failure); `buildTimeLimit` (30 s) counted after
-  the lock, each download limited by the time left; no redirects; size limits
+  the lock, each download limited by the time left; one curl handle per build (`curl_reset()` keeps the DNS cache and open connections: a Google set has dozens of files, and on a server with a slow resolver a lookup per file broke the time limit); no redirects; size limits
   while downloading (CSS, each file, the whole set); every write checked; the
   CSS is published only without external `url()`/`@import`; a temporary
   directory is renamed into place; cleanup errors are logged, not thrown.
