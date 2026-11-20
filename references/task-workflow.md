@@ -256,6 +256,14 @@ Verified 2026-10-31. The views «Задачи» (day list), «Сроки», «К
   the row widgets read project, company, their images, client and work
   intervals — without it a long list costs five queries per task.
 
+- Overdue (owner, 20.11.2026): `CmsTask::isLateStart()` — the fixed time of an
+  open task not in work has passed («Просрочена», an auto task is never late);
+  `isLateBeforeToday()` — and it passed before today (site's time zone). Only the
+  latter goes to the block «Просроченные задачи» of the list and the column
+  «Просрочены» of «Сроки»; a task late today stays in its day, red
+  (`.sx-task-tr--late`, the card `is-late`). Verified 2026-11-20,
+  `tests/task-overdue-block-stand.php`.
+
 ## Task deadline
 
 `deadline_at` is optional (m261031_140000). Empty — nothing is checked. When
