@@ -19,6 +19,12 @@ map through model attributes, admin forms, debug output, exception messages or
 public component getters. Tests should prove that component-provided values are
 resolved while the application params array remains free of those secrets.
 
+With Yii Config, the merged parameter group is available as `$params` inside
+package configuration. Inject its service-specific entry into a write-only
+component setter there. Web, console and a native job worker can then resolve
+the same configured component. The application does not need a second copy
+of those values in its public `params` property.
+
 Exception: credentials that administrators enter for records created in the UI
 (mailbox logins of `skeeks/cms-communication`) cannot live in project params.
 Store them encrypted (`Yii::$app->security->encryptByKey`) in a dedicated
