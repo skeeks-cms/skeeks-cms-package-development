@@ -209,6 +209,21 @@ the screen must not wait for it. Verified pattern (`cms-communication`
 `visibility = transient` deletes a successful run row: check the effect on the
 data, not the run history, when verifying such jobs.
 
+## A job that waits by publishing its next check
+
+To wait for an external state (a registrar activating a domain) without a
+scheduler entry, the job checks once and, when not ready, pushes its own type
+again with `delay` and `attempt + 1`, up to a bound; then it records the
+timeout on the domain row and notifies. Verified in `CmsJobComponent::push()`
+(23.11.2026): with `overlapPolicy` `skip`/`coalesce` a push whose `dedup_key`
+equals that of an active run returns `null`, and the run that publishes is
+itself still active. Put the attempt into the dedup key
+(`'…finish:'.$id.':'.$attempt`), keep the `resourceKey` per object so two
+checks never run at once, and make the completion conditional on the domain
+state so a manual "check now" and a scheduled check can both arrive. Mark such a
+read-only waiter `visibility = transient`. Domain example:
+`cms-hosting/DOMAIN-REGISTRY.md` («Регистрация менеджером»).
+
 ## Legacy console commands
 
 `ConsoleCommandJobHandler` gives history, separated stdout/stderr, exit code

@@ -22,3 +22,23 @@ recovery, durable identity before POST, provider duplicate response, terminal
 rotation, unchanged cart, paid-state changes during lookup, pending cooling
 period and the mutex acquisition boundary. Provider-specific status names and
 retry behavior belong to that package's README.
+
+## Paid operations on the studio's own provider account
+
+An operation that spends the studio's balance at a provider (a domain
+registration at a registrar) follows the same rules and adds three verified in
+`cms-hosting` 2.10.0 (`RegRuRegistration`, `DomainRegistrationOrders`,
+`tests/domain-registration-form.php`):
+
+- The provider's public test pair works only on a local stand and a live pair
+  only outside it (`SKEEKS_LOCAL_STAND`): the stand database is a copy of
+  production, so a stand must never spend real money even with a copied
+  configuration. Orders are stored per environment.
+- The employee's confirmation (payment received from the client) is the
+  asked-for state; the web request only queues one job with one attempt. The
+  job re-checks preconditions, persists `sending` and drops personal data before
+  the first mutating call, and sends once. A refusal with a known code ends the
+  order (nothing charged); no confirmed answer ends in `unknown` and is resolved
+  only by a provider lookup the employee starts, never by a resend.
+- The provider's answer amount (`payment`) is the recorded cost, not the price
+  list of the provider API.
