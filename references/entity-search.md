@@ -17,6 +17,19 @@ Call `$query->search($e->field->value)` and extend the query class instead.
 `search()` returns the query untouched for an empty or whitespace-only string.
 It never adds `LIKE '%%'`.
 
+## An AJAX select answers from a re-rendered page
+
+`AjaxSelect` (and `AjaxSelectModel`) sends its search to the current URL with
+`ajaxid=<widget id>`; the server renders the page again and the widget whose
+`id` equals `ajaxid` answers with JSON (`AjaxSelect::run()`). The search request
+is a GET without the form's POST data. A select that a form shows only for a
+posted choice ("Компания" or "Частный клиент") is then absent from the
+re-rendered page or gets another auto id, and the search silently returns
+another widget's results (verified 23.11.2026, `cms-hosting` domain
+registration: a client search returned companies). Give such selects a fixed
+`id` and always render them, hiding the inactive one; keep the access scope
+(`forManager()`) in `searchQuery` and check the chosen value again on save.
+
 ## Split the query into words
 
 `CmsActiveQuery::searchWords()` is the shared tokenizer:
