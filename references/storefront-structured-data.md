@@ -53,3 +53,31 @@ same contract: one JSON-LD `CollectionPage` with `@id` `<brand url>#webpage`,
 `product-list` (no ItemList in collections mode). It is skipped when the brand
 has no products or its description already has `CollectionPage`.
 `NewsArticle` stays only on real publications.
+
+## Offer availability and AggregateRating on the product card
+
+Since theme-unify-shop 2.2.1.27 `_product-price.php` has no hard-coded
+`availability`. `helpers\ProductAvailability::forSite($shopStoreProducts)` gives
+one decision for both the `Offer` markup and the visible status, and
+`_product-availability.php` renders them together inside the `Offer`:
+
+- the site keeps no stores (`shop->allStores` empty): stock is not confirmed,
+  neither markup nor status;
+- positive quantity: `InStock`, «В наличии» (supplier stores only: with the note
+  «на центральном складе», the wording of `_product-quantity.php`);
+- no quantity, `shopSite->is_show_product_no_quantity`: `BackOrder`, «Под заказ»;
+- otherwise `OutOfStock`, «Нет в наличии». It replaces the former «Товара нет»
+  rows that depended on `is_show_quantity_product`.
+
+Never set availability from the buy button alone and never default to InStock.
+
+`AggregateRating` in `product.php` and the visible block `_product-rating.php`
+(rendered at the top of `_product-price.php`, so all layouts get it) share one
+condition: `rating_value > 0 && rating_count > 0`, same values, `bestRating`
+from `shopSite->max_product_rating_value`. The count is called «оценки», not
+reviews. `shopSite->is_generate_product_rating` fills empty ratings with
+generated values (range in shop settings); the theme cannot tell them from
+real ones, so the owner decides per site whether to keep generation on.
+
+Test: `theme-unify-shop/tests/product-availability.php <vendor/autoload.php>`
+with `short_open_tag=1`.

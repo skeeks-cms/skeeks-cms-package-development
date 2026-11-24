@@ -11,6 +11,16 @@ browser-side recalculation.
 first, then multiply the copy by `measure_ratio_min`. Keep the unit price
 unchanged for later consumers of the same helper.
 
+The total shows kopecks only when there are any, on the server
+(`asDecimal($amount, 2 or 0)`) and in the browser recalculation
+(`Intl.NumberFormat` with 2 or 0 fraction digits): 16 164 and 6 981,70, the
+same sum the cart shows (theme-unify-shop 2.2.1.27).
+
+Basket and order lines store `shop_order_item.quantity` as `decimal(18,4)`
+(cms-shop 3.2.7.47), like `shop_store_product` and `shop_bill_item`. With
+`decimal(18,2)` two packs of 3.592 m² were saved as 7.18 m² and the cart total
+differed from the card. Keep the exact pack multiple; round only money.
+
 Verification: `theme-unify-shop/tests/product-price-total.php <vendor/autoload.php>`
 with `short_open_tag=1`. It executes the real template block and checks a
 discounted, a regular and a zero price, a fractional quantity, `data-amount`
