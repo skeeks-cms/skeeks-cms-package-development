@@ -26,6 +26,12 @@ add a package block to a core view.
   clients checks `!$owner->is_worker` and renders nothing for employees;
   record source values refuse employees as well (`proposal-client:user.ID`).
   Verified 2026-10-23 with `cms-proposal` (client card 1672).
+- A service card outside CRM uses the same place: the hosting site card
+  (`cms-hosting` `admin-vps-site/view`, under the properties, before DNS)
+  renders `POSITION_MAIN` with a `HostingVpsSite` owner. Its blocks follow
+  the card's own `sx-properties` rows rather than the contact-block look.
+  The skeeks.com project adds "Товарная база" there from its bootstrap.
+  Verified 2026-11-25 on the Windows stand (site 1413).
 - A block looks like the neighbouring contact blocks (owner decision
   2026-10-23): a `BackendSurfaceWidget` (`titleTag h2`, `raised`,
   `responsive`) with the `CrmContactBlockWidget` markup and classes —
