@@ -12,8 +12,14 @@ Product `description` (Yandex requires it for product snippets): the card takes
 `productDescriptionShort`, otherwise `productDescriptionFull` (both getters
 already fall back to the main/parent product), strips HTML including
 `script`/`style`, decodes entities, collapses whitespace and cuts to 500
-characters at a word boundary. The meta tag is omitted only when both are empty
-(theme-unify-shop 2.2.1.22).
+characters at a word boundary (theme-unify-shop 2.2.1.22). Since 2.2.1.28 it is
+never empty: next come the product's collections (`shopProduct->collections`,
+for an offer without its own — those of `shopProductWhithOffers`),
+`description_short` then `description_full`; last, a line built from `seoName`
+with «Бренд», «Коллекция», «Страна» and «Цена указана за 1 <measure symbol>»
+(the same unit wording the Yandex feed uses when a product has no description).
+Supplier-imported products usually have no own text but a described collection.
+Test: `theme-unify-shop/tests/product-description.php <vendor/autoload.php>`.
 
 `ShopComponent::getAgregateCategoryData()` (`cms-shop`) still returns
 `offerCount`, `lowPrice`, `highPrice` and the rating keys (`reviewCount`,
