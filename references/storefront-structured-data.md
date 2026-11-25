@@ -1,5 +1,18 @@
 # Storefront structured data: listings and product cards
 
+## Organization logo is an absolute link
+
+`cms-theme-unify-v2` `views/modals.php` prints a hidden microdata
+`Organization` on every page; `publisher` blocks of publications
+(`content-element/default.php`) and the brand page (`theme-unify-shop`
+`content-element/brand.php`) repeat it. `theme->logo` is usually a relative
+`/uploads/...` path, and a `meta content` value is plain text that search
+engines do not resolve against the page. Output the logo as
+`<link itemprop="logo|image" href="Url::to($this->theme->logo, true)">`, skip
+the tags when the logo is empty, and `Html::encode()` the site name, phone,
+email and address (cms-theme-unify-v2 2.2.2.8, theme-unify-shop 2.2.1.29).
+Test: `cms-theme-unify-v2/tests/organization-markup.php <vendor/autoload.php>`.
+
 ## Product only on a single product page
 
 `schema.org/Product` (with `Offer`, `AggregateRating`, `Brand`) belongs to the
