@@ -71,6 +71,14 @@ one decision for both the `Offer` markup and the visible status, and
 
 Never set availability from the buy button alone and never default to InStock.
 
+`Offer` `price` is the final unit price the visitor sees as «Ваша цена»:
+`$priceHelper->minMoney` (shop discounts applied), formatted with two decimals,
+and `priceCurrency` from the same `Money` (theme-unify-shop 2.2.1.28). Never
+`basePrice`: Yandex Webmaster «Товары» compares the markup with the visible
+price and the product feed (which exports the guest discounted price plus
+`oldprice`), and a base price on discounted items is reported as an error.
+Test: `theme-unify-shop/tests/product-offer-price.php` with `short_open_tag=1`.
+
 `AggregateRating` in `product.php` and the visible block `_product-rating.php`
 (rendered at the top of `_product-price.php`, so all layouts get it) share one
 condition: `rating_value > 0 && rating_count > 0`, same values, `bestRating`
