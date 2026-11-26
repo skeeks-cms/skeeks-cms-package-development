@@ -120,6 +120,19 @@ price and the product feed (which exports the guest discounted price plus
 `oldprice`), and a base price on discounted items is reported as an error.
 Test: `theme-unify-shop/tests/product-offer-price.php` with `short_open_tag=1`.
 
+The `Offer` exists only when the visitor sees a price above zero
+(theme-unify-shop 2.2.1.31): `$isOfferMarkup = $isShowPrice &&
+(float)$priceHelper->minMoney->amount > 0`, computed before the
+`product-price` block, in both the simple product and the chosen offer. Without
+it the block keeps its markup for the visitor but loses
+`itemprop="offers"`/`itemscope`, the `url`/`price`/`priceCurrency`/
+`priceValidUntil` tags, and `_product-availability.php` gets `'markup' => false`
+(visible status only, no `availability` link that would otherwise attach to
+`Product`). A product with variants and no chosen offer has no `Offer` at all.
+Hidden prices («показывать цену только при наличии») and zero prices («по
+запросу») are never sent as an active offer. Test:
+`theme-unify-shop/tests/product-offer-hidden-price.php` with `short_open_tag=1`.
+
 `AggregateRating` in `product.php` and the visible block `_product-rating.php`
 (rendered at the top of `_product-price.php`, so all layouts get it) share one
 condition: `rating_value > 0 && rating_count > 0`, same values, `bestRating`
