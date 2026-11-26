@@ -40,6 +40,28 @@ Test: `theme-unify-shop/tests/product-description.php <vendor/autoload.php>`.
 and `lowPrice` (`{=minMoney}`, listing totals); project overrides of
 `catalog.php` may still read the other keys, so keep them unchanged.
 
+## Product card meta tags
+
+`product.php` (theme-unify-shop 2.2.1.30) resolves title, meta description and
+keywords in one order: the product's own `meta_*` field; otherwise the
+template of its content (`CmsContent::meta_title_template`,
+`meta_description_template`, `meta_keywords_template`, edited in the content
+settings, block «Seo»; before 2.2.1.30 the card ignored them); otherwise the
+theme default. A template that renders empty falls back to the default. Do not
+mass-fill product `meta_*` to change a site's format — set the content template.
+
+`helpers\ProductMeta::render()` substitutes `{=model.name}`, `{=model.seoName}`,
+`{=model.description_short}`, `{=section}`, `{=section.seoName}`, `{=brand}`,
+`{=sku}` (brand_sku), `{=collection}`, `{=country}`, `{=price}` (empty unless
+the base price is above zero), `{=measure}`, `{=siteName}` and
+`{=property.<code or name>}` (`getAttributeAsText`, properties are loaded only
+when a template asks). Unknown or empty variables become empty; a `[...]` part
+is dropped when any variable inside is empty. `ProductMeta::clean()` then
+removes markers without text, repeated punctuation («р..»), empty brackets and
+hanging dashes. The default description is `defaultDescription()`: «✔ name.
+✔ short description. Цена …» without empty parts; the default title is
+unchanged. Test: `theme-unify-shop/tests/product-meta.php` (no autoload needed).
+
 ## Listing: CollectionPage + ItemList
 
 `views/modules/cms/tree/catalog.php` (sections and saved filters, since

@@ -395,7 +395,8 @@ quote freshness, checkout verification and cart totals, read
 [storefront-delivery.md](references/storefront-delivery.md).
 
 For schema.org markup of product cards versus section/filter listings
-(CollectionPage, ItemList, no Product on listings), read
+(CollectionPage, ItemList, no Product on listings) and product card meta
+tags (own fields, content templates, `ProductMeta`), read
 [storefront-structured-data.md](references/storefront-structured-data.md).
 
 For asynchronous storefront search, suggestion visibility, session locks and
