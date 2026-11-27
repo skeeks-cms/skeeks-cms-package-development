@@ -58,6 +58,12 @@ Consumers:
   `legal_checkbox_template` uses the core text; a custom template gets `{url}`
   = the consent URL (a link written into a custom text by hand stays as is).
   The cart (`cart-v2.php`) reuses the checkout form's text.
+- Element ids (cms-module-form2 ≥ 3.0.2.17, theme-unify-shop ≥ 2.2.1.32): one
+  page often has the cart and a modal form together, so only the cart checkbox
+  keeps `id="sx-rules"` (project cart CSS targets it); a form-constructor
+  checkbox gets `<widget id>-rules` with class `sx-rules`. Style and script form
+  checkboxes by the class `.sx-rules`, never by `#sx-rules`. The cart script
+  checks the `#sx-rules` that is not inside a `<form>`.
 - «Купить в 1 клик» (`theme-unify-shop` `_product-price.php`).
 - Site login widget (`cms-theme-unify-v2` `widgets\auth\AuthWidget`):
   `renderConsent($key)` adds the checkbox to the first step (phone, call-check
